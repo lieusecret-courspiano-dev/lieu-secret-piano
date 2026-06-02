@@ -140,15 +140,15 @@ function ReservationContent() {
       const res  = await fetch(
         `/api/availability/slots?from=${from}&to=${to}&tz=${encodeURIComponent(timezone)}&code=${encodeURIComponent(code.trim())}`
       )
-      if (res.ok || res.status !== 401) {
-        // Code accepté par le serveur
+      if (res.ok) {
+        // Code accepté par le serveur (200)
         validatedCodeRef.current = code.trim()
         try { localStorage.setItem(LS_KEY, code.trim()) } catch {}
         setAccessGranted(true)
         setCodeError('')
         return true
       } else {
-        // Code refusé par le serveur
+        // Code refusé ou erreur → accès refusé dans tous les cas
         validatedCodeRef.current = ''
         try { localStorage.removeItem(LS_KEY) } catch {}
         setAccessGranted(false)

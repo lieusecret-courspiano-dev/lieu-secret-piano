@@ -8,27 +8,39 @@ export async function GET(req: NextRequest) {
   const from     = searchParams.get('from') || DateTime.now().toFormat('yyyy-MM-dd')
   const to       = searchParams.get('to')   || DateTime.now().plus({ days: 30 }).toFormat('yyyy-MM-dd')
   const timezone = searchParams.get('tz')   || 'Europe/Paris'
-  const code     = searchParams.get('code') || ''
+  const code     = (searchParams.get('code') || '').trim().toLowerCase()
 
   try {
-    // ── Vérification du code d'accès côté serveur ──────────
-    const { data: settings } = await supabaseAdmin
+    // ── Récupération du code d'accès depuis Supabase ──────
+    const { data: settings, error: settingsError } = await supabaseAdmin
       .from('site_settings')
       .select('cours_access_code')
       .eq('id', 1)
       .single()
 
+    // Si erreur Supabase → refus par sécurité (fail closed)
+    if (settingsError) {
+      console.error('Erreur lecture site_settings:', settingsError)
+      return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
+    }
+
     const validCode = (settings?.cours_access_code || '').trim().toLowerCase()
 
-    // Si un code est défini et que le code fourni ne correspond pas → refus
-    if (validCode && code.trim().toLowerCase() !== validCode) {
-      return NextResponse.json({ error: 'Code d\'accès invalide' }, { status: 401 })
+    // Si un code est défini → vérification stricte
+    if (validCode) {
+      if (!code || code !== validCode) {
+        return NextResponse.json({ error: 'Code d\'accès invalide' }, { status: 401 })
+      }
     }
+    // Si aucun code défini en admin → accès libre (cours publics)
 
     const slots = await generateAvailableSlots(from, to, timezone)
     return NextResponse.json(slots)
+
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Erreur'
+    console.error('Erreur slots:', message)
+    // Fail closed : en cas d'erreur inattendue, refuser l'accès
     return NextResponse.json({ error: message }, { status: 500 })
   }
 }
