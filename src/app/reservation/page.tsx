@@ -60,8 +60,7 @@ interface Settings {
 const DAYS_FR   = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
 const MONTHS_FR = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre']
 
-// Clé localStorage
-const LS_KEY = 'ls_access_code'
+
 
 function ReservationContent() {
   const searchParams = useSearchParams()
@@ -94,16 +93,15 @@ function ReservationContent() {
     fetchData()
   }, [])
 
-  // Tenter l'accès automatique via code URL ou localStorage — TOUJOURS vérifié côté serveur
+  // Tenter l'accès automatique UNIQUEMENT via le code passé dans l'URL (?code=xxx)
+  // Le localStorage n'est plus utilisé pour l'accès automatique
   useEffect(() => {
     if (!settings) return
-
-    const codeToTry = codeParam?.trim() || (() => {
-      try { return localStorage.getItem(LS_KEY) || '' } catch { return '' }
-    })()
-
-    if (codeToTry) {
-      verifyCodeWithServer(codeToTry)
+    // Nettoyer tout code potentiellement stocké en localStorage
+    try { localStorage.removeItem('ls_access_code') } catch {}
+    // Vérifier uniquement si un code est passé explicitement dans l'URL
+    if (codeParam?.trim()) {
+      verifyCodeWithServer(codeParam.trim())
     }
   }, [settings, codeParam])
 
@@ -143,14 +141,12 @@ function ReservationContent() {
       if (res.ok) {
         // Code accepté par le serveur (200)
         validatedCodeRef.current = code.trim()
-        try { localStorage.setItem(LS_KEY, code.trim()) } catch {}
         setAccessGranted(true)
         setCodeError('')
         return true
       } else {
         // Code refusé ou erreur → accès refusé dans tous les cas
         validatedCodeRef.current = ''
-        try { localStorage.removeItem(LS_KEY) } catch {}
         setAccessGranted(false)
         return false
       }
@@ -173,7 +169,6 @@ function ReservationContent() {
         // Code devenu invalide (changé par l'admin) → révoquer l'accès
         setAccessGranted(false)
         validatedCodeRef.current = ''
-        try { localStorage.removeItem(LS_KEY) } catch {}
         setSlots([])
         return
       }
