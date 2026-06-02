@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Search, CheckCircle, Clock, XCircle, Trash2 } from 'lucide-react'
+import { Search, CheckCircle, Clock, XCircle, Trash2, Download } from 'lucide-react'
 
 interface Inscription {
   id: string
@@ -23,9 +23,129 @@ interface Inscription {
 }
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
-  en_attente: { label: 'En attente',  color: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' },
-  confirme:   { label: 'Confirme',    color: 'bg-green-500/10 text-green-400 border-green-500/20' },
-  refuse:     { label: 'Refuse',      color: 'bg-red-500/10 text-red-400 border-red-500/20' },
+  en_attente: { label: 'En attente', color: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' },
+  confirme:   { label: 'Confirmé',   color: 'bg-green-500/10 text-green-400 border-green-500/20'   },
+  refuse:     { label: 'Refusé',     color: 'bg-red-500/10 text-red-400 border-red-500/20'         },
+}
+
+// ── Export CSV (compatible Excel) ─────────────────────────────────────
+function exportCSV(inscriptions: Inscription[]) {
+  const BOM = '\uFEFF' // BOM UTF-8 pour Excel
+  const headers = [
+    'Prénom', 'Nom', 'Email', 'Téléphone', 'Adresse', 'Ville', 'Pays',
+    'Niveau', 'Années de pratique', 'Disponibilités', 'Fréquence',
+    'Objectifs', 'Message', 'Statut', 'Date d\'inscription',
+  ]
+
+  function escapeCSV(val: string | null | undefined): string {
+    if (!val) return ''
+    const str = String(val).replace(/"/g, '""')
+    return `"${str}"`
+  }
+
+  const rows = inscriptions.map(i => [
+    escapeCSV(i.prenom),
+    escapeCSV(i.nom),
+    escapeCSV(i.email),
+    escapeCSV(i.telephone),
+    escapeCSV(i.adresse),
+    escapeCSV(i.ville),
+    escapeCSV(i.pays),
+    escapeCSV(i.niveau),
+    escapeCSV(i.annees_pratique),
+    escapeCSV(i.rythme),
+    escapeCSV(i.frequence),
+    escapeCSV(i.objectifs),
+    escapeCSV(i.message),
+    escapeCSV(STATUS_LABELS[i.status]?.label || i.status),
+    escapeCSV(new Date(i.created_at).toLocaleDateString('fr-FR')),
+  ].join(';'))
+
+  const csv = BOM + [headers.join(';'), ...rows].join('\n')
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+  const url  = URL.createObjectURL(blob)
+  const a    = document.createElement('a')
+  a.href     = url
+  a.download = `inscriptions-lieu-secret-${new Date().toISOString().slice(0, 10)}.csv`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+// ── Export PDF via fenêtre d'impression ──────────────────────────────
+function exportPDF(inscriptions: Inscription[]) {
+  const date = new Date().toLocaleDateString('fr-FR')
+
+  const rows = inscriptions.map(i => `
+    <tr>
+      <td>${i.prenom} ${i.nom}</td>
+      <td>${i.email}</td>
+      <td>${i.telephone || '—'}</td>
+      <td>${i.niveau.split(' ')[0]}</td>
+      <td>${i.ville || '—'}</td>
+      <td>${i.rythme || '—'}</td>
+      <td>
+        <span class="status status-${i.status}">
+          ${STATUS_LABELS[i.status]?.label || i.status}
+        </span>
+      </td>
+      <td>${new Date(i.created_at).toLocaleDateString('fr-FR')}</td>
+    </tr>
+  `).join('')
+
+  const html = `<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Inscriptions — Lieu Secret</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Georgia, serif; font-size: 11px; color: #1a1a1a; padding: 24px; }
+    h1 { font-size: 22px; color: #b45309; letter-spacing: 2px; margin-bottom: 4px; }
+    .subtitle { font-size: 11px; color: #777; margin-bottom: 6px; }
+    .meta { font-size: 10px; color: #999; margin-bottom: 20px; }
+    table { width: 100%; border-collapse: collapse; font-size: 10px; }
+    thead tr { background: #f5f0e8; }
+    th { text-align: left; padding: 7px 8px; font-size: 9px; text-transform: uppercase;
+         letter-spacing: 0.5px; color: #555; border-bottom: 2px solid #d97706; }
+    td { padding: 6px 8px; border-bottom: 1px solid #eee; vertical-align: top; }
+    tr:nth-child(even) td { background: #fafaf8; }
+    .status { padding: 2px 7px; border-radius: 10px; font-size: 9px; font-weight: bold; }
+    .status-en_attente { background: #fef3c7; color: #92400e; }
+    .status-confirme   { background: #d1fae5; color: #065f46; }
+    .status-refuse     { background: #fee2e2; color: #991b1b; }
+    .footer { margin-top: 20px; font-size: 9px; color: #aaa; text-align: center; }
+    @media print { body { padding: 12px; } }
+  </style>
+</head>
+<body>
+  <h1>LIEU SECRET</h1>
+  <div class="subtitle">École de Piano en Ligne — Liste des inscriptions</div>
+  <div class="meta">Exporté le ${date} · ${inscriptions.length} inscription${inscriptions.length > 1 ? 's' : ''}</div>
+  <table>
+    <thead>
+      <tr>
+        <th>Élève</th>
+        <th>Email</th>
+        <th>Téléphone</th>
+        <th>Niveau</th>
+        <th>Ville</th>
+        <th>Disponibilités</th>
+        <th>Statut</th>
+        <th>Date</th>
+      </tr>
+    </thead>
+    <tbody>${rows}</tbody>
+  </table>
+  <div class="footer">Lieu Secret — lieusecret-courspiano.fr</div>
+  <script>window.onload = () => { window.print(); }</script>
+</body>
+</html>`
+
+  const win = window.open('', '_blank')
+  if (win) {
+    win.document.write(html)
+    win.document.close()
+  }
 }
 
 export default function AdminInscriptions() {
@@ -69,9 +189,33 @@ export default function AdminInscriptions() {
 
   return (
     <div className="p-6 md:p-8 pb-24 md:pb-8">
-      <div className="mb-6">
-        <h1 className="text-2xl font-serif text-white">Inscriptions</h1>
-        <p className="text-noir-400 text-sm mt-1">{inscriptions.length} demande{inscriptions.length > 1 ? 's' : ''} au total</p>
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-serif text-white">Inscriptions</h1>
+          <p className="text-noir-400 text-sm mt-1">{inscriptions.length} demande{inscriptions.length > 1 ? 's' : ''} au total</p>
+        </div>
+
+        {/* Boutons export */}
+        {inscriptions.length > 0 && (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => exportCSV(filtered.length > 0 ? filtered : inscriptions)}
+              className="btn-outline flex items-center gap-2 text-xs px-3 py-2"
+              title="Exporter en CSV (compatible Excel)"
+            >
+              <Download size={14} />
+              Export Excel (.csv)
+            </button>
+            <button
+              onClick={() => exportPDF(filtered.length > 0 ? filtered : inscriptions)}
+              className="btn-outline flex items-center gap-2 text-xs px-3 py-2"
+              title="Exporter en PDF"
+            >
+              <Download size={14} />
+              Export PDF
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Recherche */}
@@ -80,7 +224,7 @@ export default function AdminInscriptions() {
         <input
           value={search}
           onChange={e => setSearch(e.target.value)}
-          placeholder="Rechercher un eleve..."
+          placeholder="Rechercher un élève..."
           className="input w-full pl-9 max-w-sm"
         />
       </div>
@@ -99,11 +243,11 @@ export default function AdminInscriptions() {
           <table className="w-full min-w-[700px]">
             <thead>
               <tr className="border-b border-noir-800">
-                <th className="text-left text-xs text-noir-400 uppercase tracking-wider py-3 px-4">Eleve</th>
+                <th className="text-left text-xs text-noir-400 uppercase tracking-wider py-3 px-4">Élève</th>
                 <th className="text-left text-xs text-noir-400 uppercase tracking-wider py-3 px-4">Email</th>
                 <th className="text-left text-xs text-noir-400 uppercase tracking-wider py-3 px-4">Niveau</th>
                 <th className="text-left text-xs text-noir-400 uppercase tracking-wider py-3 px-4">Ville</th>
-                <th className="text-left text-xs text-noir-400 uppercase tracking-wider py-3 px-4">Disponibilites</th>
+                <th className="text-left text-xs text-noir-400 uppercase tracking-wider py-3 px-4">Disponibilités</th>
                 <th className="text-left text-xs text-noir-400 uppercase tracking-wider py-3 px-4">Statut</th>
                 <th className="text-left text-xs text-noir-400 uppercase tracking-wider py-3 px-4">Date</th>
                 <th className="py-3 px-4" />
@@ -151,7 +295,7 @@ export default function AdminInscriptions() {
         </div>
       )}
 
-      {/* Modal detail */}
+      {/* Modal détail */}
       {selected && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm overflow-y-auto">
           <div className="bg-noir-900 border border-noir-700 rounded-2xl w-full max-w-lg p-6 shadow-2xl my-4">
@@ -166,20 +310,20 @@ export default function AdminInscriptions() {
 
             <div className="space-y-2 mb-6">
               {[
-                { label: 'Email',        value: selected.email },
-                { label: 'Telephone',    value: selected.telephone || '—' },
-                { label: 'Adresse',      value: [selected.adresse, selected.ville, selected.pays].filter(Boolean).join(', ') || '—' },
-                { label: 'Niveau',       value: selected.niveau },
-                { label: 'Pratique',     value: selected.annees_pratique || '—' },
-                { label: 'Disponibilites', value: selected.rythme || '—' },
-                { label: 'Frequence',    value: selected.frequence || '—' },
-                { label: 'Objectifs',    value: selected.objectifs || '—' },
-                { label: 'Message',      value: selected.message || '—' },
-                { label: 'Statut',       value: STATUS_LABELS[selected.status]?.label || selected.status },
-                { label: 'Date',         value: new Date(selected.created_at).toLocaleDateString('fr-FR') },
+                { label: 'Email',           value: selected.email },
+                { label: 'Téléphone',       value: selected.telephone || '—' },
+                { label: 'Adresse',         value: [selected.adresse, selected.ville, selected.pays].filter(Boolean).join(', ') || '—' },
+                { label: 'Niveau',          value: selected.niveau },
+                { label: 'Pratique',        value: selected.annees_pratique || '—' },
+                { label: 'Disponibilités',  value: selected.rythme || '—' },
+                { label: 'Fréquence',       value: selected.frequence || '—' },
+                { label: 'Objectifs',       value: selected.objectifs || '—' },
+                { label: 'Message',         value: selected.message || '—' },
+                { label: 'Statut',          value: STATUS_LABELS[selected.status]?.label || selected.status },
+                { label: 'Date',            value: new Date(selected.created_at).toLocaleDateString('fr-FR') },
               ].map((item, i) => (
                 <div key={i} className="flex justify-between text-sm border-b border-noir-800 pb-2">
-                  <span className="text-noir-400 shrink-0 w-28">{item.label}</span>
+                  <span className="text-noir-400 shrink-0 w-32">{item.label}</span>
                   <span className="text-white text-right">{item.value}</span>
                 </div>
               ))}

@@ -2,15 +2,15 @@ import { Resend } from 'resend'
 import { generateCoursICS, generateEventICS } from './ics'
 import { DateTime } from 'luxon'
 
-const resend     = new Resend(process.env.RESEND_API_KEY!)
-const FROM       = process.env.RESEND_FROM_EMAIL || 'Lieu Secret <onboarding@resend.dev>'
+const resend      = new Resend(process.env.RESEND_API_KEY!)
+const FROM        = process.env.RESEND_FROM_EMAIL || 'Lieu Secret <onboarding@resend.dev>'
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'lieusecret-courspiano@outlook.fr'
 
 function formatDate(isoString: string, timezone: string): string {
   return DateTime.fromISO(isoString, { zone: 'utc' })
     .setZone(timezone)
     .setLocale('fr')
-    .toFormat("EEEE d MMMM yyyy 'a' HH'h'mm")
+    .toFormat("EEEE d MMMM yyyy 'à' HH'h'mm")
 }
 
 function baseTemplate(content: string): string {
@@ -26,13 +26,13 @@ function baseTemplate(content: string): string {
     '<table width="600" cellpadding="0" cellspacing="0" style="background:#111111;border:1px solid #f59e0b;border-radius:8px;overflow:hidden;max-width:600px;">',
     '<tr><td style="background:linear-gradient(135deg,#1a1a1a,#111111);padding:32px;text-align:center;border-bottom:1px solid #f59e0b;">',
     '<div style="font-size:26px;color:#f59e0b;letter-spacing:4px;font-weight:300;">LIEU SECRET</div>',
-    '<div style="font-size:12px;color:#a8a8a8;margin-top:6px;letter-spacing:2px;">ECOLE DE PIANO EN LIGNE</div>',
+    '<div style="font-size:12px;color:#a8a8a8;margin-top:6px;letter-spacing:2px;">ÉCOLE DE PIANO EN LIGNE</div>',
     '</td></tr>',
     '<tr><td style="padding:32px;">',
     content,
     '</td></tr>',
     '<tr><td style="background:#0a0a0a;padding:20px;text-align:center;border-top:1px solid #282828;">',
-    '<p style="margin:0;font-size:12px;color:#404040;">Lieu Secret &mdash; Ecole de Piano en Ligne<br/>',
+    '<p style="margin:0;font-size:12px;color:#404040;">Lieu Secret &mdash; École de Piano en Ligne<br/>',
     '<a href="mailto:' + ADMIN_EMAIL + '" style="color:#f59e0b;text-decoration:none;">' + ADMIN_EMAIL + '</a></p>',
     '</td></tr>',
     '</table></td></tr></table>',
@@ -55,7 +55,7 @@ function zoomBlock(link: string | null | undefined): string {
     '<div style="margin-top:16px;background:#1a1a1a;border:1px solid rgba(245,158,11,0.3);border-radius:6px;padding:14px 18px;">',
     '<p style="margin:0 0 6px;color:#a8a8a8;font-size:12px;text-transform:uppercase;letter-spacing:1px;">Lien Zoom</p>',
     '<a href="' + link + '" style="color:#f59e0b;font-size:14px;word-break:break-all;">' + link + '</a>',
-    '<p style="margin:8px 0 0;color:#707070;font-size:12px;">Cliquez sur ce lien a l\'heure du cours.</p>',
+    '<p style="margin:8px 0 0;color:#707070;font-size:12px;">Cliquez sur ce lien à l\'heure du cours.</p>',
     '</div>',
   ].join('')
 }
@@ -83,7 +83,7 @@ export async function sendCoursConfirmation(params: {
     : ''
 
   const content = [
-    '<h2 style="color:#f59e0b;font-size:22px;margin:0 0 8px;">Votre cours est confirme</h2>',
+    '<h2 style="color:#f59e0b;font-size:22px;margin:0 0 8px;">Votre cours est confirmé !</h2>',
     '<p style="color:#a8a8a8;font-size:14px;margin:0 0 24px;">Bonjour ' + params.studentName + ',</p>',
     '<div style="background:#1a1a1a;border-left:3px solid #f59e0b;padding:16px 20px;border-radius:4px;margin-bottom:16px;">',
     '<p style="margin:0 0 6px;color:#e8e8e8;font-size:15px;font-weight:bold;">' + dateLocal + '</p>',
@@ -91,18 +91,18 @@ export async function sendCoursConfirmation(params: {
     '</div>',
     zoomBlock(params.zoomLink),
     '<p style="color:#d0d0d0;font-size:14px;line-height:1.7;margin-top:20px;">',
-    'Votre cours de piano individuel a bien ete enregistre. Le fichier .ics joint vous permet d\'ajouter ce rendez-vous dans Outlook, Google Calendar ou Apple Calendar.',
+    'Votre cours de piano individuel a bien été enregistré. Le fichier .ics joint vous permet d\'ajouter ce rendez-vous dans Outlook, Google Calendar ou Apple Calendar.',
     '</p>',
     msgBlock,
-    '<p style="color:#707070;font-size:13px;margin-top:24px;">A tres bientot,<br/><span style="color:#f59e0b;">Lieu Secret</span></p>',
-    cancelBlock(params.cancelUrl, 'Annuler cette reservation'),
+    '<p style="color:#707070;font-size:13px;margin-top:24px;">À très bientôt,<br/><span style="color:#f59e0b;">Lieu Secret</span></p>',
+    cancelBlock(params.cancelUrl, 'Annuler cette réservation'),
   ].join('')
 
   try {
     const result = await resend.emails.send({
       from:        FROM,
       to:          params.studentEmail,
-      subject:     'Cours de piano confirme - ' + dateLocal,
+      subject:     'Cours de piano confirmé — ' + dateLocal,
       html:        baseTemplate(content),
       attachments: [{
         filename:     'cours-piano-lieu-secret.ics',
@@ -110,10 +110,10 @@ export async function sendCoursConfirmation(params: {
         content_type: 'text/calendar; charset=utf-8; method=REQUEST',
       }],
     })
-    console.log('Email cours envoye:', result)
+    console.log('Email cours envoyé :', result)
     return result
   } catch (err) {
-    console.error('Erreur email cours:', err)
+    console.error('Erreur email cours :', err)
     throw err
   }
 }
@@ -141,10 +141,10 @@ export async function sendEventConfirmation(params: {
 
   const paiementLine = params.isPaid && params.amount
     ? '<p style="margin:8px 0 0;color:#f59e0b;font-size:14px;">Paiement : ' + params.amount.toFixed(2) + ' EUR</p>'
-    : '<p style="margin:8px 0 0;color:#4ade80;font-size:14px;">Evenement gratuit</p>'
+    : '<p style="margin:8px 0 0;color:#4ade80;font-size:14px;">Événement gratuit</p>'
 
   const content = [
-    '<h2 style="color:#f59e0b;font-size:22px;margin:0 0 8px;">Inscription confirmee</h2>',
+    '<h2 style="color:#f59e0b;font-size:22px;margin:0 0 8px;">Inscription confirmée !</h2>',
     '<p style="color:#a8a8a8;font-size:14px;margin:0 0 24px;">Bonjour ' + params.studentName + ',</p>',
     '<div style="background:#1a1a1a;border-left:3px solid #f59e0b;padding:16px 20px;border-radius:4px;margin-bottom:16px;">',
     '<p style="margin:0 0 4px;color:#f59e0b;font-size:16px;font-weight:bold;">' + params.eventTitle + '</p>',
@@ -154,9 +154,9 @@ export async function sendEventConfirmation(params: {
     '</div>',
     zoomBlock(params.zoomLink),
     '<p style="color:#d0d0d0;font-size:14px;line-height:1.7;margin-top:20px;">',
-    'Votre inscription a bien ete enregistree. Le fichier .ics joint vous permet d\'ajouter cet evenement dans votre agenda.',
+    'Votre inscription a bien été enregistrée. Le fichier .ics joint vous permet d\'ajouter cet événement à votre agenda.',
     '</p>',
-    '<p style="color:#707070;font-size:13px;margin-top:24px;">A tres bientot,<br/><span style="color:#f59e0b;">Lieu Secret</span></p>',
+    '<p style="color:#707070;font-size:13px;margin-top:24px;">À très bientôt,<br/><span style="color:#f59e0b;">Lieu Secret</span></p>',
     cancelBlock(params.cancelUrl, 'Annuler cette inscription'),
   ].join('')
 
@@ -164,7 +164,7 @@ export async function sendEventConfirmation(params: {
     const result = await resend.emails.send({
       from:        FROM,
       to:          params.studentEmail,
-      subject:     'Inscription confirmee - ' + params.eventTitle,
+      subject:     'Inscription confirmée — ' + params.eventTitle,
       html:        baseTemplate(content),
       attachments: [{
         filename:     'evenement-lieu-secret.ics',
@@ -172,10 +172,10 @@ export async function sendEventConfirmation(params: {
         content_type: 'text/calendar; charset=utf-8; method=REQUEST',
       }],
     })
-    console.log('Email evenement envoye:', result)
+    console.log('Email événement envoyé :', result)
     return result
   } catch (err) {
-    console.error('Erreur email evenement:', err)
+    console.error('Erreur email événement :', err)
     throw err
   }
 }
@@ -193,7 +193,7 @@ export async function sendAdminNotification(params: {
   const adminEmail = ADMIN_EMAIL
 
   const rows = [
-    '<tr><td style="padding:8px 0;color:#a8a8a8;font-size:13px;width:140px;">Eleve</td><td style="padding:8px 0;color:#e8e8e8;font-size:14px;">' + params.studentName + '</td></tr>',
+    '<tr><td style="padding:8px 0;color:#a8a8a8;font-size:13px;width:140px;">Élève</td><td style="padding:8px 0;color:#e8e8e8;font-size:14px;">' + params.studentName + '</td></tr>',
     '<tr><td style="padding:8px 0;color:#a8a8a8;font-size:13px;">Email</td><td style="padding:8px 0;color:#e8e8e8;font-size:14px;"><a href="mailto:' + params.studentEmail + '" style="color:#f59e0b;">' + params.studentEmail + '</a></td></tr>',
     '<tr><td style="padding:8px 0;color:#a8a8a8;font-size:13px;">Type</td><td style="padding:8px 0;color:#e8e8e8;font-size:14px;">' + params.type + '</td></tr>',
     '<tr><td style="padding:8px 0;color:#a8a8a8;font-size:13px;">Date</td><td style="padding:8px 0;color:#e8e8e8;font-size:14px;">' + params.dateLocal + '</td></tr>',
@@ -203,7 +203,7 @@ export async function sendAdminNotification(params: {
   ].join('')
 
   const content = [
-    '<h2 style="color:#f59e0b;font-size:20px;margin:0 0 16px;">Nouvelle reservation</h2>',
+    '<h2 style="color:#f59e0b;font-size:20px;margin:0 0 16px;">Nouvelle réservation</h2>',
     '<table style="width:100%;border-collapse:collapse;">',
     rows,
     '</table>',
@@ -213,7 +213,7 @@ export async function sendAdminNotification(params: {
     const emailData: Parameters<typeof resend.emails.send>[0] = {
       from:    FROM,
       to:      adminEmail,
-      subject: 'Nouvelle reservation - ' + params.studentName + ' - ' + params.type,
+      subject: 'Nouvelle réservation — ' + params.studentName + ' — ' + params.type,
       html:    baseTemplate(content),
     }
     if (params.icsContent) {
@@ -224,14 +224,14 @@ export async function sendAdminNotification(params: {
       }]
     }
     const result = await resend.emails.send(emailData)
-    console.log('Email admin envoye:', result)
+    console.log('Email admin envoyé :', result)
     return result
   } catch (err) {
-    console.error('Erreur email admin:', err)
+    console.error('Erreur email admin :', err)
   }
 }
 
-// ── Email annulation ──────────────────────────────────────────
+// ── Email annulation ──────────────────────────────────────────────────
 export async function sendCancellationEmail(params: {
   studentName:  string
   studentEmail: string
@@ -243,26 +243,26 @@ export async function sendCancellationEmail(params: {
   const byAdmin    = params.cancelledBy === 'admin'
 
   const studentContent = [
-    '<h2 style="color:#f59e0b;font-size:22px;margin:0 0 8px;">Reservation annulee</h2>',
+    '<h2 style="color:#f59e0b;font-size:22px;margin:0 0 8px;">Réservation annulée</h2>',
     '<p style="color:#a8a8a8;font-size:14px;margin:0 0 24px;">Bonjour ' + params.studentName + ',</p>',
     '<div style="background:#1a1a1a;border-left:3px solid #f59e0b;padding:16px 20px;border-radius:4px;margin-bottom:16px;">',
     '<p style="margin:0 0 6px;color:#e8e8e8;font-size:15px;font-weight:bold;">' + params.type + '</p>',
     '<p style="margin:0;color:#a8a8a8;font-size:13px;">' + params.dateLocal + '</p>',
     '</div>',
     byAdmin
-      ? '<p style="color:#d0d0d0;font-size:14px;line-height:1.7;">Votre reservation a ete annulee par votre professeur. N\'hesitez pas a reserver un autre creneau.</p>'
-      : '<p style="color:#d0d0d0;font-size:14px;line-height:1.7;">Votre annulation a bien ete prise en compte. Le creneau est de nouveau disponible.</p>',
-    '<p style="color:#707070;font-size:13px;margin-top:24px;">A bientot,<br/><span style="color:#f59e0b;">Lieu Secret</span></p>',
+      ? '<p style="color:#d0d0d0;font-size:14px;line-height:1.7;">Votre réservation a été annulée par votre professeur. N\'hésitez pas à réserver un autre créneau.</p>'
+      : '<p style="color:#d0d0d0;font-size:14px;line-height:1.7;">Votre annulation a bien été prise en compte. Le créneau est de nouveau disponible.</p>',
+    '<p style="color:#707070;font-size:13px;margin-top:24px;">À bientôt,<br/><span style="color:#f59e0b;">Lieu Secret</span></p>',
   ].join('')
 
   const adminContent = [
-    '<h2 style="color:#f59e0b;font-size:20px;margin:0 0 16px;">Reservation annulee</h2>',
+    '<h2 style="color:#f59e0b;font-size:20px;margin:0 0 16px;">Réservation annulée</h2>',
     '<table style="width:100%;border-collapse:collapse;">',
-    '<tr><td style="padding:8px 0;color:#a8a8a8;font-size:13px;width:140px;">Eleve</td><td style="padding:8px 0;color:#e8e8e8;font-size:14px;">' + params.studentName + '</td></tr>',
+    '<tr><td style="padding:8px 0;color:#a8a8a8;font-size:13px;width:140px;">Élève</td><td style="padding:8px 0;color:#e8e8e8;font-size:14px;">' + params.studentName + '</td></tr>',
     '<tr><td style="padding:8px 0;color:#a8a8a8;font-size:13px;">Email</td><td style="padding:8px 0;color:#e8e8e8;font-size:14px;">' + params.studentEmail + '</td></tr>',
     '<tr><td style="padding:8px 0;color:#a8a8a8;font-size:13px;">Type</td><td style="padding:8px 0;color:#e8e8e8;font-size:14px;">' + params.type + '</td></tr>',
     '<tr><td style="padding:8px 0;color:#a8a8a8;font-size:13px;">Date</td><td style="padding:8px 0;color:#e8e8e8;font-size:14px;">' + params.dateLocal + '</td></tr>',
-    '<tr><td style="padding:8px 0;color:#a8a8a8;font-size:13px;">Annule par</td><td style="padding:8px 0;color:#e8e8e8;font-size:14px;">' + (byAdmin ? 'Administrateur' : 'Eleve') + '</td></tr>',
+    '<tr><td style="padding:8px 0;color:#a8a8a8;font-size:13px;">Annulé par</td><td style="padding:8px 0;color:#e8e8e8;font-size:14px;">' + (byAdmin ? 'Administrateur' : 'Élève') + '</td></tr>',
     '</table>',
   ].join('')
 
@@ -271,17 +271,17 @@ export async function sendCancellationEmail(params: {
       resend.emails.send({
         from:    FROM,
         to:      params.studentEmail,
-        subject: 'Reservation annulee - ' + params.type,
+        subject: 'Réservation annulée — ' + params.type,
         html:    baseTemplate(studentContent),
       }),
       resend.emails.send({
         from:    FROM,
         to:      adminEmail,
-        subject: 'Reservation annulee - ' + params.studentName,
+        subject: 'Réservation annulée — ' + params.studentName,
         html:    baseTemplate(adminContent),
       }),
     ])
   } catch (err) {
-    console.error('Erreur email annulation:', err)
+    console.error('Erreur email annulation :', err)
   }
 }

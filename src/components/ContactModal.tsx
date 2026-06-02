@@ -8,9 +8,9 @@ interface Props {
 }
 
 export default function ContactModal({ onClose }: Props) {
-  const [form, setForm]     = useState({ name: '', email: '', subject: '', message: '' })
+  const [form, setForm]       = useState({ name: '', email: '', subject: '', message: '' })
   const [loading, setLoading] = useState(false)
-  const [error, setError]   = useState('')
+  const [error, setError]     = useState('')
   const [success, setSuccess] = useState(false)
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
@@ -20,7 +20,11 @@ export default function ContactModal({ onClose }: Props) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!form.name || !form.email || !form.message) {
-      setError('Nom, email et message sont requis')
+      setError('Le nom, l\'email et le message sont requis.')
+      return
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      setError('Adresse email invalide.')
       return
     }
     setLoading(true)
@@ -33,7 +37,7 @@ export default function ContactModal({ onClose }: Props) {
       })
       if (!res.ok) {
         const d = await res.json()
-        throw new Error(d.error || 'Erreur')
+        throw new Error(d.error || 'Erreur lors de l\'envoi')
       }
       setSuccess(true)
     } catch (e: unknown) {
@@ -44,11 +48,12 @@ export default function ContactModal({ onClose }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-      <div className="bg-noir-900 border border-noir-700 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-noir-800">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/70 backdrop-blur-sm">
+      <div className="bg-noir-900 border border-noir-700 rounded-t-2xl sm:rounded-2xl w-full max-w-md shadow-2xl overflow-hidden max-h-[95vh] overflow-y-auto">
+
+        <div className="flex items-center justify-between px-6 py-4 border-b border-noir-800 sticky top-0 bg-noir-900 z-10">
           <h2 className="text-white font-serif text-lg">Nous contacter</h2>
-          <button onClick={onClose} className="text-noir-400 hover:text-white transition-colors">
+          <button onClick={onClose} className="text-noir-400 hover:text-white transition-colors p-1">
             <X size={20} />
           </button>
         </div>
@@ -63,7 +68,7 @@ export default function ContactModal({ onClose }: Props) {
             <button onClick={onClose} className="btn-gold">Fermer</button>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <form onSubmit={handleSubmit} className="p-5 sm:p-6 space-y-4">
             <div>
               <label className="label mb-1 block">Votre nom *</label>
               <input name="name" value={form.name} onChange={handleChange} placeholder="Prénom Nom" className="input w-full" />

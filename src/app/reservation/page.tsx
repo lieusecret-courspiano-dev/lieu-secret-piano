@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, useRef, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { DateTime } from 'luxon'
 import { detectTimezone, formatTime } from '@/lib/utils'
@@ -58,55 +58,73 @@ interface Settings {
 }
 
 const DAYS_FR   = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
-const MONTHS_FR = ['Janvier','Fevrier','Mars','Avril','Mai','Juin','Juillet','Aout','Septembre','Octobre','Novembre','Decembre']
-
-
+const MONTHS_FR = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre']
 
 function ReservationContent() {
   const searchParams = useSearchParams()
   const tabParam     = searchParams.get('tab')
   const codeParam    = searchParams.get('code')
 
-  const [timezone, setTimezone]               = useState('Europe/Paris')
-  const [slots, setSlots]                     = useState<GeneratedSlot[]>([])
-  const [events, setEvents]                   = useState<Event[]>([])
-  const [settings, setSettings]               = useState<Settings | null>(null)
-  const [selectedSlot, setSelectedSlot]       = useState<GeneratedSlot | null>(null)
-  const [selectedEvent, setSelectedEvent]     = useState<Event | null>(null)
-  const [showContact, setShowContact]         = useState(false)
-  const [loading, setLoading]                 = useState(true)
-  const [activeTab, setActiveTab]             = useState<'cours' | 'evenements'>(
+  const [timezone, setTimezone]           = useState('Europe/Paris')
+  const [slots, setSlots]                 = useState<GeneratedSlot[]>([])
+  const [events, setEvents]               = useState<Event[]>([])
+  const [settings, setSettings]           = useState<Settings | null>(null)
+  const [selectedSlot, setSelectedSlot]   = useState<GeneratedSlot | null>(null)
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null)
+  const [showContact, setShowContact]     = useState(false)
+  const [loading, setLoading]             = useState(true)
+  const [activeTab, setActiveTab]         = useState<'cours' | 'evenements'>(
     tabParam === 'evenements' ? 'evenements' : 'cours'
   )
-  const [currentMonth, setCurrentMonth]       = useState(() => DateTime.now().startOf('month'))
-  const [selectedDate, setSelectedDate]       = useState<string | null>(null)
-  const [codeInput, setCodeInput]             = useState('')
-  const [codeError, setCodeError]             = useState('')
-  const [accessGranted, setAccessGranted]     = useState(false)
-  const [settingsReady, setSettingsReady]     = useState(false)
+  const [currentMonth, setCurrentMonth]   = useState(() => DateTime.now().startOf('month'))
+  const [selectedDate, setSelectedDate]   = useState<string | null>(null)
+  const [codeInput, setCodeInput]         = useState('')
+  const [codeError, setCodeError]         = useState('')
+  const [accessGranted, setAccessGranted] = useState(false)
+  const [settingsReady, setSettingsReady] = useState(false)
 
-  
+  // Ref pour stocker le code valide (évite les re-renders)
+  const validCodeRef = useRef<string>('')
 
   useEffect(() => {
     setTimezone(detectTimezone())
     fetchData()
   }, [])
 
+  // Vérification du code d'accès — APRÈS chargement des settings
   useEffect(() => {
-    if (!settings) return
+    if (!settings || !settingsReady) return
+
     const validCode = (settings.cours_access_code || '').trim().toLowerCase()
-    if (settingsReady && (!validCode || (codeParam && codeParam.trim().toLowerCase() === validCode))) {
+    validCodeRef.current = validCode
+
+    // Si aucun code requis → accès libre
+    if (!validCode) {
       setAccessGranted(true)
-      try { localStorage.setItem('ls_access_code', codeParam?.trim() ?? '') } catch {}
       return
     }
+
+    // Vérifier le code passé en URL (?code=xxx)
+    if (codeParam && codeParam.trim().toLowerCase() === validCode) {
+      try { localStorage.setItem('ls_access_code', codeParam.trim()) } catch {}
+      setAccessGranted(true)
+      return
+    }
+
+    // Vérifier le code sauvegardé en localStorage
     try {
       const saved = localStorage.getItem('ls_access_code')
-      if (settingsReady && (!validCode || (saved && saved.trim().toLowerCase() === validCode))) setAccessGranted(true)
+      if (saved && saved.trim().toLowerCase() === validCode) {
+        setAccessGranted(true)
+        return
+      }
     } catch {}
-  }, [settings, codeParam])
 
-  // Charger les créneaux quand le mois change
+    // Aucun code valide trouvé → accès refusé
+    setAccessGranted(false)
+  }, [settings, settingsReady, codeParam])
+
+  // Charger les créneaux uniquement si accès accordé
   useEffect(() => {
     if (accessGranted) fetchSlots()
   }, [currentMonth, timezone, accessGranted])
@@ -118,8 +136,10 @@ function ReservationContent() {
         fetch('/api/events'),
         fetch('/api/settings'),
       ])
-      setEvents(Array.isArray(await evRes.json()) ? await evRes.json() : [])
-      setSettings(await stRes.json())
+      const evData = await evRes.json()
+      const stData = await stRes.json()
+      setEvents(Array.isArray(evData) ? evData : [])
+      setSettings(stData)
       setSettingsReady(true)
     } catch (e) {
       console.error(e)
@@ -130,6 +150,9 @@ function ReservationContent() {
   }
 
   async function fetchSlots() {
+    // Double vérification : ne jamais appeler l'API si accès non accordé
+    if (!accessGranted) return
+
     const from = currentMonth.toFormat('yyyy-MM-dd')
     const to   = currentMonth.endOf('month').toFormat('yyyy-MM-dd')
     try {
@@ -141,20 +164,23 @@ function ReservationContent() {
     }
   }
 
-  // Re-fetch events separately
+  // Re-fetch events
   useEffect(() => {
     fetch('/api/events').then(r => r.json()).then(d => setEvents(Array.isArray(d) ? d : [])).catch(() => {})
   }, [])
 
   function handleCodeSubmit(e: React.FormEvent) {
     e.preventDefault()
-    const validCode = (settings?.cours_access_code || '').trim().toLowerCase()
+    const validCode = validCodeRef.current || (settings?.cours_access_code || '').trim().toLowerCase()
+
     if (!validCode || codeInput.trim().toLowerCase() === validCode) {
       try { localStorage.setItem('ls_access_code', codeInput.trim()) } catch {}
       setCodeError('')
       setAccessGranted(true)
     } else {
       setCodeError('Code incorrect. Contactez votre professeur.')
+      // Effacer tout code potentiellement sauvegardé
+      try { localStorage.removeItem('ls_access_code') } catch {}
     }
   }
 
@@ -163,7 +189,6 @@ function ReservationContent() {
     slots.map(s => DateTime.fromISO(s.start, { zone: 'utc' }).setZone(timezone).toFormat('yyyy-MM-dd'))
   )
 
-  // Créneaux pour une date
   function getSlotsForDate(dateStr: string): GeneratedSlot[] {
     return slots.filter(s => {
       const d = DateTime.fromISO(s.start, { zone: 'utc' }).setZone(timezone)
@@ -171,7 +196,6 @@ function ReservationContent() {
     })
   }
 
-  // Calendrier
   function getCalendarDays(): (DateTime | null)[] {
     const firstDay = currentMonth.startOf('month')
     const lastDay  = currentMonth.endOf('month')
@@ -187,9 +211,8 @@ function ReservationContent() {
   const featuredEvent = events.find(e => e.is_featured) || null
 
   const tabCoursLabel  = settings?.tab_cours_label  || 'Cours individuels'
-  const tabEventsLabel = settings?.tab_events_label || 'Ateliers & Evenements'
+  const tabEventsLabel = settings?.tab_events_label || 'Ateliers & Événements'
 
-  // Convertir slot en format Creneau pour BookingModal
   const slotAsCreneau = selectedSlot ? {
     id:         selectedSlot.start,
     start_time: selectedSlot.start,
@@ -216,7 +239,7 @@ function ReservationContent() {
         </div>
       </header>
 
-      {/* EVENEMENT EN VEDETTE */}
+      {/* ÉVÉNEMENT EN VEDETTE */}
       {featuredEvent && !loading && (
         <FeaturedEvent event={featuredEvent} timezone={timezone} onReserve={() => setSelectedEvent(featuredEvent)} />
       )}
@@ -230,10 +253,10 @@ function ReservationContent() {
           </div>
         </div>
         <h1 className="font-serif text-3xl md:text-4xl text-white mb-3 leading-tight">
-          {settings?.hero_title || 'Reservez votre cours de piano'}
+          {settings?.hero_title || 'Réservez votre cours de piano'}
         </h1>
         <p className="text-noir-300 text-base max-w-xl mx-auto">
-          {settings?.hero_subtitle || 'Choisissez un creneau et commencez votre aventure musicale'}
+          {settings?.hero_subtitle || 'Choisissez un créneau et commencez votre aventure musicale'}
         </p>
         <div className="mt-5 inline-flex items-center gap-2 bg-noir-800 border border-noir-700 rounded-full px-4 py-2">
           <span className="text-xs text-noir-400">Fuseau :</span>
@@ -264,6 +287,7 @@ function ReservationContent() {
 
         ) : activeTab === 'cours' ? (
 
+          /* ── Espace élève : vérification du code ── */
           !accessGranted ? (
             <div className="max-w-sm mx-auto text-center py-12">
               <div className="w-14 h-14 rounded-2xl bg-gold-500/10 border border-gold-500/20 flex items-center justify-center mx-auto mb-6">
@@ -272,22 +296,30 @@ function ReservationContent() {
                 </svg>
               </div>
               <h2 className="font-serif text-2xl text-white mb-2">
-                {settings?.espace_eleves_title || 'Espace eleves'}
+                {settings?.espace_eleves_title || 'Espace élèves'}
               </h2>
               <p className="text-noir-400 text-sm mb-8 leading-relaxed">
-                {settings?.espace_eleves_desc || "Les cours individuels sont reserves aux eleves inscrits."}
+                {settings?.espace_eleves_desc || "Les cours individuels sont réservés aux élèves inscrits. Saisissez votre code d'accès pour voir les créneaux disponibles."}
               </p>
               <form onSubmit={handleCodeSubmit} className="space-y-3">
-                <input type="text" value={codeInput} onChange={e => setCodeInput(e.target.value)}
-                  placeholder={settings?.reservation_code_placeholder || "Votre code d'acces"}
-                  className="input w-full text-center tracking-widest" autoComplete="off" />
+                <input
+                  type="password"
+                  value={codeInput}
+                  onChange={e => setCodeInput(e.target.value)}
+                  placeholder={settings?.reservation_code_placeholder || "Votre code d'accès"}
+                  className="input w-full text-center tracking-widest"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck={false}
+                />
                 {codeError && <p className="text-red-400 text-xs">{codeError}</p>}
                 <button type="submit" className="btn-gold w-full">
-                  {settings?.reservation_code_btn || "Acceder aux creneaux"}
+                  {settings?.reservation_code_btn || 'Accéder aux créneaux'}
                 </button>
               </form>
               <p className="text-noir-600 text-xs mt-6">
-                {settings?.reservation_contact_link || "Pas encore eleve ?"}{' '}
+                {settings?.reservation_contact_link || 'Pas encore élève ?'}{' '}
                 <button onClick={() => setShowContact(true)} className="text-gold-500 hover:text-gold-400 underline">
                   Contactez-nous
                 </button>
@@ -295,6 +327,7 @@ function ReservationContent() {
             </div>
 
           ) : (
+            /* ── Calendrier et créneaux (accès accordé) ── */
             <div className="max-w-3xl mx-auto">
               <div className="grid md:grid-cols-2 gap-6">
 
@@ -345,7 +378,7 @@ function ReservationContent() {
                       )
                     })}
                   </div>
-                  <p className="text-xs text-noir-600 mt-3 text-center">Point dore = creneaux disponibles</p>
+                  <p className="text-xs text-noir-600 mt-3 text-center">Point doré = créneaux disponibles</p>
                 </div>
 
                 {/* Créneaux */}
@@ -360,7 +393,7 @@ function ReservationContent() {
                           </svg>
                         </div>
                         <p className="text-noir-400 text-sm">
-                          {settings?.reservation_select_date || "Selectionnez une date pour voir les creneaux"}
+                          {settings?.reservation_select_date || 'Sélectionnez une date pour voir les créneaux'}
                         </p>
                       </div>
                     </div>
@@ -371,7 +404,7 @@ function ReservationContent() {
                       </h3>
                       {getSlotsForDate(selectedDate).length === 0 ? (
                         <p className="text-noir-400 text-sm">
-                          {settings?.reservation_no_slot || "Aucun creneau disponible ce jour."}
+                          {settings?.reservation_no_slot || 'Aucun créneau disponible ce jour.'}
                         </p>
                       ) : (
                         <div className="space-y-2">
@@ -386,11 +419,11 @@ function ReservationContent() {
                                     {formatTime(slot.start, timezone)}
                                   </div>
                                   <div className="text-noir-400 text-xs mt-0.5">
-                                    jusqu'a {formatTime(slot.end, timezone)}
+                                    jusqu&apos;à {formatTime(slot.end, timezone)}
                                   </div>
                                 </div>
                                 <span className="text-xs text-gold-500 opacity-0 group-hover:opacity-100 transition-opacity">
-                                  Reserver →
+                                  Réserver →
                                 </span>
                               </div>
                             </button>
@@ -405,6 +438,7 @@ function ReservationContent() {
           )
 
         ) : (
+          /* ── Onglet Événements ── */
           <div>
             {events.length === 0 ? (
               <div className="text-center py-16 text-noir-400">
@@ -413,7 +447,7 @@ function ReservationContent() {
                     <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
                   </svg>
                 </div>
-                <p className="text-lg">Aucun evenement a venir pour le moment.</p>
+                <p className="text-lg">Aucun événement à venir pour le moment.</p>
               </div>
             ) : (
               <div className="grid md:grid-cols-2 gap-6">
@@ -431,7 +465,7 @@ function ReservationContent() {
         <div className="max-w-5xl mx-auto px-4 text-center">
           <div className="w-px h-6 bg-gold-500/40 mx-auto mb-4" />
           <p className="font-serif text-gold-400 tracking-widest text-sm mb-2">LIEU SECRET</p>
-          <p className="text-noir-500 text-xs mb-4">Ecole de Piano en Ligne</p>
+          <p className="text-noir-500 text-xs mb-4">École de Piano en Ligne</p>
           {settings?.contact_email && (
             <a href={`mailto:${settings.contact_email}`} className="text-gold-500 text-sm hover:text-gold-400 transition-colors block mb-4">
               {settings.contact_email}

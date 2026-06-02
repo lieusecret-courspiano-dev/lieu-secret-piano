@@ -5,19 +5,18 @@ import { Suspense, useEffect, useState } from 'react'
 import Link from 'next/link'
 
 function ConfirmationContent() {
-  const params    = useSearchParams()
-  const sessionId = params.get('session_id')
-  const type      = params.get('type') || 'cours'
-  const nameParam = params.get('name') || ''
+  const params     = useSearchParams()
+  const sessionId  = params.get('session_id')
+  const type       = params.get('type') || 'cours'
+  const nameParam  = params.get('name')  || ''
   const emailParam = params.get('email') || ''
 
-  const [status, setStatus]   = useState<'loading' | 'done' | 'error'>('loading')
+  const [status, setStatus]             = useState<'loading' | 'done' | 'error'>('loading')
   const [studentName, setStudentName]   = useState(nameParam)
   const [studentEmail, setStudentEmail] = useState(emailParam)
   const [eventTitle, setEventTitle]     = useState('')
 
   useEffect(() => {
-    // Si paiement Stripe — appeler le fallback pour créer la réservation et envoyer les emails
     if (sessionId && type === 'event') {
       fetch(`/api/stripe/confirm?session_id=${sessionId}`)
         .then(r => r.json())
@@ -29,7 +28,7 @@ function ConfirmationContent() {
           }
           setStatus('done')
         })
-        .catch(() => setStatus('done')) // Afficher quand même la confirmation
+        .catch(() => setStatus('done'))
     } else {
       setStatus('done')
     }
@@ -40,7 +39,7 @@ function ConfirmationContent() {
       <div className="min-h-screen bg-noir-950 flex items-center justify-center">
         <div className="text-center">
           <div className="w-10 h-10 border-2 border-gold-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-noir-400 text-sm">Confirmation de votre paiement...</p>
+          <p className="text-noir-400 text-sm">Confirmation de votre paiement en cours…</p>
         </div>
       </div>
     )
@@ -54,7 +53,7 @@ function ConfirmationContent() {
           <img src="/piano-hero.jpg" alt="Piano" className="w-full h-full object-cover opacity-80" />
         </div>
 
-        {/* Icone succes */}
+        {/* Icône succès */}
         <div className="w-14 h-14 rounded-full bg-green-500/20 border border-green-500/40 flex items-center justify-center mx-auto mb-6">
           <svg width="26" height="26" fill="none" stroke="#4ade80" strokeWidth="2.5" viewBox="0 0 24 24">
             <polyline points="20 6 9 17 4 12"/>
@@ -64,7 +63,7 @@ function ConfirmationContent() {
         <div className="w-px h-5 bg-gold-500/40 mx-auto mb-4" />
 
         <h1 className="font-serif text-3xl text-white mb-4">
-          {type === 'event' ? 'Inscription confirmee !' : 'Reservation confirmee !'}
+          {type === 'event' ? 'Inscription confirmée !' : 'Réservation confirmée !'}
         </h1>
 
         {studentName && (
@@ -79,18 +78,18 @@ function ConfirmationContent() {
 
         <p className="text-noir-400 text-sm mb-6 leading-relaxed">
           {type === 'event'
-            ? 'Votre paiement a ete accepte et votre inscription est confirmee.'
-            : 'Votre reservation a bien ete enregistree.'
+            ? 'Votre paiement a été accepté et votre inscription est confirmée.'
+            : 'Votre réservation a bien été enregistrée.'
           }
           {studentEmail && (
-            <> Un email de confirmation avec le fichier calendrier (.ics) a ete envoye a <strong className="text-gold-400">{studentEmail}</strong>.</>
+            <> Un email de confirmation avec le fichier calendrier (.ics) a été envoyé à <strong className="text-gold-400">{studentEmail}</strong>.</>
           )}
         </p>
 
         <div className="bg-noir-900 border border-noir-700 rounded-xl p-4 mb-8 text-left">
-          <h3 className="text-gold-400 text-sm font-medium mb-3">Ajouter a votre agenda</h3>
+          <h3 className="text-gold-400 text-sm font-medium mb-3">Ajouter à votre agenda</h3>
           <p className="text-noir-400 text-xs leading-relaxed">
-            Ouvrez l'email de confirmation et cliquez sur le fichier <strong className="text-white">.ics</strong> joint pour ajouter automatiquement ce rendez-vous dans :
+            Ouvrez l&apos;email de confirmation et cliquez sur le fichier <strong className="text-white">.ics</strong> joint pour ajouter automatiquement ce rendez-vous dans :
           </p>
           <ul className="mt-2 space-y-1 text-xs text-noir-400">
             <li>— <strong className="text-white">Outlook</strong> — double-cliquez sur le fichier .ics</li>
@@ -100,7 +99,7 @@ function ConfirmationContent() {
         </div>
 
         <Link href="/" className="btn-gold inline-block">
-          Retour a l'accueil
+          Retour à l&apos;accueil
         </Link>
       </div>
     </div>
