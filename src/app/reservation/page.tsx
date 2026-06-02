@@ -60,6 +60,9 @@ interface Settings {
 const DAYS_FR   = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
 const MONTHS_FR = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre']
 
+// Clé localStorage
+const LS_KEY = 'ls_access_code'
+
 function ReservationContent() {
   const searchParams = useSearchParams()
   const tabParam     = searchParams.get('tab')
@@ -81,50 +84,30 @@ function ReservationContent() {
   const [codeInput, setCodeInput]         = useState('')
   const [codeError, setCodeError]         = useState('')
   const [accessGranted, setAccessGranted] = useState(false)
-  const [settingsReady, setSettingsReady] = useState(false)
+  const [checkingCode, setCheckingCode]   = useState(false)
 
-  // Ref pour stocker le code valide (évite les re-renders)
-  const validCodeRef = useRef<string>('')
+  // Code validé stocké en mémoire (jamais exposé sans vérification serveur)
+  const validatedCodeRef = useRef<string>('')
 
   useEffect(() => {
     setTimezone(detectTimezone())
     fetchData()
   }, [])
 
-  // Vérification du code d'accès — APRÈS chargement des settings
+  // Tenter l'accès automatique via code URL ou localStorage — TOUJOURS vérifié côté serveur
   useEffect(() => {
-    if (!settings || !settingsReady) return
+    if (!settings) return
 
-    const validCode = (settings.cours_access_code || '').trim().toLowerCase()
-    validCodeRef.current = validCode
+    const codeToTry = codeParam?.trim() || (() => {
+      try { return localStorage.getItem(LS_KEY) || '' } catch { return '' }
+    })()
 
-    // Si aucun code requis → accès libre
-    if (!validCode) {
-      setAccessGranted(true)
-      return
+    if (codeToTry) {
+      verifyCodeWithServer(codeToTry)
     }
+  }, [settings, codeParam])
 
-    // Vérifier le code passé en URL (?code=xxx)
-    if (codeParam && codeParam.trim().toLowerCase() === validCode) {
-      try { localStorage.setItem('ls_access_code', codeParam.trim()) } catch {}
-      setAccessGranted(true)
-      return
-    }
-
-    // Vérifier le code sauvegardé en localStorage
-    try {
-      const saved = localStorage.getItem('ls_access_code')
-      if (saved && saved.trim().toLowerCase() === validCode) {
-        setAccessGranted(true)
-        return
-      }
-    } catch {}
-
-    // Aucun code valide trouvé → accès refusé
-    setAccessGranted(false)
-  }, [settings, settingsReady, codeParam])
-
-  // Charger les créneaux uniquement si accès accordé
+  // Charger les créneaux uniquement si accès accordé — en passant le code à l'API
   useEffect(() => {
     if (accessGranted) fetchSlots()
   }, [currentMonth, timezone, accessGranted])
@@ -140,23 +123,60 @@ function ReservationContent() {
       const stData = await stRes.json()
       setEvents(Array.isArray(evData) ? evData : [])
       setSettings(stData)
-      setSettingsReady(true)
     } catch (e) {
       console.error(e)
-      setSettingsReady(true)
     } finally {
       setLoading(false)
     }
   }
 
-  async function fetchSlots() {
-    // Double vérification : ne jamais appeler l'API si accès non accordé
-    if (!accessGranted) return
+  // ── Vérification du code CÔTÉ SERVEUR ─────────────────────
+  async function verifyCodeWithServer(code: string): Promise<boolean> {
+    if (!code.trim()) return false
+    setCheckingCode(true)
+    try {
+      const from = DateTime.now().toFormat('yyyy-MM-dd')
+      const to   = DateTime.now().plus({ days: 1 }).toFormat('yyyy-MM-dd')
+      const res  = await fetch(
+        `/api/availability/slots?from=${from}&to=${to}&tz=${encodeURIComponent(timezone)}&code=${encodeURIComponent(code.trim())}`
+      )
+      if (res.ok || res.status !== 401) {
+        // Code accepté par le serveur
+        validatedCodeRef.current = code.trim()
+        try { localStorage.setItem(LS_KEY, code.trim()) } catch {}
+        setAccessGranted(true)
+        setCodeError('')
+        return true
+      } else {
+        // Code refusé par le serveur
+        validatedCodeRef.current = ''
+        try { localStorage.removeItem(LS_KEY) } catch {}
+        setAccessGranted(false)
+        return false
+      }
+    } catch {
+      return false
+    } finally {
+      setCheckingCode(false)
+    }
+  }
 
+  async function fetchSlots() {
+    if (!accessGranted || !validatedCodeRef.current) return
     const from = currentMonth.toFormat('yyyy-MM-dd')
     const to   = currentMonth.endOf('month').toFormat('yyyy-MM-dd')
     try {
-      const res  = await fetch(`/api/availability/slots?from=${from}&to=${to}&tz=${encodeURIComponent(timezone)}`)
+      const res  = await fetch(
+        `/api/availability/slots?from=${from}&to=${to}&tz=${encodeURIComponent(timezone)}&code=${encodeURIComponent(validatedCodeRef.current)}`
+      )
+      if (res.status === 401) {
+        // Code devenu invalide (changé par l'admin) → révoquer l'accès
+        setAccessGranted(false)
+        validatedCodeRef.current = ''
+        try { localStorage.removeItem(LS_KEY) } catch {}
+        setSlots([])
+        return
+      }
       const data = await res.json()
       setSlots(Array.isArray(data) ? data : [])
     } catch {
@@ -169,18 +189,15 @@ function ReservationContent() {
     fetch('/api/events').then(r => r.json()).then(d => setEvents(Array.isArray(d) ? d : [])).catch(() => {})
   }, [])
 
-  function handleCodeSubmit(e: React.FormEvent) {
+  async function handleCodeSubmit(e: React.FormEvent) {
     e.preventDefault()
-    const validCode = validCodeRef.current || (settings?.cours_access_code || '').trim().toLowerCase()
-
-    if (!validCode || codeInput.trim().toLowerCase() === validCode) {
-      try { localStorage.setItem('ls_access_code', codeInput.trim()) } catch {}
-      setCodeError('')
-      setAccessGranted(true)
-    } else {
+    if (!codeInput.trim()) {
+      setCodeError('Veuillez saisir votre code d\'accès.')
+      return
+    }
+    const ok = await verifyCodeWithServer(codeInput.trim())
+    if (!ok) {
       setCodeError('Code incorrect. Contactez votre professeur.')
-      // Effacer tout code potentiellement sauvegardé
-      try { localStorage.removeItem('ls_access_code') } catch {}
     }
   }
 
@@ -305,17 +322,23 @@ function ReservationContent() {
                 <input
                   type="password"
                   value={codeInput}
-                  onChange={e => setCodeInput(e.target.value)}
+                  onChange={e => { setCodeInput(e.target.value); setCodeError('') }}
                   placeholder={settings?.reservation_code_placeholder || "Votre code d'accès"}
                   className="input w-full text-center tracking-widest"
                   autoComplete="off"
                   autoCorrect="off"
                   autoCapitalize="off"
                   spellCheck={false}
+                  disabled={checkingCode}
                 />
                 {codeError && <p className="text-red-400 text-xs">{codeError}</p>}
-                <button type="submit" className="btn-gold w-full">
-                  {settings?.reservation_code_btn || 'Accéder aux créneaux'}
+                <button type="submit" className="btn-gold w-full" disabled={checkingCode}>
+                  {checkingCode ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <span className="w-4 h-4 border-2 border-noir-900 border-t-transparent rounded-full animate-spin" />
+                      Vérification…
+                    </span>
+                  ) : (settings?.reservation_code_btn || 'Accéder aux créneaux')}
                 </button>
               </form>
               <p className="text-noir-600 text-xs mt-6">
