@@ -68,6 +68,13 @@ interface Settings {
   zoom_evenement: string
   stripe_public_key: string
   cours_access_code: string
+  // Professeur
+  prof_nom: string
+  prof_titre: string
+  prof_photo: string
+  prof_bio: string
+  prof_parcours: string
+  prof_pedagogie: string
   tab_cours_label: string
   tab_events_label: string
   espace_eleves_title: string
@@ -99,6 +106,7 @@ const EMPTY: Settings = {
   stats_label1: '', stats_label2: '', stats_label3: '', stats_label4: '',
   zoom_cours: '', zoom_atelier: '', zoom_masterclass: '', zoom_evenement: '',
   stripe_public_key: '', cours_access_code: '',
+  prof_nom: '', prof_titre: '', prof_photo: '', prof_bio: '', prof_parcours: '', prof_pedagogie: '',
   tab_cours_label: '', tab_events_label: '',
   espace_eleves_title: '', espace_eleves_desc: '',
   reservation_titre: '', reservation_no_slot: '',
@@ -112,22 +120,22 @@ type Section = {
 
 const SECTIONS: Section[] = [
   {
-    title: 'Informations generales',
+    title: 'Informations générales',
     fields: [
-      { key: 'site_title',       label: 'Titre du site',    type: 'text',     placeholder: 'Lieu Secret — Ecole de Piano' },
+      { key: 'site_title',       label: 'Titre du site',    type: 'text',     placeholder: 'Lieu Secret — École de Piano' },
       { key: 'site_description', label: 'Description',      type: 'textarea', placeholder: 'Description du site...' },
       { key: 'contact_email',    label: 'Email de contact', type: 'email',    placeholder: 'contact@lieusecret-courspiano.fr' },
-      { key: 'phone',            label: 'Telephone',        type: 'text',     placeholder: '+33 6 00 00 00 00' },
+      { key: 'phone',            label: 'Téléphone',        type: 'text',     placeholder: '+33 6 00 00 00 00' },
     ],
   },
   {
     title: 'Hero — Titre et sous-titre',
     fields: [
       { key: 'hero_title',    label: 'Titre principal (ligne 1)', type: 'text',     placeholder: "L'art du piano," },
-      { key: 'hero_title2',   label: 'Titre ligne 2 (en dore)',   type: 'text',     placeholder: 'a votre rythme' },
+      { key: 'hero_title2',   label: 'Titre ligne 2 (en doré)',   type: 'text',     placeholder: 'à votre rythme' },
       { key: 'hero_subtitle', label: 'Sous-titre',                type: 'textarea', placeholder: 'Cours individuels, ateliers...' },
-      { key: 'hero_btn1',     label: 'Bouton principal (dore)',   type: 'text',     placeholder: 'Reserver un creneau' },
-      { key: 'hero_btn2',     label: 'Bouton secondaire',         type: 'text',     placeholder: 'Decouvrir les offres' },
+      { key: 'hero_btn1',     label: 'Bouton principal (doré)',   type: 'text',     placeholder: 'Réserver un créneau' },
+      { key: 'hero_btn2',     label: 'Bouton secondaire',         type: 'text',     placeholder: 'Découvrir les offres' },
     ],
   },
   {
@@ -136,26 +144,37 @@ const SECTIONS: Section[] = [
       { key: 'stats_label1', label: 'Stat 1 (format: Valeur Description)', type: 'text', placeholder: '100% En ligne' },
       { key: 'stats_label2', label: 'Stat 2', type: 'text', placeholder: '1h Cours individuel' },
       { key: 'stats_label3', label: 'Stat 3', type: 'text', placeholder: 'Monde entier Fuseaux horaires' },
-      { key: 'stats_label4', label: 'Stat 4', type: 'text', placeholder: 'Tous niveaux Debutant a avance' },
+      { key: 'stats_label4', label: 'Stat 4', type: 'text', placeholder: 'Tous niveaux Débutant à avancé' },
     ],
   },
   {
-    title: 'Section A propos',
+    title: 'Votre professeur',
     fields: [
-      { key: 'apropos_titre',  label: 'Titre',              type: 'text',     placeholder: 'Un espace musical unique et bienveillant' },
-      { key: 'apropos_texte1', label: 'Paragraphe 1',       type: 'textarea', placeholder: 'Lieu Secret est une ecole...' },
-      { key: 'apropos_texte2', label: 'Paragraphe 2',       type: 'textarea', placeholder: 'Chaque cours est une invitation...' },
-      { key: 'apropos_point1', label: 'Point cle 1',        type: 'text',     placeholder: 'Cours 100% en ligne via Zoom' },
-      { key: 'apropos_point2', label: 'Point cle 2',        type: 'text',     placeholder: 'Creneaux flexibles' },
-      { key: 'apropos_point3', label: 'Point cle 3',        type: 'text',     placeholder: 'Gestion fuseaux horaires' },
-      { key: 'apropos_point4', label: 'Point cle 4',        type: 'text',     placeholder: 'Confirmation par email avec .ics' },
+      { key: 'prof_nom',       label: 'Nom complet',          type: 'text',     placeholder: 'Prénom Nom' },
+      { key: 'prof_titre',     label: 'Titre / Spécialité',   type: 'text',     placeholder: 'Pianiste & Pédagogue' },
+      { key: 'prof_photo',     label: 'URL de la photo',      type: 'text',     placeholder: 'https://... (lien direct vers votre photo)' },
+      { key: 'prof_bio',       label: 'Biographie',           type: 'textarea', placeholder: 'Présentez-vous en quelques lignes...' },
+      { key: 'prof_parcours',  label: 'Parcours',             type: 'textarea', placeholder: 'Vos études, diplômes, expériences...' },
+      { key: 'prof_pedagogie', label: 'Pédagogie',            type: 'textarea', placeholder: 'Votre approche pédagogique, vos méthodes...' },
+    ],
+  },
+  {
+    title: 'Section À propos',
+    fields: [
+      { key: 'apropos_titre',  label: 'Titre',         type: 'text',     placeholder: 'Un espace musical unique et bienveillant' },
+      { key: 'apropos_texte1', label: 'Paragraphe 1',  type: 'textarea', placeholder: 'Lieu Secret est une école...' },
+      { key: 'apropos_texte2', label: 'Paragraphe 2',  type: 'textarea', placeholder: 'Chaque cours est une invitation...' },
+      { key: 'apropos_point1', label: 'Point clé 1',   type: 'text',     placeholder: 'Cours 100% en ligne via Zoom' },
+      { key: 'apropos_point2', label: 'Point clé 2',   type: 'text',     placeholder: 'Créneaux flexibles' },
+      { key: 'apropos_point3', label: 'Point clé 3',   type: 'text',     placeholder: 'Gestion fuseaux horaires' },
+      { key: 'apropos_point4', label: 'Point clé 4',   type: 'text',     placeholder: 'Confirmation par email avec .ics' },
     ],
   },
   {
     title: 'Section Nos offres',
     fields: [
-      { key: 'offres_titre',      label: 'Titre de la section',  type: 'text', placeholder: 'Choisissez votre formule' },
-      { key: 'offres_sous_titre', label: 'Sous-titre',           type: 'text', placeholder: 'Des cours adaptes a chaque profil...' },
+      { key: 'offres_titre',      label: 'Titre de la section', type: 'text', placeholder: 'Choisissez votre formule' },
+      { key: 'offres_sous_titre', label: 'Sous-titre',          type: 'text', placeholder: 'Des cours adaptés à chaque profil...' },
     ],
   },
   {
@@ -163,12 +182,12 @@ const SECTIONS: Section[] = [
     fields: [
       { key: 'offre1_titre', label: 'Titre',       type: 'text',     placeholder: 'Cours individuel' },
       { key: 'offre1_sous',  label: 'Sous-titre',  type: 'text',     placeholder: 'Sur mesure' },
-      { key: 'offre1_desc',  label: 'Description', type: 'textarea', placeholder: 'Un cours dedie entierement a vous...' },
-      { key: 'offre1_btn',   label: 'Bouton',      type: 'text',     placeholder: 'Reserver un creneau' },
-      { key: 'offre1_f1',    label: 'Point 1',     type: 'text',     placeholder: '1h de cours en tete-a-tete' },
-      { key: 'offre1_f2',    label: 'Point 2',     type: 'text',     placeholder: 'Creneau flexible' },
-      { key: 'offre1_f3',    label: 'Point 3',     type: 'text',     placeholder: 'Suivi personnalise' },
-      { key: 'offre1_f4',    label: 'Point 4',     type: 'text',     placeholder: 'Lien Zoom envoye par email' },
+      { key: 'offre1_desc',  label: 'Description', type: 'textarea', placeholder: 'Un cours dédié entièrement à vous...' },
+      { key: 'offre1_btn',   label: 'Bouton',      type: 'text',     placeholder: 'Réserver un créneau' },
+      { key: 'offre1_f1',    label: 'Point 1',     type: 'text',     placeholder: '1h de cours en tête-à-tête' },
+      { key: 'offre1_f2',    label: 'Point 2',     type: 'text',     placeholder: 'Créneau flexible' },
+      { key: 'offre1_f3',    label: 'Point 3',     type: 'text',     placeholder: 'Suivi personnalisé' },
+      { key: 'offre1_f4',    label: 'Point 4',     type: 'text',     placeholder: 'Lien Zoom envoyé par email' },
     ],
   },
   {
@@ -178,9 +197,9 @@ const SECTIONS: Section[] = [
       { key: 'offre2_sous',  label: 'Sous-titre',  type: 'text',     placeholder: 'Collectif' },
       { key: 'offre2_desc',  label: 'Description', type: 'textarea', placeholder: 'Apprenez en groupe...' },
       { key: 'offre2_btn',   label: 'Bouton',      type: 'text',     placeholder: 'Voir les ateliers' },
-      { key: 'offre2_f1',    label: 'Point 1',     type: 'text',     placeholder: "Jusqu'a 8 participants" },
-      { key: 'offre2_f2',    label: 'Point 2',     type: 'text',     placeholder: "Theme defini a l'avance" },
-      { key: 'offre2_f3',    label: 'Point 3',     type: 'text',     placeholder: 'Echanges et partage' },
+      { key: 'offre2_f1',    label: 'Point 1',     type: 'text',     placeholder: "Jusqu'à 8 participants" },
+      { key: 'offre2_f2',    label: 'Point 2',     type: 'text',     placeholder: "Thème défini à l'avance" },
+      { key: 'offre2_f3',    label: 'Point 3',     type: 'text',     placeholder: 'Échanges et partage' },
       { key: 'offre2_f4',    label: 'Point 4',     type: 'text',     placeholder: 'Gratuit ou payant' },
     ],
   },
@@ -191,42 +210,42 @@ const SECTIONS: Section[] = [
       { key: 'offre3_sous',  label: 'Sous-titre',  type: 'text',     placeholder: 'Perfectionnement' },
       { key: 'offre3_desc',  label: 'Description', type: 'textarea', placeholder: 'Poussez votre technique...' },
       { key: 'offre3_btn',   label: 'Bouton',      type: 'text',     placeholder: 'Voir les masterclass' },
-      { key: 'offre3_f1',    label: 'Point 1',     type: 'text',     placeholder: 'Niveau intermediaire/avance' },
+      { key: 'offre3_f1',    label: 'Point 1',     type: 'text',     placeholder: 'Niveau intermédiaire/avancé' },
       { key: 'offre3_f2',    label: 'Point 2',     type: 'text',     placeholder: 'Technique approfondie' },
       { key: 'offre3_f3',    label: 'Point 3',     type: 'text',     placeholder: 'Petits groupes (6 max)' },
       { key: 'offre3_f4',    label: 'Point 4',     type: 'text',     placeholder: 'Enregistrement disponible' },
     ],
   },
   {
-    title: 'Section Comment ca marche',
+    title: 'Section Comment ça marche',
     fields: [
-      { key: 'steps_label', label: 'Label (petit texte)', type: 'text', placeholder: 'Simple et rapide' },
-      { key: 'steps_titre', label: 'Titre',               type: 'text', placeholder: 'Comment ca marche ?' },
+      { key: 'steps_label', label: 'Label',  type: 'text', placeholder: 'Simple et rapide' },
+      { key: 'steps_titre', label: 'Titre',  type: 'text', placeholder: 'Comment ça marche ?' },
     ],
   },
   {
-    title: 'Bandeau Pret a commencer',
+    title: 'Bandeau Prêt à commencer',
     fields: [
-      { key: 'cta_titre',      label: 'Titre',      type: 'text', placeholder: 'Pret(e) a commencer ?' },
-      { key: 'cta_sous_titre', label: 'Sous-titre', type: 'text', placeholder: 'Reservez votre premier cours...' },
+      { key: 'cta_titre',      label: 'Titre',      type: 'text', placeholder: 'Prêt(e) à commencer ?' },
+      { key: 'cta_sous_titre', label: 'Sous-titre', type: 'text', placeholder: 'Réservez votre premier cours...' },
     ],
   },
   {
-    title: 'Page de reservation — Textes',
+    title: 'Page de réservation — Textes',
     fields: [
-      { key: 'tab_cours_label',     label: 'Onglet Cours individuels',  type: 'text',     placeholder: 'Cours individuels' },
-      { key: 'tab_events_label',    label: 'Onglet Ateliers/Evenements', type: 'text',    placeholder: 'Ateliers & Evenements' },
-      { key: 'espace_eleves_title',        label: 'Titre espace eleves',          type: 'text',     placeholder: 'Espace eleves' },
-      { key: 'espace_eleves_desc',         label: 'Description espace eleves',    type: 'textarea', placeholder: 'Les cours individuels sont reserves...' },
-      { key: 'reservation_code_placeholder', label: 'Placeholder code acces',      type: 'text',     placeholder: "Votre code d'acces" },
-      { key: 'reservation_code_btn',       label: 'Bouton acces creneaux',        type: 'text',     placeholder: 'Acceder aux creneaux' },
-      { key: 'reservation_contact_link',   label: 'Texte lien contact',           type: 'text',     placeholder: 'Pas encore eleve ?' },
-      { key: 'reservation_select_date',    label: 'Message selection date',       type: 'text',     placeholder: 'Selectionnez une date pour voir les creneaux' },
-      { key: 'reservation_no_slot',        label: 'Message aucun creneau',        type: 'text',     placeholder: 'Aucun creneau disponible ce jour.' },
+      { key: 'tab_cours_label',              label: 'Onglet Cours individuels',    type: 'text',     placeholder: 'Cours individuels' },
+      { key: 'tab_events_label',             label: 'Onglet Ateliers/Événements',  type: 'text',     placeholder: 'Ateliers & Événements' },
+      { key: 'espace_eleves_title',          label: 'Titre espace élèves',         type: 'text',     placeholder: 'Espace élèves' },
+      { key: 'espace_eleves_desc',           label: 'Description espace élèves',   type: 'textarea', placeholder: 'Les cours individuels sont réservés...' },
+      { key: 'reservation_code_placeholder', label: 'Placeholder code accès',      type: 'text',     placeholder: "Votre code d'accès" },
+      { key: 'reservation_code_btn',         label: 'Bouton accès créneaux',       type: 'text',     placeholder: 'Accéder aux créneaux' },
+      { key: 'reservation_contact_link',     label: 'Texte lien contact',          type: 'text',     placeholder: 'Pas encore élève ?' },
+      { key: 'reservation_select_date',      label: 'Message sélection date',      type: 'text',     placeholder: 'Sélectionnez une date pour voir les créneaux' },
+      { key: 'reservation_no_slot',          label: 'Message aucun créneau',       type: 'text',     placeholder: 'Aucun créneau disponible ce jour.' },
     ],
   },
   {
-    title: 'Reseaux sociaux',
+    title: 'Réseaux sociaux',
     fields: [
       { key: 'instagram', label: 'Instagram (URL)', type: 'url', placeholder: 'https://instagram.com/lieusecret' },
       { key: 'facebook',  label: 'Facebook (URL)',  type: 'url', placeholder: 'https://facebook.com/lieusecret' },
@@ -237,9 +256,9 @@ const SECTIONS: Section[] = [
   {
     title: 'Virement bancaire',
     fields: [
-      { key: 'virement_nom',  label: 'Nom du beneficiaire', type: 'text',     placeholder: 'Lieu Secret' },
+      { key: 'virement_nom',  label: 'Nom du bénéficiaire', type: 'text',     placeholder: 'Lieu Secret' },
       { key: 'virement_iban', label: 'IBAN',                type: 'text',     placeholder: 'FR76 ...' },
-      { key: 'virement_info', label: 'Instructions',        type: 'textarea', placeholder: 'Precisez votre nom...' },
+      { key: 'virement_info', label: 'Instructions',        type: 'textarea', placeholder: 'Précisez votre nom...' },
     ],
   },
 ]
@@ -287,8 +306,8 @@ export default function AdminParametres() {
     try {
       const res  = await fetch('/api/test-email', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: testEmail }) })
       const data = await res.json()
-      setTestMsg(res.ok ? 'Email envoye avec succes !' : 'Erreur : ' + data.error)
-    } catch { setTestMsg('Erreur reseau') }
+      setTestMsg(res.ok ? 'Email envoyé avec succès !' : 'Erreur : ' + data.error)
+    } catch { setTestMsg('Erreur réseau') }
   }
 
   if (fetching) {
@@ -298,8 +317,8 @@ export default function AdminParametres() {
   return (
     <div className="p-6 md:p-8 pb-24 md:pb-8 max-w-2xl">
       <div className="mb-6">
-        <h1 className="text-2xl font-serif text-white">Parametres</h1>
-        <p className="text-noir-400 text-sm mt-1">Personnalisez tous les textes et parametres de votre site</p>
+        <h1 className="text-2xl font-serif text-white">Paramètres</h1>
+        <p className="text-noir-400 text-sm mt-1">Personnalisez tous les textes et paramètres de votre site</p>
       </div>
 
       <form onSubmit={handleSave} className="space-y-6">
@@ -332,7 +351,7 @@ export default function AdminParametres() {
               { key: 'zoom_cours',       label: 'Cours individuel' },
               { key: 'zoom_atelier',     label: 'Atelier de groupe' },
               { key: 'zoom_masterclass', label: 'Masterclass' },
-              { key: 'zoom_evenement',   label: 'Evenement / Autre' },
+              { key: 'zoom_evenement',   label: 'Événement / Autre' },
             ].map(item => (
               <div key={item.key}>
                 <label className="label mb-1 block">{item.label}</label>
@@ -342,19 +361,19 @@ export default function AdminParametres() {
           </div>
         </div>
 
-        {/* Stripe + Code acces */}
+        {/* Stripe + Code accès */}
         <div className="card border-gold-500/20">
-          <h2 className="text-gold-400 font-medium text-sm uppercase tracking-wider mb-2">Paiement Stripe + Acces eleves</h2>
+          <h2 className="text-gold-400 font-medium text-sm uppercase tracking-wider mb-2">Paiement Stripe + Accès élèves</h2>
           <div className="space-y-4">
             <div>
-              <label className="label mb-1 block">Cle publique Stripe (pk_live_...)</label>
+              <label className="label mb-1 block">Clé publique Stripe (pk_live_...)</label>
               <input type="text" value={settings.stripe_public_key || ''} onChange={e => handleChange('stripe_public_key', e.target.value)} placeholder="pk_live_..." className="input w-full font-mono text-xs" />
-              <p className="text-xs text-noir-600 mt-1">La cle secrete doit etre dans les variables Vercel : STRIPE_SECRET_KEY</p>
+              <p className="text-xs text-noir-600 mt-1">La clé secrète doit être dans les variables Vercel : STRIPE_SECRET_KEY</p>
             </div>
             <div>
-              <label className="label mb-1 block">Code d'acces cours individuels</label>
+              <label className="label mb-1 block">Code d&apos;accès cours individuels</label>
               <input type="text" value={settings.cours_access_code || ''} onChange={e => handleChange('cours_access_code', e.target.value)} placeholder="ex: piano2025" className="input w-full" />
-              <p className="text-xs text-noir-500 mt-1">Lien a envoyer aux eleves : lieusecret-courspiano.fr/reservation?code=VOTRE-CODE</p>
+              <p className="text-xs text-noir-500 mt-1">Lien à envoyer aux élèves : lieusecret-courspiano.fr/reservation?code=VOTRE-CODE</p>
             </div>
           </div>
         </div>
@@ -362,19 +381,19 @@ export default function AdminParametres() {
         {/* Test email */}
         <div className="card border-noir-700">
           <h2 className="text-gold-400 font-medium text-sm uppercase tracking-wider mb-3">Tester les emails</h2>
-          <p className="text-noir-500 text-xs mb-3">Verifiez que Resend est bien configure.</p>
+          <p className="text-noir-500 text-xs mb-3">Vérifiez que Resend est bien configuré.</p>
           <div className="flex gap-2">
             <input type="email" value={testEmail} onChange={e => setTestEmail(e.target.value)} placeholder="votre@email.fr" className="input flex-1" />
             <button type="button" onClick={handleTestEmail} className="btn-gold px-4 text-sm">Tester</button>
           </div>
-          {testMsg && <p className={`text-xs mt-2 ${testMsg.includes('succes') ? 'text-green-400' : 'text-red-400'}`}>{testMsg}</p>}
+          {testMsg && <p className={`text-xs mt-2 ${testMsg.includes('succès') ? 'text-green-400' : 'text-red-400'}`}>{testMsg}</p>}
         </div>
 
-        {/* Acces admin */}
+        {/* Accès admin */}
         <div className="card border-noir-700">
-          <h2 className="text-gold-400 font-medium text-sm uppercase tracking-wider mb-3">Acces administrateur</h2>
+          <h2 className="text-gold-400 font-medium text-sm uppercase tracking-wider mb-3">Accès administrateur</h2>
           <p className="text-noir-400 text-sm leading-relaxed">
-            Les identifiants admin sont definis via les variables Vercel :<br />
+            Les identifiants admin sont définis via les variables Vercel :<br />
             <code className="text-gold-300 text-xs bg-noir-800 px-1.5 py-0.5 rounded mt-1 inline-block">ADMIN_EMAIL</code>{' '}
             <code className="text-gold-300 text-xs bg-noir-800 px-1.5 py-0.5 rounded">ADMIN_PASSWORD</code>
           </p>
@@ -384,7 +403,7 @@ export default function AdminParametres() {
 
         <button type="submit" className="btn-gold w-full flex items-center justify-center gap-2" disabled={loading}>
           {saved ? (
-            <><CheckCircle size={16} /> Enregistre !</>
+            <><CheckCircle size={16} /> Enregistré !</>
           ) : loading ? (
             <><span className="w-4 h-4 border-2 border-noir-900 border-t-transparent rounded-full animate-spin" /> Enregistrement...</>
           ) : (

@@ -1,9 +1,9 @@
-// ── Types de base ──────────────────────────────────────────────
+// ── Types de base ──────────────────────────────────────────
 export type EventType        = 'cours' | 'atelier' | 'evenement'
 export type ReservationStatus = 'pending' | 'confirmed' | 'cancelled'
 export type PaymentMethod    = 'gratuit' | 'virement' | 'stripe'
 
-// ── Créneau horaire ────────────────────────────────────────────
+// ── Créneau horaire ────────────────────────────────────────
 export interface Creneau {
   id:           string
   start_time:   string   // ISO UTC
@@ -13,7 +13,7 @@ export interface Creneau {
   created_at:   string
 }
 
-// ── Événement / Atelier / Cours collectif ──────────────────────
+// ── Événement / Atelier / Cours collectif ──────────────────
 export interface Event {
   id:               string
   title:            string
@@ -30,7 +30,7 @@ export interface Event {
   created_at:       string
 }
 
-// ── Réservation ────────────────────────────────────────────────
+// ── Réservation ────────────────────────────────────────────
 export interface Reservation {
   id:               string
   creneau_id:       string | null
@@ -51,7 +51,7 @@ export interface Reservation {
   event?:   Event
 }
 
-// ── Message de contact ─────────────────────────────────────────
+// ── Message de contact ─────────────────────────────────────
 export interface Message {
   id:         string
   name:       string
@@ -62,7 +62,7 @@ export interface Message {
   created_at: string
 }
 
-// ── Paramètres du site ─────────────────────────────────────────
+// ── Paramètres du site ─────────────────────────────────────
 export interface SiteSettings {
   site_title:       string
   site_description: string
@@ -75,71 +75,84 @@ export interface SiteSettings {
   virement_iban:    string
   virement_nom:     string
   virement_info:    string
+  // Hero
   hero_title:       string
   hero_title2:      string
   hero_subtitle:    string
+  hero_btn1:        string
+  hero_btn2:        string
+  stats_label1:     string
+  stats_label2:     string
+  stats_label3:     string
+  stats_label4:     string
+  // Zoom
   zoom_cours:       string
   zoom_atelier:     string
   zoom_masterclass: string
   zoom_evenement:   string
+  // Stripe & accès
   stripe_public_key:  string
-  cours_access_code:   string
+  cours_access_code:  string
+  // Onglets réservation
   tab_cours_label:     string
   tab_events_label:    string
-  espace_eleves_title:  string
-  espace_eleves_desc:   string
-  reservation_titre:           string
-  reservation_no_slot:         string
-  reservation_select_date:     string
+  espace_eleves_title: string
+  espace_eleves_desc:  string
+  reservation_titre:            string
+  reservation_no_slot:          string
+  reservation_select_date:      string
   reservation_code_placeholder: string
-  reservation_code_btn:        string
-  reservation_contact_link:    string
-  apropos_titre:        string
-  apropos_texte1:       string
-  apropos_texte2:       string
-  apropos_point1:       string
-  apropos_point2:       string
-  apropos_point3:       string
-  apropos_point4:       string
-  offres_titre:         string
-  offres_sous_titre:    string
-  cta_titre:            string
-  cta_sous_titre:       string
-  stats_label1:         string
-  stats_label2:         string
-  stats_label3:         string
-  stats_label4:         string
-  hero_btn1:            string
-  hero_btn2:            string
-  steps_titre:          string
-  steps_label:          string
-  offre1_titre:         string
-  offre1_sous:          string
-  offre1_desc:          string
-  offre1_btn:           string
-  offre1_f1:            string
-  offre1_f2:            string
-  offre1_f3:            string
-  offre1_f4:            string
-  offre2_titre:         string
-  offre2_sous:          string
-  offre2_desc:          string
-  offre2_btn:           string
-  offre2_f1:            string
-  offre2_f2:            string
-  offre2_f3:            string
-  offre2_f4:            string
-  offre3_titre:         string
-  offre3_sous:          string
-  offre3_desc:          string
-  offre3_btn:           string
-  offre3_f1:            string
-  offre3_f2:            string
-  offre3_f3:            string
-  offre3_f4:            string
+  reservation_code_btn:         string
+  reservation_contact_link:     string
+  // Professeur
+  prof_nom:       string
+  prof_titre:     string
+  prof_photo:     string
+  prof_bio:       string
+  prof_parcours:  string
+  prof_pedagogie: string
+  // À propos
+  apropos_titre:  string
+  apropos_texte1: string
+  apropos_texte2: string
+  apropos_point1: string
+  apropos_point2: string
+  apropos_point3: string
+  apropos_point4: string
+  // Offres
+  offres_titre:      string
+  offres_sous_titre: string
+  cta_titre:         string
+  cta_sous_titre:    string
+  steps_titre:       string
+  steps_label:       string
+  offre1_titre: string
+  offre1_sous:  string
+  offre1_desc:  string
+  offre1_btn:   string
+  offre1_f1:    string
+  offre1_f2:    string
+  offre1_f3:    string
+  offre1_f4:    string
+  offre2_titre: string
+  offre2_sous:  string
+  offre2_desc:  string
+  offre2_btn:   string
+  offre2_f1:    string
+  offre2_f2:    string
+  offre2_f3:    string
+  offre2_f4:    string
+  offre3_titre: string
+  offre3_sous:  string
+  offre3_desc:  string
+  offre3_btn:   string
+  offre3_f1:    string
+  offre3_f2:    string
+  offre3_f3:    string
+  offre3_f4:    string
 }
 
-// ── Fuseaux horaires ───────────────────────────────────────────
+// ── Fuseaux horaires ───────────────────────────────────────
 export const TIMEZONES = [
   { value: 'Europe/Paris',      label: '🇫🇷 France (Paris)' },
   { value: 'Europe/London',     label: '🇬🇧 Royaume-Uni (Londres)' },
