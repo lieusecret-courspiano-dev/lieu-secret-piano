@@ -23,7 +23,7 @@ const TYPES_Q = [
 ]
 
 const EMPTY_QUIZ = { titre: '', description: '', niveau: 'fondamentaux', score_min: 70, statut: 'brouillon' }
-const EMPTY_Q = { type: 'qcm', question: '', options: ['', '', '', ''], bonne_reponse: '', explication: '', audio_url: '', image_url: '', points: 1 }
+const EMPTY_Q = { type: 'qcm', question: '', options: ['', '', '', ''], bonne_reponse: '', explication: '', audio_url: '', points: 1 }
 
 export default function AdminQuizPage() {
   const [quiz, setQuiz] = useState<Quiz[]>([])
@@ -182,7 +182,7 @@ export default function AdminQuizPage() {
                             {question.bonne_reponse && <p className="text-green-400 text-xs mt-0.5">✓ {question.bonne_reponse}</p>}
                           </div>
                           <div className="flex gap-1 shrink-0">
-                            <button onClick={() => { setEditQ(question); setQForm({ type: question.type, question: question.question, options: question.options || ['', '', '', ''], bonne_reponse: question.bonne_reponse || '', explication: question.explication || '', audio_url: question.audio_url || '', image_url: question.image_url || '', points: question.points }); setShowQForm(true) }}
+                            <button onClick={() => { setEditQ(question); setQForm({ type: question.type, question: question.question, options: question.options || ['', '', '', ''], bonne_reponse: question.bonne_reponse || '', explication: question.explication || '', audio_url: question.audio_url || '', points: question.points }); setShowQForm(true) }}
                               className="text-noir-500 hover:text-gold-400 p-1 rounded transition-colors"><Pencil size={12} /></button>
                             <button onClick={() => handleDeleteQuestion(question.id)} className="text-noir-500 hover:text-red-400 p-1 rounded transition-colors"><Trash2 size={12} /></button>
                           </div>
