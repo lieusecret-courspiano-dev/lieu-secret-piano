@@ -9,7 +9,9 @@ function useQuizSounds() {
   const ctxRef = useRef<AudioContext | null>(null)
 
   function getCtx() {
-    if (!ctxRef.current) ctxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)()
+    if (!ctxRef.current) {
+      ctxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)()
+    }
     return ctxRef.current
   }
 
@@ -18,30 +20,25 @@ function useQuizSounds() {
       const ctx = getCtx()
       const osc = ctx.createOscillator()
       const gain = ctx.createGain()
-      osc.connect(gain); gain.connect(ctx.destination)
-      osc.type = type; osc.frequency.value = freq
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+      osc.type = type
+      osc.frequency.value = freq
       gain.gain.setValueAtTime(vol, ctx.currentTime)
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration)
-      osc.start(ctx.currentTime); osc.stop(ctx.currentTime + duration)
+      osc.start(ctx.currentTime)
+      osc.stop(ctx.currentTime + duration)
     } catch {}
   }, [])
 
-  // Son bonne réponse : note joyeuse courte
   const playCorrect = useCallback(() => {
-    playTone(523, 0.15, 'sine', 0.3)  // Do5
-    setTimeout(() => playTone(659, 0.15, 'sine', 0.3), 120)  // Mi5
-    setTimeout(() => playTone(784, 0.25, 'sine', 0.3), 240)  // Sol5
+    playTone(523, 0.1, 'sine', 0.2)
+    setTimeout(() => playTone(659, 0.1, 'sine', 0.2), 80)
+    setTimeout(() => playTone(784, 0.15, 'sine', 0.2), 160)
   }, [playTone])
 
-  // Son mauvaise réponse : note grave courte
-  const playWrong = useCallback(() => {
-    playTone(220, 0.2, 'sawtooth', 0.2)  // La3
-    setTimeout(() => playTone(196, 0.3, 'sawtooth', 0.15), 150)  // Sol3
-  }, [playTone])
-
-  // Mélodie succès : fanfare joyeuse
   const playSuccess = useCallback(() => {
-    const notes = [523, 659, 784, 1047]  // Do Mi Sol Do
+    const notes = [523, 659, 784, 1047]
     notes.forEach((freq, i) => setTimeout(() => playTone(freq, 0.3, 'sine', 0.35), i * 180))
     setTimeout(() => {
       playTone(784, 0.15, 'sine', 0.3)
@@ -49,29 +46,42 @@ function useQuizSounds() {
     }, notes.length * 180)
   }, [playTone])
 
-  // Mélodie échec : mélodie descendante triste
   const playFailure = useCallback(() => {
-    const notes = [392, 349, 330, 294]  // Sol Fa Mi Ré
+    const notes = [392, 349, 330, 294]
     notes.forEach((freq, i) => setTimeout(() => playTone(freq, 0.35, 'triangle', 0.25), i * 200))
   }, [playTone])
 
-  return { playCorrect, playWrong, playSuccess, playFailure }
+  return { playCorrect, playSuccess, playFailure }
 }
 
 interface Quiz {
-  id: string; titre: string; description: string | null; niveau: string
-  score_min: number; statut: string
+  id: string
+  titre: string
+  description: string | null
+  niveau: string
+  score_min: number
+  statut: string
   quiz_questions?: { count: number }[]
   quiz_resultats?: { score: number; reussi: boolean; created_at: string }[]
 }
+
 interface Question {
-  id: string; type: string; question: string; options: string[] | null
-  bonne_reponse: string | null; explication: string | null; audio_url: string | null
-  points: number; position: number
+  id: string
+  type: string
+  question: string
+  options: string[] | null
+  bonne_reponse: string | null
+  explication: string | null
+  audio_url: string | null
+  points: number
+  position: number
 }
 
 const NIVEAU_LABELS: Record<string, string> = {
-  fondamentaux: 'Fondamentaux', comprehension: 'Compréhension', expression: 'Expression', tous: 'Tous niveaux'
+  fondamentaux: 'Fondamentaux',
+  comprehension: 'Compréhension',
+  expression: 'Expression',
+  tous: 'Tous niveaux',
 }
 
 export default function EleveQuizPage() {
@@ -85,7 +95,6 @@ export default function EleveQuizPage() {
   const [result, setResult] = useState<{ score: number; reussi: boolean; details: any[] } | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [filter, setFilter] = useState('tous')
-  const [lastAnswer, setLastAnswer] = useState<'correct' | 'wrong' | null>(null)
   const sounds = useQuizSounds()
 
   useEffect(() => {
@@ -107,41 +116,63 @@ export default function EleveQuizPage() {
     setLoading(false)
   }
 
-  
-
-  
-
   async function startQuiz(q: Quiz) {
     try {
       const res = await fetch(`/api/eleve/quiz?id=${q.id}`)
       if (res.status === 401) { router.push('/espace-eleve/login'); return }
       const data = await res.json()
-      console.log('[startQuiz] questions count:', (data.questions || []).length)
       if (data.error) { console.error('[startQuiz] error:', data.error); return }
       setActiveQuiz({ quiz: q, questions: data.questions || [] })
-      setCurrentQ(0); setReponses({}); setSubmitted(false); setResult(null)
+      setCurrentQ(0)
+      setReponses({})
+      setSubmitted(false)
+      setResult(null)
     } catch (e) { console.error('startQuiz error:', e) }
   }
 
   async function submitQuiz() {
     if (!activeQuiz) return
     setSubmitting(true)
-    const res = await fetch('/api/eleve/quiz', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ quiz_id: activeQuiz.quiz.id, reponses })
-    })
-    
+    try {
+      const res = await fetch('/api/eleve/quiz', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quiz_id: activeQuiz.quiz.id, reponses })
+      })
+      const data = await res.json()
+
+      // Construire les détails de correction
+      const details = activeQuiz.questions.map(q => ({
+        question: q.question,
+        reponse: reponses[q.id] || '',
+        correct: data.corrections?.[q.id]?.correct || false,
+        bonne_reponse: data.corrections?.[q.id]?.bonne_reponse || '',
+        explication: data.corrections?.[q.id]?.explication || null,
+      }))
+
+      setResult({ score: data.score, reussi: data.reussi, details })
+      setSubmitted(true)
+
+      // Jouer la mélodie selon le résultat
+      if (data.reussi) {
+        sounds.playSuccess()
+      } else {
+        sounds.playFailure()
+      }
+
+      loadQuiz()
+    } catch (e) {
+      console.error('submitQuiz error:', e)
+    }
+    setSubmitting(false)
   }
 
-  
-
-  const nbQ = (q: Quiz) => q.quiz_questions?.[0]?.count || 0
   function selectReponse(qId: string, val: string) {
     setReponses(prev => ({ ...prev, [qId]: val }))
     sounds.playCorrect()
   }
 
+  const nbQ = (q: Quiz) => q.quiz_questions?.[0]?.count || 0
   const lastResult = (q: Quiz) => q.quiz_resultats?.[0]
   const filtered = filter === 'tous' ? quiz : quiz.filter(q => q.niveau === filter || q.niveau === 'tous')
 
@@ -149,7 +180,6 @@ export default function EleveQuizPage() {
   if (activeQuiz && !submitted) {
     const questions = activeQuiz.questions
 
-    // Pas de questions disponibles
     if (!questions || questions.length === 0) {
       return (
         <EleveLayout>
@@ -205,7 +235,11 @@ export default function EleveQuizPage() {
               <div className="space-y-2">
                 {q.options.map((opt, i) => (
                   <button key={i} onClick={() => selectReponse(q.id, opt)}
-                    className={`w-full text-left px-4 py-3 rounded-xl border text-sm transition-all ${reponses[q.id] === opt ? 'bg-gold-500/10 border-gold-500/40 text-gold-400' : 'border-noir-700 text-noir-300 hover:border-noir-600 hover:text-white'}`}>
+                    className={`w-full text-left px-4 py-3 rounded-xl border text-sm transition-all ${
+                      reponses[q.id] === opt
+                        ? 'bg-gold-500/10 border-gold-500/40 text-gold-400'
+                        : 'border-noir-700 text-noir-300 hover:border-noir-600 hover:text-white'
+                    }`}>
                     <span className="font-mono text-xs text-noir-600 mr-2">{String.fromCharCode(65 + i)}.</span>
                     {opt}
                   </button>
@@ -217,7 +251,11 @@ export default function EleveQuizPage() {
               <div className="grid grid-cols-2 gap-3">
                 {['Vrai', 'Faux'].map(v => (
                   <button key={v} onClick={() => selectReponse(q.id, v)}
-                    className={`py-3 rounded-xl border text-sm font-medium transition-all ${reponses[q.id] === v ? 'bg-gold-500/10 border-gold-500/40 text-gold-400' : 'border-noir-700 text-noir-300 hover:border-noir-600'}`}>
+                    className={`py-3 rounded-xl border text-sm font-medium transition-all ${
+                      reponses[q.id] === v
+                        ? 'bg-gold-500/10 border-gold-500/40 text-gold-400'
+                        : 'border-noir-700 text-noir-300 hover:border-noir-600'
+                    }`}>
                     {v}
                   </button>
                 ))}
@@ -225,19 +263,27 @@ export default function EleveQuizPage() {
             )}
 
             {(q.type === 'reponse_courte' || q.type === 'reponse_libre' || q.type === 'audio') && (
-              <textarea value={reponses[q.id] || ''} onChange={e => selectReponse(q.id, e.target.value)}
-                className="input w-full h-24 resize-none" placeholder="Votre réponse..." />
+              <textarea
+                value={reponses[q.id] || ''}
+                onChange={e => selectReponse(q.id, e.target.value)}
+                className="input w-full h-24 resize-none"
+                placeholder="Votre réponse..."
+              />
             )}
           </div>
 
           <div className="flex items-center justify-between gap-3">
-            <button onClick={() => setCurrentQ(c => Math.max(0, c - 1))} disabled={currentQ === 0} className="btn-outline disabled:opacity-30">Précédent</button>
+            <button onClick={() => setCurrentQ(c => Math.max(0, c - 1))} disabled={currentQ === 0}
+              className="btn-outline disabled:opacity-30">Précédent</button>
+
             {currentQ < questions.length - 1 ? (
-              <button onClick={() => setCurrentQ(c => c + 1)} disabled={!reponses[q.id]} className="btn-gold flex items-center gap-2 disabled:opacity-50">
+              <button onClick={() => setCurrentQ(c => c + 1)} disabled={!reponses[q.id]}
+                className="btn-gold flex items-center gap-2 disabled:opacity-50">
                 Suivant <ChevronRight size={16} />
               </button>
             ) : (
-              <button onClick={submitQuiz} disabled={submitting || answered < questions.length} className="btn-gold disabled:opacity-50">
+              <button onClick={submitQuiz} disabled={submitting || answered < questions.length}
+                className="btn-gold disabled:opacity-50">
                 {submitting ? 'Correction...' : `Terminer (${answered}/${questions.length})`}
               </button>
             )}
@@ -255,7 +301,9 @@ export default function EleveQuizPage() {
       <EleveLayout>
         <div className="p-4 md:p-6 max-w-2xl mx-auto">
           <div className="card text-center mb-6">
-            <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 ${reussi ? 'bg-green-500/10 border-2 border-green-500/30' : 'bg-red-500/10 border-2 border-red-500/30'}`}>
+            <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 ${
+              reussi ? 'bg-green-500/10 border-2 border-green-500/30' : 'bg-red-500/10 border-2 border-red-500/30'
+            }`}>
               {reussi ? <Trophy size={36} className="text-green-400" /> : <XCircle size={36} className="text-red-400" />}
             </div>
             <h2 className="font-serif text-2xl text-white mb-2">{reussi ? 'Bravo !' : 'Continuez vos efforts'}</h2>
@@ -270,12 +318,20 @@ export default function EleveQuizPage() {
             {result.details?.map((d: any, i: number) => (
               <div key={i} className={`card border ${d.correct ? 'border-green-500/20' : 'border-red-500/20'}`}>
                 <div className="flex items-start gap-3">
-                  {d.correct ? <CheckCircle size={16} className="text-green-400 shrink-0 mt-0.5" /> : <XCircle size={16} className="text-red-400 shrink-0 mt-0.5" />}
+                  {d.correct
+                    ? <CheckCircle size={16} className="text-green-400 shrink-0 mt-0.5" />
+                    : <XCircle size={16} className="text-red-400 shrink-0 mt-0.5" />}
                   <div className="flex-1">
                     <p className="text-white text-sm font-medium">{d.question}</p>
-                    <p className="text-noir-400 text-xs mt-1">Votre réponse : <span className={d.correct ? 'text-green-400' : 'text-red-400'}>{d.reponse || '(sans réponse)'}</span></p>
-                    {!d.correct && d.bonne_reponse && <p className="text-green-400 text-xs">Bonne réponse : {d.bonne_reponse}</p>}
-                    {d.explication && <p className="text-noir-500 text-xs mt-1 italic">{d.explication}</p>}
+                    <p className="text-noir-400 text-xs mt-1">
+                      Votre réponse : <span className={d.correct ? 'text-green-400' : 'text-red-400'}>{d.reponse || '(sans réponse)'}</span>
+                    </p>
+                    {!d.correct && d.bonne_reponse && (
+                      <p className="text-green-400 text-xs">Bonne réponse : {d.bonne_reponse}</p>
+                    )}
+                    {d.explication && (
+                      <p className="text-noir-500 text-xs mt-1 italic">{d.explication}</p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -283,8 +339,10 @@ export default function EleveQuizPage() {
           </div>
 
           <div className="flex gap-3">
-            <button onClick={() => { setActiveQuiz(null); setResult(null); setSubmitted(false) }} className="btn-outline flex-1">Retour aux quiz</button>
-            <button onClick={() => startQuiz(activeQuiz!.quiz)} className="btn-gold flex-1 flex items-center justify-center gap-2">
+            <button onClick={() => { setActiveQuiz(null); setResult(null); setSubmitted(false) }}
+              className="btn-outline flex-1">Retour aux quiz</button>
+            <button onClick={() => startQuiz(activeQuiz!.quiz)}
+              className="btn-gold flex-1 flex items-center justify-center gap-2">
               <RotateCcw size={14} /> Recommencer
             </button>
           </div>
@@ -302,18 +360,23 @@ export default function EleveQuizPage() {
           <p className="text-noir-400 text-sm mt-1">Testez vos connaissances et validez vos compétences</p>
         </div>
 
-        {/* Filtres */}
         <div className="flex gap-2 mb-6 flex-wrap">
           {(['tous', 'fondamentaux', 'comprehension', 'expression'] as const).map(n => (
             <button key={n} onClick={() => setFilter(n)}
-              className={`px-4 py-1.5 rounded-full text-xs font-medium border transition-all ${filter === n ? 'bg-gold-500/10 border-gold-500/30 text-gold-400' : 'border-noir-700 text-noir-400 hover:border-noir-600'}`}>
+              className={`px-4 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                filter === n
+                  ? 'bg-gold-500/10 border-gold-500/30 text-gold-400'
+                  : 'border-noir-700 text-noir-400 hover:border-noir-600'
+              }`}>
               {NIVEAU_LABELS[n] || 'Tous'}
             </button>
           ))}
         </div>
 
         {loading ? (
-          <div className="text-center py-12"><div className="w-8 h-8 border-2 border-gold-500 border-t-transparent rounded-full animate-spin mx-auto" /></div>
+          <div className="text-center py-12">
+            <div className="w-8 h-8 border-2 border-gold-500 border-t-transparent rounded-full animate-spin mx-auto" />
+          </div>
         ) : filtered.length === 0 ? (
           <div className="card text-center py-16">
             <p className="text-noir-400 text-lg">Aucun quiz disponible pour le moment</p>
@@ -325,14 +388,20 @@ export default function EleveQuizPage() {
               const last = lastResult(q)
               const nb = nbQ(q)
               return (
-                <div key={q.id} className="card hover:border-gold-500/30 transition-all cursor-pointer group" onClick={() => startQuiz(q)}>
+                <div key={q.id}
+                  className="card hover:border-gold-500/30 transition-all cursor-pointer group"
+                  onClick={() => startQuiz(q)}>
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <p className="text-white font-semibold group-hover:text-gold-400 transition-colors">{q.titre}</p>
-                        <span className="text-xs bg-noir-800 text-noir-400 px-2 py-0.5 rounded-full capitalize">{NIVEAU_LABELS[q.niveau] || q.niveau}</span>
+                        <span className="text-xs bg-noir-800 text-noir-400 px-2 py-0.5 rounded-full capitalize">
+                          {NIVEAU_LABELS[q.niveau] || q.niveau}
+                        </span>
                       </div>
-                      {q.description && <p className="text-noir-500 text-xs mb-2 line-clamp-2">{q.description}</p>}
+                      {q.description && (
+                        <p className="text-noir-500 text-xs mb-2 line-clamp-2">{q.description}</p>
+                      )}
                       <div className="flex items-center gap-3 text-xs text-noir-500">
                         <span>{nb} question{nb > 1 ? 's' : ''}</span>
                         <span>·</span>
