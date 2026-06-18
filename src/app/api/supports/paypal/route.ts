@@ -52,8 +52,10 @@ export async function POST(req: NextRequest) {
           custom_id: JSON.stringify({ type: 'support', support_id: support.id, eleve_id: eleve.id }),
         }],
         application_context: {
-          return_url: `${APP_URL}/espace-eleve/mes-supports?success=1`,
+          return_url: `${APP_URL}/espace-eleve/mes-supports/paypal-return`,
           cancel_url: `${APP_URL}/bibliotheque-pedagogique`,
+          brand_name: 'Lieu Secret',
+          user_action: 'PAY_NOW',
         },
       }),
     })
