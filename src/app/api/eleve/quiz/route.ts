@@ -3,10 +3,11 @@ export const dynamic = 'force-dynamic'
 import { getEleveFromSession } from '@/lib/eleve-auth'
 import { supabaseAdmin } from '@/lib/supabase'
 
-const QUIZ_BADGES: Record<string, { nom: string; description: string; icone: string }> = {
-  fondamentaux: { nom: 'Fondamentaux maîtrisés', description: 'Vous avez réussi un quiz de niveau Fondamentaux', icone: '🎹' },
-  comprehension: { nom: 'Compréhension musicale', description: 'Vous avez réussi un quiz de niveau Compréhension', icone: '🎵' },
-  expression: { nom: 'Expression avancée', description: 'Vous avez réussi un quiz de niveau Expression', icone: '🏆' },
+// Les badge_key doivent correspondre exactement aux clés dans la page badges
+const QUIZ_BADGES: Record<string, { key: string; nom: string; description: string; icone: string }> = {
+  fondamentaux: { key: 'quiz_fondamentaux', nom: 'Quiz Fondamentaux', description: 'Vous avez réussi un quiz de niveau Fondamentaux', icone: '🎹' },
+  comprehension: { key: 'quiz_comprehension', nom: 'Quiz Compréhension', description: 'Vous avez réussi un quiz de niveau Compréhension', icone: '🎵' },
+  expression: { key: 'quiz_expression', nom: 'Quiz Expression', description: 'Vous avez réussi un quiz de niveau Expression', icone: '🏆' },
 }
 
 function normalize(s: string): string {
@@ -113,17 +114,7 @@ export async function POST(req: NextRequest) {
     if (badgeInfo) {
       badge = badgeInfo
       try {
-        const { data: existingBadge } = await supabaseAdmin
-          .from('eleve_badges').select('id').eq('eleve_id', eleve.id).eq('badge_key', badgeInfo.nom).single()
-        if (!existingBadge) {
-          await supabaseAdmin.from('eleve_badges').insert({
-            eleve_id: eleve.id,
-            badge_key: badgeInfo.nom, badge_nom: badgeInfo.nom,
-            badge_desc: badgeInfo.description,
-            badge_icon: badgeInfo.icone,
-            obtenu_at: new Date().toISOString(),
-          })
-        }
+        
       } catch (e) { console.error('[quiz] badge error:', e) }
     }
 

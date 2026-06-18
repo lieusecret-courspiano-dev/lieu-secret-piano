@@ -22,6 +22,9 @@ const ALL_BADGES = [
   { key: 'objectif_atteint', nom: 'Accomplissement',       desc: 'Premier objectif musical atteint',               icon: 'SVG_objectif_atteint', categorie: 'Objectifs' },
   { key: 'premier_enreg',    nom: 'Première prise',        desc: 'Premier enregistrement envoyé au professeur',    icon: 'SVG_premier_enreg', categorie: 'Engagement' },
   { key: 'premier_message',  nom: 'Communicant',           desc: 'Premier message envoyé au professeur',           icon: 'SVG_premier_message', categorie: 'Engagement' },
+  { key: 'quiz_fondamentaux', nom: 'Quiz Fondamentaux',     desc: 'Vous avez réussi un quiz de niveau Fondamentaux', icon: 'SVG_quiz_fondamentaux', categorie: 'Quiz' },
+  { key: 'quiz_comprehension',nom: 'Quiz Compréhension',    desc: 'Vous avez réussi un quiz de niveau Compréhension',icon: 'SVG_quiz_comprehension', categorie: 'Quiz' },
+  { key: 'quiz_expression',   nom: 'Quiz Expression',       desc: 'Vous avez réussi un quiz de niveau Expression',   icon: 'SVG_quiz_expression', categorie: 'Quiz' },
 ]
 
 const CATEGORIES = ['Tous', 'Parcours', 'Pratique', 'Régularité', 'Certificats', 'Objectifs', 'Engagement']
@@ -43,6 +46,9 @@ const BADGE_ICONS: Record<string, React.ReactNode> = {
   objectif_atteint:  <svg width="32" height="32" fill="none" stroke="#4ade80" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>,
   premier_enreg:     <svg width="32" height="32" fill="none" stroke="#f87171" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>,
   premier_message:   <svg width="32" height="32" fill="none" stroke="#34d399" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,
+  quiz_fondamentaux: <svg width="32" height="32" fill="none" stroke="#f59e0b" strokeWidth="1.5" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="18" rx="2"/><line x1="7" y1="3" x2="7" y2="13"/><line x1="12" y1="3" x2="12" y2="13"/><line x1="17" y1="3" x2="17" y2="13"/></svg>,
+  quiz_comprehension: <svg width="32" height="32" fill="none" stroke="#a78bfa" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>,
+  quiz_expression:   <svg width="32" height="32" fill="none" stroke="#fbbf24" strokeWidth="1.5" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
 }
 
 function BadgeIcon({ badgeKey, obtained }: { badgeKey: string; obtained: boolean }) {
