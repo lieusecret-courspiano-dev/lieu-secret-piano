@@ -72,7 +72,24 @@ function SupportViewer({ support, onClose }: { support: Support; onClose: () => 
 
       {/* Contenu */}
       <div className="flex-1 overflow-hidden" style={{ minHeight: '70vh' }}>
-        
+
+        {isPdf && support.fichier_url && (
+          <div className="w-full flex flex-col" style={{ height: 'calc(100vh - 120px)' }}>
+            <iframe
+              src={`https://docs.google.com/viewer?url=${encodeURIComponent(support.fichier_url)}&embedded=true`}
+              className="w-full flex-1 border-0"
+              style={{ minHeight: '400px' }}
+              title={support.titre}
+            />
+            <div className="bg-noir-900 border-t border-noir-800 px-4 py-2 flex items-center justify-between shrink-0">
+              <p className="text-noir-500 text-xs">Si le document ne s&apos;affiche pas, utilisez le bouton Télécharger</p>
+              <a href={support.fichier_url} target="_blank" rel="noopener noreferrer"
+                className="text-xs text-gold-400 hover:text-gold-300 flex items-center gap-1">
+                <ExternalLink size={12} /> Ouvrir dans un nouvel onglet
+              </a>
+            </div>
+          </div>
+        )}
 
         {isVideo && support.fichier_url && (
           <div className="flex items-center justify-center h-full bg-black p-4">

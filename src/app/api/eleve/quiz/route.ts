@@ -128,7 +128,9 @@ export async function POST(req: NextRequest) {
         if (!existingBadge) {
           await supabaseAdmin.from('eleve_badges').insert({
             eleve_id: eleve.id, nom: badgeInfo.nom, description: badgeInfo.description,
-            icone: badgeInfo.icone, categorie: 'quiz', obtenu_le: new Date().toISOString(),
+            icone: badgeInfo.icone, categorie: 'quiz',
+            obtenu_le: new Date().toISOString(),
+            obtenu_at: new Date().toISOString(),
           })
         }
       } catch {}
