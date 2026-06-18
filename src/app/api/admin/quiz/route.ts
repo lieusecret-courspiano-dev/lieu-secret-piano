@@ -28,18 +28,7 @@ export async function POST(req: NextRequest) {
   const isAdmin = await validateAdminSession()
   if (!isAdmin) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
 
-  const body = await req.json()
-  const { titre, description, niveau, module, score_min, statut } = body
-
-  if (!titre?.trim()) return NextResponse.json({ error: 'Titre requis' }, { status: 400 })
-
-  const { data, error } = await supabaseAdmin.from('quiz').insert({
-    titre, description: description || null, niveau: niveau || 'fondamentaux',
-    module: module || null, score_min: score_min || 70, statut: statut || 'brouillon',
-  }).select().single()
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json(data)
+  
 }
 
 // PATCH — modifier un quiz
@@ -50,9 +39,7 @@ export async function PATCH(req: NextRequest) {
   const { id, ...fields } = await req.json()
   if (!id) return NextResponse.json({ error: 'ID manquant' }, { status: 400 })
 
-  const { data, error } = await supabaseAdmin.from('quiz').update({ ...fields, updated_at: new Date().toISOString() }).eq('id', id).select().single()
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json(data)
+  
 }
 
 // DELETE — supprimer un quiz
