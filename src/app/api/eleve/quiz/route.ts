@@ -4,10 +4,10 @@ import { getEleveFromSession } from '@/lib/eleve-auth'
 import { supabaseAdmin } from '@/lib/supabase'
 
 // Les badge_key doivent correspondre exactement aux clés dans la page badges
-const QUIZ_BADGES: Record<string, { key: string; nom: string; description: string; icone: string }> = {
-  fondamentaux: { key: 'quiz_fondamentaux', nom: 'Quiz Fondamentaux', description: 'Vous avez réussi un quiz de niveau Fondamentaux', icone: '🎹' },
-  comprehension: { key: 'quiz_comprehension', nom: 'Quiz Compréhension', description: 'Vous avez réussi un quiz de niveau Compréhension', icone: '🎵' },
-  expression: { key: 'quiz_expression', nom: 'Quiz Expression', description: 'Vous avez réussi un quiz de niveau Expression', icone: '🏆' },
+const QUIZ_BADGE_MAP: Record<string, string> = {
+  fondamentaux: 'QUIZ_FONDAMENTAUX',
+  comprehension: 'QUIZ_COMPREHENSION',
+  expression: 'QUIZ_EXPRESSION',
 }
 
 function normalize(s: string): string {
@@ -110,19 +110,22 @@ export async function POST(req: NextRequest) {
   // 5. Badge + notification si réussi
   let badge = null
   if (reussi) {
-    const badgeInfo = QUIZ_BADGES[quiz.niveau]
-    if (badgeInfo) {
-      badge = badgeInfo
-      try {
-        
-      } catch (e) { console.error('[quiz] badge error:', e) }
-    }
+    try {
+      const { attribuerBadge, BADGES } = await import('@/lib/badges')
+      const badgeKey = QUIZ_BADGE_MAP[quiz.niveau] as keyof typeof BADGES
+      if (badgeKey && BADGES[badgeKey]) {
+        const badgeData = BADGES[badgeKey]
+        const attribue = await attribuerBadge(eleve.id, badgeData)
+        if (attribue) badge = { nom: badgeData.badge_nom, description: badgeData.badge_desc, icone: badgeData.badge_icon }
+        else badge = { nom: badgeData.badge_nom, description: badgeData.badge_desc, icone: badgeData.badge_icon }
+      }
+    } catch (e) { console.error('[quiz] badge error:', e) }
 
     try {
       await supabaseAdmin.from('eleve_notifications').insert({
         eleve_id: eleve.id, type: 'badge',
         titre: `Quiz réussi : ${quiz.titre}`,
-        message: `Félicitations ! Vous avez obtenu ${score}% (minimum requis : ${quiz.score_min}%).${badgeInfo ? ` Badge : ${badgeInfo.icone} ${badgeInfo.nom}` : ''}`,
+        message: `Félicitations ! Vous avez obtenu ${score}% (minimum requis : ${quiz.score_min}%).`,
         lien: '/espace-eleve/quiz',
       })
     } catch {}

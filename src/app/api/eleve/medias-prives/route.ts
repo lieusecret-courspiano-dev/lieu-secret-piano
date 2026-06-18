@@ -70,15 +70,16 @@ export async function POST(req: NextRequest) {
         </div>
       </div>`,
     }).catch(console.error)
+  } catch {}
 
-    // Notification dans l'espace admin
-    await supabaseAdmin.from('eleve_notifications').insert({
-      eleve_id: eleve.id,
-      type: 'media',
-      titre: `Enregistrement envoyé : ${titre}`,
-      message: 'Votre professeur sera notifié et pourra vous laisser un commentaire.',
-      lien: '/espace-eleve/enregistrements',
-    })
+  // Badge "Première prise" — premier enregistrement envoyé
+  try {
+    const { count } = await supabaseAdmin
+      .from('eleve_medias_prives').select('*', { count: 'exact', head: true }).eq('eleve_id', eleve.id)
+    if ((count || 0) === 1) {
+      const { attribuerBadge, BADGES } = await import('@/lib/badges')
+      await attribuerBadge(eleve.id, BADGES.PREMIER_ENREG)
+    }
   } catch {}
 
   return NextResponse.json(data)

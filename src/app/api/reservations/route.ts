@@ -272,5 +272,19 @@ export async function POST(req: NextRequest) {
     console.error('Email error:', emailErr)
   }
 
+  // Badge "Premier cours" — première réservation de cours
+  try {
+    const { data: eleve } = await supabaseAdmin.from('eleves').select('id').eq('email', student_email).single()
+    if (eleve) {
+      const { count: nbResa } = await supabaseAdmin
+        .from('reservations').select('*', { count: 'exact', head: true })
+        .eq('student_email', student_email).eq('type', 'cours')
+      if ((nbResa || 0) === 1) {
+        const { attribuerBadge, BADGES } = await import('@/lib/badges')
+        await attribuerBadge(eleve.id, BADGES.PREMIER_COURS)
+      }
+    }
+  } catch {}
+
   return NextResponse.json(reservation, { status: 201 })
 }

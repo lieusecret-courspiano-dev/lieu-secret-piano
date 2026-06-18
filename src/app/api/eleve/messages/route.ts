@@ -68,48 +68,14 @@ export async function POST(req: NextRequest) {
 
   // Badge "Communicant" — premier message envoyé
   try {
-    const { data: msgCount } = await supabaseAdmin
-      .from('eleve_messages')
-      .select('id', { count: 'exact', head: true })
-      .eq('eleve_id', eleve.id)
-      .eq('expediteur', 'eleve')
-
     const { count: nbMessages } = await supabaseAdmin
-      .from('eleve_messages')
-      .select('*', { count: 'exact', head: true })
-      .eq('eleve_id', eleve.id)
-      .eq('expediteur', 'eleve')
-
+      .from('eleve_messages').select('*', { count: 'exact', head: true })
+      .eq('eleve_id', eleve.id).eq('expediteur', 'eleve')
     if ((nbMessages || 0) === 1) {
-      // Premier message — attribuer le badge
-      const { data: existingBadge } = await supabaseAdmin
-        .from('eleve_badges')
-        .select('id')
-        .eq('eleve_id', eleve.id)
-        .eq('badge_key', 'communicant')
-        .single()
-
-      if (!existingBadge) {
-        await supabaseAdmin.from('eleve_badges').insert({
-          eleve_id: eleve.id,
-          badge_key: 'communicant', badge_nom: 'Communicant',
-          badge_desc: 'Premier message envoyé au professeur',
-          badge_icon: '💬',
-          obtenu_at: new Date().toISOString(),
-        })
-
-        await supabaseAdmin.from('eleve_notifications').insert({
-          eleve_id: eleve.id,
-          type: 'badge',
-          titre: 'Badge obtenu : Communicant',
-          message: 'Félicitations ! Vous avez envoyé votre premier message au professeur.',
-          lien: '/espace-eleve/badges',
-        })
-      }
+      const { attribuerBadge, BADGES } = await import('@/lib/badges')
+      await attribuerBadge(eleve.id, BADGES.PREMIER_MESSAGE)
     }
-  } catch (e) {
-    console.error('[messages badge]', e)
-  }
+  } catch (e) { console.error('[messages badge]', e) }
 
   return NextResponse.json(data)
 }
