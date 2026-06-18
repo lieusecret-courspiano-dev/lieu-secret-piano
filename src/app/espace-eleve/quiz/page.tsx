@@ -130,34 +130,7 @@ export default function EleveQuizPage() {
     } catch (e) { console.error('startQuiz error:', e) }
   }
 
-  async function submitQuiz() {
-    if (!activeQuiz) return
-    setSubmitting(true)
-    try {
-      const res = await fetch('/api/eleve/quiz', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ quiz_id: activeQuiz.quiz.id, reponses })
-      })
-      const data = await res.json()
-
-      // Construire les détails de correction
-      
-      setSubmitted(true)
-
-      // Jouer la mélodie selon le résultat
-      if (data.reussi) {
-        sounds.playSuccess()
-      } else {
-        sounds.playFailure()
-      }
-
-      loadQuiz()
-    } catch (e) {
-      console.error('submitQuiz error:', e)
-    }
-    setSubmitting(false)
-  }
+  
 
   function selectReponse(qId: string, val: string) {
     setReponses(prev => ({ ...prev, [qId]: val }))
