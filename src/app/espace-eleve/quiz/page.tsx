@@ -92,7 +92,7 @@ export default function EleveQuizPage() {
   const [currentQ, setCurrentQ] = useState(0)
   const [reponses, setReponses] = useState<Record<string, string>>({})
   const [submitted, setSubmitted] = useState(false)
-  const [result, setResult] = useState<{ score: number; reussi: boolean; details: any[] } | null>(null)
+  const [result, setResult] = useState<{ score: number; reussi: boolean; details: any[]; badge?: any } | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [filter, setFilter] = useState('tous')
   const sounds = useQuizSounds()
@@ -142,15 +142,7 @@ export default function EleveQuizPage() {
       const data = await res.json()
 
       // Construire les détails de correction
-      const details = activeQuiz.questions.map(q => ({
-        question: q.question,
-        reponse: reponses[q.id] || '',
-        correct: data.corrections?.[q.id]?.correct || false,
-        bonne_reponse: data.corrections?.[q.id]?.bonne_reponse || '',
-        explication: data.corrections?.[q.id]?.explication || null,
-      }))
-
-      setResult({ score: data.score, reussi: data.reussi, details })
+      
       setSubmitted(true)
 
       // Jouer la mélodie selon le résultat
@@ -307,14 +299,7 @@ export default function EleveQuizPage() {
               {reussi ? <Trophy size={36} className="text-green-400" /> : <XCircle size={36} className="text-red-400" />}
             </div>
             <h2 className="font-serif text-2xl text-white mb-2">{reussi ? 'Bravo !' : 'Continuez vos efforts'}</h2>
-            <p className="text-5xl font-bold mb-2" style={{ color: reussi ? '#4ade80' : '#f87171' }}>{pct}%</p>
-            <p className="text-noir-400 text-sm">Score minimum requis : {activeQuiz?.quiz.score_min}%</p>
-            <p className={`text-sm font-medium mt-2 ${reussi ? 'text-green-400' : 'text-red-400'}`}>
-              {reussi ? 'Quiz réussi !' : 'Quiz non réussi'}
-            </p>
-          </div>
-
-          <div className="space-y-3 mb-6">
+            
             {result.details?.map((d: any, i: number) => (
               <div key={i} className={`card border ${d.correct ? 'border-green-500/20' : 'border-red-500/20'}`}>
                 <div className="flex items-start gap-3">
