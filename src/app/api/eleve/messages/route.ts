@@ -66,5 +66,52 @@ export async function POST(req: NextRequest) {
     }).catch(console.error)
   } catch {}
 
+  // Badge "Communicant" — premier message envoyé
+  try {
+    const { data: msgCount } = await supabaseAdmin
+      .from('eleve_messages')
+      .select('id', { count: 'exact', head: true })
+      .eq('eleve_id', eleve.id)
+      .eq('expediteur', 'eleve')
+
+    const { count: nbMessages } = await supabaseAdmin
+      .from('eleve_messages')
+      .select('*', { count: 'exact', head: true })
+      .eq('eleve_id', eleve.id)
+      .eq('expediteur', 'eleve')
+
+    if ((nbMessages || 0) === 1) {
+      // Premier message — attribuer le badge
+      const { data: existingBadge } = await supabaseAdmin
+        .from('eleve_badges')
+        .select('id')
+        .eq('eleve_id', eleve.id)
+        .eq('nom', 'Communicant')
+        .single()
+
+      if (!existingBadge) {
+        await supabaseAdmin.from('eleve_badges').insert({
+          eleve_id: eleve.id,
+          nom: 'Communicant',
+          description: 'Premier message envoyé au professeur',
+          icone: '💬',
+          categorie: 'Engagement',
+          obtenu_le: new Date().toISOString(),
+          obtenu_at: new Date().toISOString(),
+        })
+
+        await supabaseAdmin.from('eleve_notifications').insert({
+          eleve_id: eleve.id,
+          type: 'badge',
+          titre: 'Badge obtenu : Communicant',
+          message: 'Félicitations ! Vous avez envoyé votre premier message au professeur.',
+          lien: '/espace-eleve/badges',
+        })
+      }
+    }
+  } catch (e) {
+    console.error('[messages badge]', e)
+  }
+
   return NextResponse.json(data)
 }
