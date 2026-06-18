@@ -132,6 +132,31 @@ export default function EleveQuizPage() {
 
   
 
+  async function submitQuiz() {
+    if (!activeQuiz) return
+    setSubmitting(true)
+    try {
+      const res = await fetch('/api/eleve/quiz', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quiz_id: activeQuiz.quiz.id, reponses })
+      })
+      const data = await res.json()
+      const details = activeQuiz.questions.map(q => ({
+        question: q.question,
+        reponse: reponses[q.id] || '',
+        correct: data.corrections?.[q.id]?.correct || false,
+        bonne_reponse: data.corrections?.[q.id]?.bonne_reponse || '',
+        explication: data.corrections?.[q.id]?.explication || null,
+      }))
+      setResult({ score: data.score, reussi: data.reussi, details, badge: data.badge || null })
+      setSubmitted(true)
+      if (data.reussi) { sounds.playSuccess() } else { sounds.playFailure() }
+      loadQuiz()
+    } catch (e) { console.error('submitQuiz error:', e) }
+    setSubmitting(false)
+  }
+
   function selectReponse(qId: string, val: string) {
     setReponses(prev => ({ ...prev, [qId]: val }))
     sounds.playCorrect()
