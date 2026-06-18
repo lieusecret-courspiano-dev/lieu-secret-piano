@@ -10,7 +10,7 @@ import {
 
 interface DashboardData {
   periode: { from: string; to: string }
-  revenus: { total: number; packs: number; cadeaux: number; events: number; cb_direct: number; par_stripe: number; par_paypal: number; par_carte: number; par_virement: number }
+  revenus: { total: number; packs: number; cadeaux: number; events: number; cb_direct: number; supports?: number; par_stripe: number; par_paypal: number; par_carte: number; par_virement: number }
   activite: { cours_confirmes: number; cours_avec_pack: number; heures_consommees: number; heures_restantes: number; eleves_actifs: number; inscriptions: number }
   comptabilite: { nb_transactions: number; nb_packs_vendus: number; nb_cadeaux_vendus: number; nb_events_vendus: number; montant_stripe: number; montant_paypal: number; montant_carte: number; montant_virement: number }
   monthlyData: { month: string; label: string; revenus: number; revenus_packs: number; revenus_cadeaux: number; revenus_events: number; revenus_cb: number; cours: number; packs_vendus: number; cadeaux_vendus: number }[]
@@ -110,6 +110,7 @@ export default function DashboardPage() {
     { name: 'Bons cadeaux', value: data.revenus.cadeaux },
     { name: 'Événements', value: data.revenus.events },
     { name: 'CB direct', value: data.revenus.cb_direct },
+    { name: 'Supports', value: data.revenus.supports || 0 },
   ].filter(d => d.value > 0) : []
 
   return (
