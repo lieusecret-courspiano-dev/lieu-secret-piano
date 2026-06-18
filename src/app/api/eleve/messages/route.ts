@@ -86,17 +86,15 @@ export async function POST(req: NextRequest) {
         .from('eleve_badges')
         .select('id')
         .eq('eleve_id', eleve.id)
-        .eq('nom', 'Communicant')
+        .eq('badge_key', 'communicant')
         .single()
 
       if (!existingBadge) {
         await supabaseAdmin.from('eleve_badges').insert({
           eleve_id: eleve.id,
-          nom: 'Communicant',
-          description: 'Premier message envoyé au professeur',
-          icone: '💬',
-          categorie: 'Engagement',
-          obtenu_le: new Date().toISOString(),
+          badge_key: 'communicant', badge_nom: 'Communicant',
+          badge_desc: 'Premier message envoyé au professeur',
+          badge_icon: '💬',
           obtenu_at: new Date().toISOString(),
         })
 

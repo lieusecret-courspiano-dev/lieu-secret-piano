@@ -122,15 +122,13 @@ export async function POST(req: NextRequest) {
       badge = badgeInfo
       try {
         const { data: existingBadge } = await supabaseAdmin
-          .from('eleve_badges').select('id').eq('eleve_id', eleve.id).eq('nom', badgeInfo.nom).single()
+          .from('eleve_badges').select('id').eq('eleve_id', eleve.id).eq('badge_key', badgeInfo.nom).single()
         if (!existingBadge) {
           await supabaseAdmin.from('eleve_badges').insert({
             eleve_id: eleve.id,
-            nom: badgeInfo.nom,
-            description: badgeInfo.description,
-            icone: badgeInfo.icone,
-            categorie: 'quiz',
-            obtenu_le: new Date().toISOString(),
+            badge_key: badgeInfo.nom, badge_nom: badgeInfo.nom,
+            badge_desc: badgeInfo.description,
+            badge_icon: badgeInfo.icone,
             obtenu_at: new Date().toISOString(),
           })
         }
