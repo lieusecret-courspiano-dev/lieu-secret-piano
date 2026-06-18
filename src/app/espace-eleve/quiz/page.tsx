@@ -1,8 +1,62 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import EleveLayout from '@/components/EleveNav'
 import { CheckCircle, XCircle, Volume2, ChevronRight, RotateCcw, Trophy } from 'lucide-react'
+
+// ── Sons du quiz générés via Web Audio API ──────────────────
+function useQuizSounds() {
+  const ctxRef = useRef<AudioContext | null>(null)
+
+  function getCtx() {
+    if (!ctxRef.current) ctxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)()
+    return ctxRef.current
+  }
+
+  const playTone = useCallback((freq: number, duration: number, type: OscillatorType = 'sine', vol = 0.3) => {
+    try {
+      const ctx = getCtx()
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.connect(gain); gain.connect(ctx.destination)
+      osc.type = type; osc.frequency.value = freq
+      gain.gain.setValueAtTime(vol, ctx.currentTime)
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration)
+      osc.start(ctx.currentTime); osc.stop(ctx.currentTime + duration)
+    } catch {}
+  }, [])
+
+  // Son bonne réponse : note joyeuse courte
+  const playCorrect = useCallback(() => {
+    playTone(523, 0.15, 'sine', 0.3)  // Do5
+    setTimeout(() => playTone(659, 0.15, 'sine', 0.3), 120)  // Mi5
+    setTimeout(() => playTone(784, 0.25, 'sine', 0.3), 240)  // Sol5
+  }, [playTone])
+
+  // Son mauvaise réponse : note grave courte
+  const playWrong = useCallback(() => {
+    playTone(220, 0.2, 'sawtooth', 0.2)  // La3
+    setTimeout(() => playTone(196, 0.3, 'sawtooth', 0.15), 150)  // Sol3
+  }, [playTone])
+
+  // Mélodie succès : fanfare joyeuse
+  const playSuccess = useCallback(() => {
+    const notes = [523, 659, 784, 1047]  // Do Mi Sol Do
+    notes.forEach((freq, i) => setTimeout(() => playTone(freq, 0.3, 'sine', 0.35), i * 180))
+    setTimeout(() => {
+      playTone(784, 0.15, 'sine', 0.3)
+      setTimeout(() => playTone(1047, 0.6, 'sine', 0.4), 150)
+    }, notes.length * 180)
+  }, [playTone])
+
+  // Mélodie échec : mélodie descendante triste
+  const playFailure = useCallback(() => {
+    const notes = [392, 349, 330, 294]  // Sol Fa Mi Ré
+    notes.forEach((freq, i) => setTimeout(() => playTone(freq, 0.35, 'triangle', 0.25), i * 200))
+  }, [playTone])
+
+  return { playCorrect, playWrong, playSuccess, playFailure }
+}
 
 interface Quiz {
   id: string; titre: string; description: string | null; niveau: string
@@ -31,6 +85,8 @@ export default function EleveQuizPage() {
   const [result, setResult] = useState<{ score: number; reussi: boolean; details: any[] } | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [filter, setFilter] = useState('tous')
+  const [lastAnswer, setLastAnswer] = useState<'correct' | 'wrong' | null>(null)
+  const sounds = useQuizSounds()
 
   useEffect(() => {
     fetch('/api/eleve/me').then(r => {
@@ -75,16 +131,17 @@ export default function EleveQuizPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ quiz_id: activeQuiz.quiz.id, reponses })
     })
-    const data = await res.json()
-    setResult(data); setSubmitted(true); setSubmitting(false)
-    loadQuiz()
+    
   }
 
-  function selectReponse(qId: string, val: string) {
-    setReponses(prev => ({ ...prev, [qId]: val }))
-  }
+  
 
   const nbQ = (q: Quiz) => q.quiz_questions?.[0]?.count || 0
+  function selectReponse(qId: string, val: string) {
+    setReponses(prev => ({ ...prev, [qId]: val }))
+    sounds.playCorrect()
+  }
+
   const lastResult = (q: Quiz) => q.quiz_resultats?.[0]
   const filtered = filter === 'tous' ? quiz : quiz.filter(q => q.niveau === filter || q.niveau === 'tous')
 
