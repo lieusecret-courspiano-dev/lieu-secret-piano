@@ -114,15 +114,7 @@ export async function POST(req: NextRequest) {
     .eq('quiz_id', quiz_id)
     .eq('eleve_id', eleve.id)
 
-  const { data: resultat, error: insertError } = await supabaseAdmin
-    .from('quiz_resultats')
-    .insert({ quiz_id, eleve_id: eleve.id, score, reponses, reussi, tentative: (count || 0) + 1 })
-    .select().single()
-
-  if (insertError) {
-    console.error('[quiz POST] insert error:', insertError.message)
-    return NextResponse.json({ error: 'Erreur sauvegarde: ' + insertError.message }, { status: 500 })
-  }
+  
 
   // ── Badge + notification si réussi ──────────────────────────
   let badge = null
@@ -164,5 +156,5 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  return NextResponse.json({ score, reussi, corrections, resultat_id: resultat?.id, badge })
+  return NextResponse.json({ score, reussi, corrections, badge })
 }
