@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
 
   if (id) {
     // Détail d'un quiz avec questions (sans les bonnes réponses)
-    const { data: quiz } = await supabaseAdmin.from('quiz').select('*').eq('id', id).eq('statut', 'publie').single()
+    const { data: quiz } = await supabaseAdmin.from('quiz').select('*').eq('id', id).single()
     if (!quiz) return NextResponse.json({ error: 'Quiz non trouvé' }, { status: 404 })
 
     const { data: questions } = await supabaseAdmin.from('quiz_questions')
@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
 
   // Liste des quiz publiés avec résultats
   // Ordre par niveau : fondamentaux → comprehension → expression
-  const { data: allQuiz } = await supabaseAdmin.from('quiz').select('*, quiz_questions(count)').eq('statut', 'publie').order('created_at', { ascending: true })
+  const { data: allQuiz } = await supabaseAdmin.from('quiz').select('*, quiz_questions(count)').order('created_at', { ascending: true })
   const niveauOrder: Record<string, number> = { fondamentaux: 0, comprehension: 1, expression: 2 }
   const quiz = (allQuiz || []).sort((a, b) => (niveauOrder[a.niveau] ?? 9) - (niveauOrder[b.niveau] ?? 9))
   const { data: resultats } = await supabaseAdmin.from('quiz_resultats').select('quiz_id, score, reussi, created_at').eq('eleve_id', eleve.id)

@@ -219,6 +219,45 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true, type: 'cadeau', gift_code: giftCode, card_id: newCard?.id })
     }
 
+    // Support pédagogique
+    if (type === 'support') {
+      const support_id = data.support_id as string
+      const eleve_id = data.eleve_id as string
+
+      // Activer l'accès au support
+      await supabaseAdmin.from('supports_achats').insert({
+        support_id,
+        eleve_id,
+        montant: capture.amount || 0,
+        payment_method: 'paypal',
+        statut: 'actif',
+      })
+
+      // Récupérer infos élève et support
+      const { data: eleve } = await supabaseAdmin.from('eleves').select('prenom, nom, email').eq('id', eleve_id).single()
+      const { data: support } = await supabaseAdmin.from('supports_pedagogiques').select('titre').eq('id', support_id).single()
+      const settings = await getSiteSettings()
+
+      // Email confirmation élève
+      if (eleve) {
+        await resend.emails.send({
+          from: FROM,
+          to: eleve.email,
+          subject: `Votre support est disponible — ${support?.titre}`,
+          html: `<div style="font-family:Arial;background:#1a1a2e;padding:32px;color:#f0f0f0;max-width:500px;margin:0 auto;border-radius:12px;">
+            <h2 style="color:#f59e0b;">Paiement confirmé !</h2>
+            <p>Bonjour ${eleve.prenom},</p>
+            <p>Votre accès à <strong style="color:#f59e0b;">${support?.titre}</strong> est maintenant actif.</p>
+            <div style="text-align:center;margin:20px 0;">
+              <a href="${APP_URL}/espace-eleve/mes-supports" style="background:#f59e0b;color:#1a1a2e;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;">Accéder à mon support</a>
+            </div>
+          </div>`,
+        }).catch(console.error)
+      }
+
+      return NextResponse.json({ success: true, type: 'support' })
+    }
+
     return NextResponse.json({ error: 'Type non géré' }, { status: 400 })
   } catch (err: unknown) {
     console.error('[PayPal capture-order]', err)

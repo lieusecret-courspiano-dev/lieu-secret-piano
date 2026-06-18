@@ -42,13 +42,7 @@ const NAV_GROUPS = [
     ],
   },
   {
-    label: 'Mes cours',
-    items: [
-      { href: '/espace-eleve/reserver',     label: 'Réserver un cours', icon: Icons.reserver,     badge: null },
-      { href: '/espace-eleve/reservations', label: 'Mes réservations',  icon: Icons.reservations, badge: null },
-      { href: '/espace-eleve/travaux',      label: 'Travail à faire',   icon: Icons.travaux,      badge: 'travaux' },
-      { href: '/espace-eleve/notes',        label: 'Notes de cours',    icon: Icons.notes,        badge: null },
-    ],
+    
   },
   {
     label: 'Ma formation',
@@ -80,7 +74,6 @@ const NAV_GROUPS = [
   {
     label: 'Outils',
     items: [
-      { href: '/espace-eleve/messages',        label: 'Messages',          icon: Icons.messages,        badge: 'messages' },
       { href: '/espace-eleve/enregistrements', label: 'Enregistrements',   icon: Icons.enregistrements, badge: 'enregistrements' },
       { href: '/espace-eleve/journal',         label: 'Journal de pratique',icon: Icons.journal,        badge: null },
       { href: '/espace-eleve/repertoire',      label: 'Mon répertoire',    icon: Icons.repertoire,      badge: null },
@@ -255,7 +248,7 @@ export default function EleveLayout({
               <div key={group.label}>
                 <p className="text-[10px] font-bold text-noir-700 uppercase tracking-widest px-3 mb-1">{group.label}</p>
                 <div className="space-y-0.5">
-                  {group.items.map(item => {
+                  {( group.items || []).map(item => {
                     const isActive = pathname === item.href
                     const badge = getBadge(item.badge)
                     return (
@@ -319,7 +312,7 @@ export default function EleveLayout({
                 <div key={group.label}>
                   <p className="text-[10px] font-bold text-noir-700 uppercase tracking-widest px-3 mb-1">{group.label}</p>
                   <div className="space-y-0.5">
-                    {group.items.map(item => {
+                    {( group.items || []).map(item => {
                       const isActive = pathname === item.href
                       const badge = getBadge(item.badge)
                       return (

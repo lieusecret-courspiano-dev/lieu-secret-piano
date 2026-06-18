@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
+import { Resend } from 'resend'
 import { supabaseAdmin } from '@/lib/supabase'
 import { sendEventConfirmation, sendAdminNotification } from '@/lib/email'
 import { getSiteSettings } from '@/lib/settings'
@@ -31,6 +32,53 @@ export async function POST(req: NextRequest) {
   if (event.type === 'checkout.session.completed') {
     const session  = event.data.object as Stripe.Checkout.Session
     const metadata = session.metadata!
+    const metaType = metadata.type || 'evenement'
+
+    // ── Support pédagogique ──────────────────────────────────
+    if (metaType === 'support') {
+      const support_id = metadata.support_id
+      const eleve_id   = metadata.eleve_id
+      const eleve_email = metadata.eleve_email
+      const montant    = parseFloat(metadata.montant || '0')
+
+      try {
+        await supabaseAdmin.from('supports_achats').insert({
+          support_id, eleve_id,
+          acheteur_email: eleve_email,
+          montant, payment_method: 'stripe', statut: 'actif',
+          stripe_session_id: session.id,
+        })
+
+        const { data: support } = await supabaseAdmin.from('supports_pedagogiques').select('titre').eq('id', support_id).single()
+        const { data: eleve }   = await supabaseAdmin.from('eleves').select('prenom, nom').eq('id', eleve_id).single()
+        const siteSettings = await getSiteSettings()
+        const resend = new Resend(process.env.RESEND_API_KEY!)
+
+        await resend.emails.send({
+          from: process.env.RESEND_FROM_EMAIL || 'Lieu Secret <noreply@lieusecret-courspiano.fr>',
+          to: eleve_email,
+          subject: `Votre support est disponible — ${support?.titre}`,
+          html: `<div style="font-family:Arial;background:#1a1a2e;padding:32px;color:#f0f0f0;max-width:500px;margin:0 auto;border-radius:12px;">
+            <h2 style="color:#f59e0b;">Paiement confirmé !</h2>
+            <p>Bonjour ${eleve?.prenom || ''},</p>
+            <p>Votre accès à <strong style="color:#f59e0b;">${support?.titre}</strong> est maintenant actif.</p>
+            <div style="text-align:center;margin:20px 0;">
+              <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://www.lieusecret-courspiano.fr'}/espace-eleve/mes-supports" style="background:#f59e0b;color:#1a1a2e;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;">Accéder à mon support</a>
+            </div>
+          </div>`,
+        }).catch(console.error)
+
+        // Notifier admin
+        await resend.emails.send({
+          from: process.env.RESEND_FROM_EMAIL || 'Lieu Secret <noreply@lieusecret-courspiano.fr>',
+          to: siteSettings.contact_email || 'contact@lieusecret-courspiano.fr',
+          subject: `Achat support : ${support?.titre} — ${eleve?.prenom} ${eleve?.nom}`,
+          html: `<p>${eleve?.prenom} ${eleve?.nom} (${eleve_email}) a acheté <strong>${support?.titre}</strong> (${montant} €) via Stripe.</p>`,
+        }).catch(console.error)
+
+      } catch (err) { console.error('Erreur support Stripe:', err) }
+      return NextResponse.json({ received: true })
+    }
 
     const event_id        = metadata.event_id
     const student_name    = metadata.student_name

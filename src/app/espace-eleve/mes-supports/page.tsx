@@ -58,7 +58,7 @@ function SupportViewer({ support, onClose }: { support: Support; onClose: () => 
           <p className="text-white font-medium text-sm truncate">{support.titre}</p>
           {support.nb_pages && <p className="text-noir-500 text-xs">{support.nb_pages} pages</p>}
         </div>
-        {support.fichier_url && (
+        {support.fichier_url && !isLien && (
           <button
             onClick={handleDownload}
             disabled={downloading}
@@ -71,11 +71,12 @@ function SupportViewer({ support, onClose }: { support: Support; onClose: () => 
       </div>
 
       {/* Contenu */}
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-hidden" style={{ minHeight: '70vh' }}>
         {isPdf && support.fichier_url && (
           <iframe
             src={`${support.fichier_url}#toolbar=1&navpanes=1&scrollbar=1`}
-            className="w-full h-full border-0"
+            className="w-full border-0"
+            style={{ height: 'calc(100vh - 120px)', minHeight: '500px' }}
             title={support.titre}
           />
         )}
@@ -135,7 +136,7 @@ function SupportViewer({ support, onClose }: { support: Support; onClose: () => 
         {!support.fichier_url && (
           <div className="flex flex-col items-center justify-center h-full gap-4 p-8">
             <FileText size={48} className="text-noir-600" />
-            <p className="text-noir-400 text-center">Ce support n'a pas encore de fichier associé.</p>
+            <p className="text-noir-400 text-center">Ce support n&apos;a pas encore de fichier associé.</p>
           </div>
         )}
       </div>
@@ -196,10 +197,6 @@ export default function MesSupportsPage() {
     }
   }
 
-  function closeViewer() {
-    setViewing(null)
-  }
-
   const niveaux = ['tous', 'fondamentaux', 'comprehension', 'expression']
   const filtered = filter === 'tous'
     ? supports
@@ -226,7 +223,7 @@ export default function MesSupportsPage() {
   }
 
   if (viewing) {
-    return <SupportViewer support={viewing} onClose={closeViewer} />
+    return <SupportViewer support={viewing} onClose={() => setViewing(null)} />
   }
 
   return (
@@ -271,6 +268,11 @@ export default function MesSupportsPage() {
                 ? 'Votre professeur ajoutera des supports prochainement'
                 : 'Aucun support pour ce niveau'}
             </p>
+            <div className="mt-4">
+              <a href="/bibliotheque-pedagogique" className="btn-gold text-xs px-4 py-2 inline-flex items-center gap-2">
+                <ShoppingCart size={14} /> Voir et acheter les supports
+              </a>
+            </div>
           </div>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -282,7 +284,6 @@ export default function MesSupportsPage() {
                   className="card hover:border-gold-500/30 transition-all cursor-pointer group"
                   onClick={() => openSupport(s)}
                 >
-                  {/* Aperçu */}
                   {s.apercu_url ? (
                     <div className="h-36 rounded-xl overflow-hidden mb-3 bg-noir-800 -mx-1 relative">
                       <img src={s.apercu_url} alt={s.titre} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
@@ -312,7 +313,6 @@ export default function MesSupportsPage() {
                     </div>
                   </div>
 
-                  {/* Statut progression */}
                   <div className="mt-3 pt-3 border-t border-noir-800 flex items-center justify-between">
                     <span className={`text-xs font-medium flex items-center gap-1 ${
                       statut === 'termine' ? 'text-green-400'
@@ -327,7 +327,6 @@ export default function MesSupportsPage() {
                     </span>
                   </div>
 
-                  {/* Bouton marquer terminé */}
                   {statut === 'en_cours' && (
                     <button
                       onClick={e => { e.stopPropagation(); updateProgression(s.id, 'termine') }}
@@ -339,20 +338,6 @@ export default function MesSupportsPage() {
                 </div>
               )
             })}
-          </div>
-        )}
-
-        {/* Info achat */}
-        {!loading && supports.length === 0 && (
-          <div className="mt-6 card border-gold-500/20 bg-gold-500/5 text-center">
-            <Lock size={24} className="text-gold-400 mx-auto mb-2" />
-            <p className="text-white font-medium text-sm">Accéder aux supports de cours</p>
-            <p className="text-noir-400 text-xs mt-1 mb-3">
-              Les supports sont disponibles à l'achat ou attribués par votre professeur.
-            </p>
-            <a href="/bibliotheque-pedagogique" className="btn-gold text-xs px-4 py-2 inline-flex items-center gap-2">
-              <ShoppingCart size={14} /> Voir et acheter les supports
-            </a>
           </div>
         )}
       </div>

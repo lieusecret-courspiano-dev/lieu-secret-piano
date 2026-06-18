@@ -80,6 +80,18 @@ export async function GET(req: NextRequest) {
       .eq('type', 'cours')
       .is('pack_code', null)
 
+    // Supports pédagogiques vendus (revenus réels)
+    const { data: supportsAchatsAll } = await supabaseAdmin
+      .from('supports_achats')
+      .select('id, montant, payment_method, statut, created_at, supports_pedagogiques(titre)')
+      .eq('statut', 'actif')
+      .neq('attribue_manuellement', true)
+
+    const supportsAchats = (supportsAchatsAll || []).filter(s => {
+      const dateRef = s.created_at?.substring(0, 10)
+      return dateRef >= fromDate && dateRef <= toDate
+    })
+
     // Élèves actifs
     const { count: elevesActifs } = await supabaseAdmin
       .from('eleves').select('*', { count: 'exact', head: true }).eq('is_active', true)
@@ -90,11 +102,12 @@ export async function GET(req: NextRequest) {
       .gte('created_at', fromISO).lte('created_at', toISO)
 
     // CALCUL REVENUS (sans double comptabilisation)
-    const revenusPacks   = (packs || []).reduce((s, p) => s + (p.montant || 0), 0)
-    const revenusGifts   = (giftCards || []).reduce((s, g) => s + (g.montant || 0), 0)
-    const revenusEvents  = (eventResa || []).reduce((s, r) => s + (r.amount || 0), 0)
-    const revenusCB      = (cbResa || []).reduce((s, r) => s + (r.amount || 0), 0)
-    const revenusTotal   = revenusPacks + revenusGifts + revenusEvents + revenusCB
+    const revenusPacks    = (packs || []).reduce((s, p) => s + (p.montant || 0), 0)
+    const revenusGifts    = (giftCards || []).reduce((s, g) => s + (g.montant || 0), 0)
+    const revenusEvents   = (eventResa || []).reduce((s, r) => s + (r.amount || 0), 0)
+    const revenusCB       = (cbResa || []).reduce((s, r) => s + (r.amount || 0), 0)
+    const revenusSupports = (supportsAchats || []).reduce((s, x) => s + (x.montant || 0), 0)
+    const revenusTotal    = revenusPacks + revenusGifts + revenusEvents + revenusCB + revenusSupports
 
     // Par mode de paiement
     const revenusVirement = [
@@ -107,12 +120,14 @@ export async function GET(req: NextRequest) {
       + (packs || []).filter(p => p.payment_method === 'stripe').reduce((s, p) => s + (p.montant || 0), 0)
       + (giftCards || []).filter(g => g.payment_method === 'stripe').reduce((s, g) => s + (g.montant || 0), 0)
       + (eventResa || []).filter(r => r.payment_method === 'stripe').reduce((s, r) => s + (r.amount || 0), 0)
+      + (supportsAchats || []).filter(s => s.payment_method === 'stripe').reduce((s, x) => s + (x.montant || 0), 0)
 
     // PayPal uniquement
     const revenusPayPal = (cbResa || []).filter(r => r.payment_method === 'paypal').reduce((s, r) => s + (r.amount || 0), 0)
       + (packs || []).filter(p => p.payment_method === 'paypal').reduce((s, p) => s + (p.montant || 0), 0)
       + (giftCards || []).filter(g => g.payment_method === 'paypal').reduce((s, g) => s + (g.montant || 0), 0)
       + (eventResa || []).filter(r => r.payment_method === 'paypal').reduce((s, r) => s + (r.amount || 0), 0)
+      + (supportsAchats || []).filter(s => s.payment_method === 'paypal').reduce((s, x) => s + (x.montant || 0), 0)
 
     const revenusCarte = revenusStripe + revenusPayPal
 
@@ -131,15 +146,17 @@ export async function GET(req: NextRequest) {
 
     const monthlyData = months.map(month => {
       // Utilise date_paiement (YYYY-MM-DD) si disponible, sinon created_at
-      const mPacks  = (packs || []).filter(p => (p.date_paiement || p.created_at?.substring(0, 10))?.startsWith(month))
-      const mGifts  = (giftCards || []).filter(g => (g.date_paiement || g.created_at?.substring(0, 10))?.startsWith(month))
-      const mEvents = (eventResa || []).filter(r => r.created_at?.startsWith(month))
-      const mCB     = (cbResa || []).filter(r => r.created_at?.startsWith(month))
-      const mCours  = (reservations || []).filter(r => r.created_at?.startsWith(month) && r.status === 'confirmed' && r.type === 'cours')
+      const mPacks    = (packs || []).filter(p => (p.date_paiement || p.created_at?.substring(0, 10))?.startsWith(month))
+      const mGifts    = (giftCards || []).filter(g => (g.date_paiement || g.created_at?.substring(0, 10))?.startsWith(month))
+      const mEvents   = (eventResa || []).filter(r => r.created_at?.startsWith(month))
+      const mCB       = (cbResa || []).filter(r => r.created_at?.startsWith(month))
+      const mSupports = (supportsAchats || []).filter(s => s.created_at?.startsWith(month))
+      const mCours    = (reservations || []).filter(r => r.created_at?.startsWith(month) && r.status === 'confirmed' && r.type === 'cours')
       const revenus = mPacks.reduce((s, p) => s + (p.montant || 0), 0)
                     + mGifts.reduce((s, g) => s + (g.montant || 0), 0)
                     + mEvents.reduce((s, r) => s + (r.amount || 0), 0)
                     + mCB.reduce((s, r) => s + (r.amount || 0), 0)
+                    + mSupports.reduce((s, x) => s + (x.montant || 0), 0)
       return {
         month, label: DateTime.fromFormat(month, 'yyyy-MM').setLocale('fr').toFormat('MMM yy'),
         revenus: Math.round(revenus * 100) / 100,
@@ -147,7 +164,8 @@ export async function GET(req: NextRequest) {
         revenus_cadeaux: Math.round(mGifts.reduce((s, g) => s + (g.montant || 0), 0) * 100) / 100,
         revenus_events: Math.round(mEvents.reduce((s, r) => s + (r.amount || 0), 0) * 100) / 100,
         revenus_cb: Math.round(mCB.reduce((s, r) => s + (r.amount || 0), 0) * 100) / 100,
-        cours: mCours.length, packs_vendus: mPacks.length, cadeaux_vendus: mGifts.length,
+        revenus_supports: Math.round(mSupports.reduce((s, x) => s + (x.montant || 0), 0) * 100) / 100,
+        cours: mCours.length, packs_vendus: mPacks.length, cadeaux_vendus: mGifts.length, supports_vendus: mSupports.length,
       }
     })
 
@@ -159,6 +177,7 @@ export async function GET(req: NextRequest) {
         cadeaux: Math.round(revenusGifts * 100) / 100,
         events: Math.round(revenusEvents * 100) / 100,
         cb_direct: Math.round(revenusCB * 100) / 100,
+        supports: Math.round(revenusSupports * 100) / 100,
         par_stripe: Math.round(revenusStripe * 100) / 100,
         par_paypal: Math.round(revenusPayPal * 100) / 100,
         par_carte: Math.round(revenusCarte * 100) / 100,
