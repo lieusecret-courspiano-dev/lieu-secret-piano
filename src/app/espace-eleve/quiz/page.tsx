@@ -55,6 +55,18 @@ export default function EleveQuizPage() {
 
   
 
+  async function startQuiz(q: Quiz) {
+    try {
+      const res = await fetch(`/api/eleve/quiz?id=${q.id}`)
+      if (res.status === 401) { router.push('/espace-eleve/login'); return }
+      const data = await res.json()
+      console.log('[startQuiz] questions count:', (data.questions || []).length)
+      if (data.error) { console.error('[startQuiz] error:', data.error); return }
+      setActiveQuiz({ quiz: q, questions: data.questions || [] })
+      setCurrentQ(0); setReponses({}); setSubmitted(false); setResult(null)
+    } catch (e) { console.error('startQuiz error:', e) }
+  }
+
   async function submitQuiz() {
     if (!activeQuiz) return
     setSubmitting(true)
