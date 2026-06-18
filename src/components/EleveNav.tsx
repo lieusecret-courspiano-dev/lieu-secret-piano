@@ -42,7 +42,14 @@ const NAV_GROUPS = [
     ],
   },
   {
-    
+    label: 'Mes cours',
+    items: [
+      { href: '/espace-eleve/reserver',     label: 'Réserver un cours', icon: Icons.reserver,     badge: null },
+      { href: '/espace-eleve/reservations', label: 'Mes réservations',  icon: Icons.reservations, badge: null },
+      { href: '/espace-eleve/messages',     label: 'Messages',          icon: Icons.messages,     badge: 'messages' },
+      { href: '/espace-eleve/travaux',      label: 'Travail à faire',   icon: Icons.travaux,      badge: 'travaux' },
+      { href: '/espace-eleve/notes',        label: 'Notes de cours',    icon: Icons.notes,        badge: null },
+    ],
   },
   {
     label: 'Ma formation',
