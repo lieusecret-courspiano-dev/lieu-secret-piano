@@ -16,9 +16,11 @@ export async function GET(req: NextRequest) {
     const { data: quiz } = await supabaseAdmin.from('quiz').select('*').eq('id', id).single()
     if (!quiz) return NextResponse.json({ error: 'Quiz non trouvé' }, { status: 404 })
 
-    const { data: questions } = await supabaseAdmin.from('quiz_questions')
-      .select('id, type, question, options, audio_url, image_url, points, position')
+    const { data: questions, error: qError } = await supabaseAdmin.from('quiz_questions')
+      .select('id, type, question, options, audio_url, points, position')
       .eq('quiz_id', id).order('position')
+    
+    if (qError) console.error('[quiz API] questions error:', qError.message)
 
     // Résultats précédents
     const { data: resultats } = await supabaseAdmin.from('quiz_resultats')
