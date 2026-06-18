@@ -2,7 +2,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { ThemeToggle } from './ThemeProvider'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 
 // ── Icônes SVG colorées par section ──────────────────────────────────────────
 const Icons = {
@@ -189,6 +189,31 @@ export default function EleveLayout({
   // Mettre à jour les compteurs quand les props changent
   useEffect(() => { if (nbNotifsProp > 0) setNbNotifs(nbNotifsProp) }, [nbNotifsProp])
   useEffect(() => { if (nbTravauxProp > 0) setNbTravaux(nbTravauxProp) }, [nbTravauxProp])
+
+  // Son de notification via Web Audio API
+  const prevNotifsRef = useRef(0)
+  useEffect(() => {
+    if (nbNotifs > prevNotifsRef.current && prevNotifsRef.current >= 0) {
+      try {
+        const ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
+        // Mélodie douce : deux notes courtes
+        const playNote = (freq: number, start: number, dur: number) => {
+          const osc = ctx.createOscillator()
+          const gain = ctx.createGain()
+          osc.connect(gain); gain.connect(ctx.destination)
+          osc.type = 'sine'; osc.frequency.value = freq
+          gain.gain.setValueAtTime(0, ctx.currentTime + start)
+          gain.gain.linearRampToValueAtTime(0.25, ctx.currentTime + start + 0.02)
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur)
+          osc.start(ctx.currentTime + start)
+          osc.stop(ctx.currentTime + start + dur)
+        }
+        playNote(880, 0, 0.15)    // La5 — première note
+        playNote(1047, 0.18, 0.2) // Do6 — deuxième note plus haute
+      } catch {}
+    }
+    prevNotifsRef.current = nbNotifs
+  }, [nbNotifs])
 
   // Scroll vers le haut du contenu principal lors de la navigation
   useEffect(() => {
