@@ -48,7 +48,7 @@ export async function GET(req: NextRequest) {
   const quiz = (allQuiz || []).sort((a, b) => (niveauOrder[a.niveau] ?? 9) - (niveauOrder[b.niveau] ?? 9))
 
   const { data: resultats } = await supabaseAdmin
-    .from('quiz_resultats').select('quiz_id, score, reussi, created_at').eq('eleve_id', eleve.id)
+    .from('quiz_resultats').select('quiz_id, score, reussi').eq('eleve_id', eleve.id)
 
   return NextResponse.json(quiz.map(q => ({
     ...q,
@@ -97,21 +97,13 @@ export async function POST(req: NextRequest) {
   console.log(`[quiz] "${quiz.titre}" score=${score}% reussi=${reussi}`)
 
   // 4. Sauvegarder le résultat
-  const { count } = await supabaseAdmin
-    .from('quiz_resultats').select('*', { count: 'exact', head: true })
-    .eq('quiz_id', quiz_id).eq('eleve_id', eleve.id)
-
   const { error: insertError } = await supabaseAdmin
     .from('quiz_resultats')
-    .insert({ quiz_id, eleve_id: eleve.id, score, reussi, tentative: (count || 0) + 1 })
+    .insert({ quiz_id, eleve_id: eleve.id, score, reussi })
 
   if (insertError) {
     console.error('[quiz] insert error:', insertError.message)
-    // Essai sans tentative
-    const { error: insertError2 } = await supabaseAdmin
-      .from('quiz_resultats')
-      .insert({ quiz_id, eleve_id: eleve.id, score, reussi })
-    if (insertError2) console.error('[quiz] insert2 error:', insertError2.message)
+    return NextResponse.json({ error: 'Erreur sauvegarde score: ' + insertError.message }, { status: 500 })
   }
 
   // 5. Badge + notification si réussi
