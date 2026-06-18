@@ -315,7 +315,7 @@ export default function AccueilPage() {
               </p>
               <div className="space-y-3">
                 {[
-                  'Cours 100% en ligne via Zoom ou Google Meet',
+                  'Cours 100% en ligne via Zoom',
                   'Creneaux flexibles adaptes a votre emploi du temps',
                   'Gestion automatique des fuseaux horaires internationaux',
                   'Confirmation instantanee par email avec fichier calendrier (.ics)',

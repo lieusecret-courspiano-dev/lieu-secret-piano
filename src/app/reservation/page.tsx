@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, Suspense } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { DateTime } from 'luxon'
 import { detectTimezone, formatTime } from '@/lib/utils'
 import { TIMEZONES } from '@/types'
@@ -11,6 +11,7 @@ import ContactModal from '@/components/ContactModal'
 import FeaturedEvent from '@/components/FeaturedEvent'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { ThemeToggle } from '@/components/ThemeProvider'
+import SiteHeader from '@/components/SiteHeader'
 
 interface GeneratedSlot {
   start: string
@@ -63,6 +64,7 @@ const MONTHS_FR = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','A
 
 
 function ReservationContent() {
+  const router = useRouter()
   const searchParams = useSearchParams()
   const tabParam     = searchParams.get('tab')
   const codeParam    = searchParams.get('code')
@@ -91,6 +93,15 @@ function ReservationContent() {
   useEffect(() => {
     setTimezone(detectTimezone())
     fetchData()
+    // Si l'élève est connecté, rediriger vers la page interne
+    fetch('/api/eleve/me').then(r => {
+      if (r.ok) return r.json()
+      return null
+    }).then(me => {
+      if (me?.id) {
+        router.replace('/espace-eleve/reserver')
+      }
+    }).catch(() => {})
   }, [])
 
   // Tenter l'accès automatique UNIQUEMENT via le code passé dans l'URL (?code=xxx)
@@ -236,20 +247,7 @@ function ReservationContent() {
     <div className="min-h-screen bg-noir-950 text-noir-100 transition-colors duration-200">
 
       {/* HEADER */}
-      <header className="border-b border-noir-800 bg-noir-900/80 backdrop-blur-sm sticky top-0 z-40">
-        <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
-          <a href="/" className="flex items-center gap-3">
-            <div className="w-px h-5 bg-gold-500" />
-            <span className="font-serif text-lg text-gold-400 tracking-widest">LIEU SECRET</span>
-          </a>
-          <div className="flex items-center gap-3">
-            <ThemeToggle />
-            <button onClick={() => setShowContact(true)} className="text-sm text-noir-300 hover:text-gold-400 transition-colors">
-              Contact
-            </button>
-          </div>
-        </div>
-      </header>
+      <SiteHeader />
 
       {/* ÉVÉNEMENT EN VEDETTE */}
       {featuredEvent && !loading && (
@@ -257,7 +255,7 @@ function ReservationContent() {
       )}
 
       {/* HERO */}
-      <section className="max-w-5xl mx-auto px-4 pt-10 pb-6 text-center">
+      <section className="max-w-5xl mx-auto px-4 pt-6 md:pt-10 pb-4 md:pb-6 text-center">
         <div className="flex justify-center mb-5">
           <div className="relative w-20 h-14 rounded-xl overflow-hidden border border-gold-500/30">
             <img src="/piano-hero.jpg" alt="Piano" className="w-full h-full object-cover opacity-80" />
@@ -291,7 +289,7 @@ function ReservationContent() {
       </div>
 
       {/* CONTENU */}
-      <main className="max-w-5xl mx-auto px-4 pb-20">
+      <main className="max-w-5xl mx-auto px-4 pb-24 md:pb-20">
         {loading ? (
           <div className="text-center py-20">
             <div className="inline-block w-8 h-8 border-2 border-gold-500 border-t-transparent rounded-full animate-spin" />
@@ -346,8 +344,8 @@ function ReservationContent() {
 
           ) : (
             /* ── Calendrier et créneaux (accès accordé) ── */
-            <div className="max-w-3xl mx-auto">
-              <div className="grid md:grid-cols-2 gap-6">
+            <div className="max-w-3xl mx-auto w-full">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
 
                 {/* Calendrier */}
                 <div className="card">
@@ -468,7 +466,7 @@ function ReservationContent() {
                 <p className="text-lg">Aucun événement à venir pour le moment.</p>
               </div>
             ) : (
-              <div className="grid md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                 {events.map(event => (
                   <EventCard key={event.id} event={event} timezone={timezone} onReserve={() => setSelectedEvent(event)} />
                 ))}

@@ -52,3 +52,16 @@ export async function PATCH(req: NextRequest) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json(data)
 }
+
+// DELETE — supprimer un message (admin)
+export async function DELETE(req: NextRequest) {
+  const isAdmin = await validateAdminSession()
+  if (!isAdmin) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
+
+  const { id } = await req.json()
+  if (!id) return NextResponse.json({ error: 'ID manquant' }, { status: 400 })
+
+  const { error } = await supabaseAdmin.from('messages').delete().eq('id', id)
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ success: true })
+}

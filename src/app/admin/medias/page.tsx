@@ -35,7 +35,7 @@ export default function AdminMedias() {
 
   async function fetchMedias() {
     setLoading(true)
-    const res  = await fetch('/api/medias')
+    const res  = await fetch('/api/medias?admin=true')
     const data = await res.json()
     setMedias(Array.isArray(data) ? data : [])
     setLoading(false)
@@ -86,7 +86,7 @@ export default function AdminMedias() {
   const byType = (type: string) => medias.filter(m => m.type === type)
 
   return (
-    <div className="p-6 md:p-8 pb-24 md:pb-8">
+    <div className="p-4 md:p-6 lg:p-8 pb-24 md:pb-8">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-serif text-white">Médias & Témoignages</h1>
@@ -112,7 +112,8 @@ export default function AdminMedias() {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {byType(value).map(m => (
-                    <div key={m.id} className={`card ${!m.is_active ? 'opacity-50' : ''}`}>
+                    <div key={m.id} className={`card ${!m.is_active ? 'border-yellow-500/30' : ''}`}>
+                      {!m.is_active && m.type === 'temoignage' && <div className="mb-2"><span className="text-xs bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 px-2 py-0.5 rounded-full">En attente de validation</span></div>}
                       {/* Preview */}
                       {value === 'photo' && (
                         <div className="aspect-video rounded-lg overflow-hidden mb-3 bg-noir-800">

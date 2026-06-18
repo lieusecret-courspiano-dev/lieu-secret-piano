@@ -31,11 +31,7 @@ const STATUS_LABELS: Record<string, { label: string; color: string }> = {
 // ── Export CSV (compatible Excel) ─────────────────────────────────────
 function exportCSV(inscriptions: Inscription[]) {
   const BOM = '\uFEFF' // BOM UTF-8 pour Excel
-  const headers = [
-    'Prénom', 'Nom', 'Email', 'Téléphone', 'Adresse', 'Ville', 'Pays',
-    'Niveau', 'Années de pratique', 'Disponibilités', 'Fréquence',
-    'Objectifs', 'Message', 'Statut', 'Date d\'inscription',
-  ]
+  // Headers dynamiques calculés ci-dessous
 
   function escapeCSV(val: string | null | undefined): string {
     if (!val) return ''
@@ -43,25 +39,51 @@ function exportCSV(inscriptions: Inscription[]) {
     return `"${str}"`
   }
 
+  // Déterminer les colonnes non vides
+  const hasPhone    = inscriptions.some(i => i.telephone)
+  const hasAdresse  = inscriptions.some(i => i.adresse)
+  const hasVille    = inscriptions.some(i => i.ville)
+  const hasPays     = inscriptions.some(i => i.pays)
+  const hasAnnees   = inscriptions.some(i => i.annees_pratique)
+  const hasRythme   = inscriptions.some(i => i.rythme)
+  const hasFreq     = inscriptions.some(i => i.frequence)
+  const hasObjectifs= inscriptions.some(i => i.objectifs)
+  const hasMessage  = inscriptions.some(i => i.message)
+
+  const dynamicHeaders = [
+    'Prénom', 'Nom', 'Email',
+    ...(hasPhone    ? ['Téléphone']          : []),
+    ...(hasAdresse  ? ['Adresse']            : []),
+    ...(hasVille    ? ['Ville']              : []),
+    ...(hasPays     ? ['Pays']               : []),
+    'Niveau',
+    ...(hasAnnees   ? ['Années de pratique'] : []),
+    ...(hasRythme   ? ['Disponibilités']     : []),
+    ...(hasFreq     ? ['Fréquence']          : []),
+    ...(hasObjectifs? ['Objectifs']          : []),
+    ...(hasMessage  ? ['Message']            : []),
+    'Statut', 'Date d\'inscription',
+  ]
+
   const rows = inscriptions.map(i => [
     escapeCSV(i.prenom),
     escapeCSV(i.nom),
     escapeCSV(i.email),
-    escapeCSV(i.telephone),
-    escapeCSV(i.adresse),
-    escapeCSV(i.ville),
-    escapeCSV(i.pays),
+    ...(hasPhone    ? [escapeCSV(i.telephone)]       : []),
+    ...(hasAdresse  ? [escapeCSV(i.adresse)]         : []),
+    ...(hasVille    ? [escapeCSV(i.ville)]           : []),
+    ...(hasPays     ? [escapeCSV(i.pays)]            : []),
     escapeCSV(i.niveau),
-    escapeCSV(i.annees_pratique),
-    escapeCSV(i.rythme),
-    escapeCSV(i.frequence),
-    escapeCSV(i.objectifs),
-    escapeCSV(i.message),
+    ...(hasAnnees   ? [escapeCSV(i.annees_pratique)] : []),
+    ...(hasRythme   ? [escapeCSV(i.rythme)]          : []),
+    ...(hasFreq     ? [escapeCSV(i.frequence)]       : []),
+    ...(hasObjectifs? [escapeCSV(i.objectifs)]       : []),
+    ...(hasMessage  ? [escapeCSV(i.message)]         : []),
     escapeCSV(STATUS_LABELS[i.status]?.label || i.status),
     escapeCSV(new Date(i.created_at).toLocaleDateString('fr-FR')),
   ].join(';'))
 
-  const csv = BOM + [headers.join(';'), ...rows].join('\n')
+  const csv = BOM + [dynamicHeaders.join(';'), ...rows].join('\n')
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
   const url  = URL.createObjectURL(blob)
   const a    = document.createElement('a')
@@ -72,80 +94,51 @@ function exportCSV(inscriptions: Inscription[]) {
 }
 
 // ── Export PDF via fenêtre d'impression ──────────────────────────────
+function exportExcel(inscriptions: Inscription[]) {
+  import('xlsx').then(XLSX => {
+    const data = inscriptions.map(i => {
+      const row: Record<string, string> = {
+        'Prénom': i.prenom || '',
+        'Nom': i.nom || '',
+        'Email': i.email || '',
+        'Niveau': i.niveau || '',
+        'Statut': i.status || '',
+        'Date': new Date(i.created_at).toLocaleDateString('fr-FR'),
+      }
+      if (i.telephone)       row['Téléphone']          = i.telephone
+      if (i.adresse)         row['Adresse']            = i.adresse
+      if (i.ville)           row['Ville']              = i.ville
+      if (i.pays)            row['Pays']               = i.pays
+      if (i.annees_pratique) row['Années de pratique'] = i.annees_pratique
+      if (i.rythme)          row['Disponibilités']     = i.rythme
+      if (i.frequence)       row['Fréquence']          = i.frequence
+      if (i.objectifs)       row['Objectifs']          = i.objectifs
+      if (i.message)         row['Message']            = i.message
+      return row
+    })
+    const ws = XLSX.utils.json_to_sheet(data)
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'Inscriptions')
+    XLSX.writeFile(wb, `inscriptions-${new Date().toISOString().split('T')[0]}.xlsx`)
+  })
+}
+
 function exportPDF(inscriptions: Inscription[]) {
-  const date = new Date().toLocaleDateString('fr-FR')
-
-  const rows = inscriptions.map(i => `
-    <tr>
-      <td>${i.prenom} ${i.nom}</td>
-      <td>${i.email}</td>
-      <td>${i.telephone || '—'}</td>
-      <td>${i.niveau.split(' ')[0]}</td>
-      <td>${i.ville || '—'}</td>
-      <td>${i.rythme || '—'}</td>
-      <td>
-        <span class="status status-${i.status}">
-          ${STATUS_LABELS[i.status]?.label || i.status}
-        </span>
-      </td>
-      <td>${new Date(i.created_at).toLocaleDateString('fr-FR')}</td>
-    </tr>
-  `).join('')
-
-  const html = `<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8"/>
-  <title>Inscriptions — Lieu Secret</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: Georgia, serif; font-size: 11px; color: #1a1a1a; padding: 24px; }
-    h1 { font-size: 22px; color: #b45309; letter-spacing: 2px; margin-bottom: 4px; }
-    .subtitle { font-size: 11px; color: #777; margin-bottom: 6px; }
-    .meta { font-size: 10px; color: #999; margin-bottom: 20px; }
-    table { width: 100%; border-collapse: collapse; font-size: 10px; }
-    thead tr { background: #f5f0e8; }
-    th { text-align: left; padding: 7px 8px; font-size: 9px; text-transform: uppercase;
-         letter-spacing: 0.5px; color: #555; border-bottom: 2px solid #d97706; }
-    td { padding: 6px 8px; border-bottom: 1px solid #eee; vertical-align: top; }
-    tr:nth-child(even) td { background: #fafaf8; }
-    .status { padding: 2px 7px; border-radius: 10px; font-size: 9px; font-weight: bold; }
-    .status-en_attente { background: #fef3c7; color: #92400e; }
-    .status-confirme   { background: #d1fae5; color: #065f46; }
-    .status-refuse     { background: #fee2e2; color: #991b1b; }
-    .footer { margin-top: 20px; font-size: 9px; color: #aaa; text-align: center; }
-    @media print { body { padding: 12px; } }
-  </style>
-</head>
-<body>
-  <h1>LIEU SECRET</h1>
-  <div class="subtitle">École de Piano en Ligne — Liste des inscriptions</div>
-  <div class="meta">Exporté le ${date} · ${inscriptions.length} inscription${inscriptions.length > 1 ? 's' : ''}</div>
-  <table>
-    <thead>
-      <tr>
-        <th>Élève</th>
-        <th>Email</th>
-        <th>Téléphone</th>
-        <th>Niveau</th>
-        <th>Ville</th>
-        <th>Disponibilités</th>
-        <th>Statut</th>
-        <th>Date</th>
-      </tr>
-    </thead>
-    <tbody>${rows}</tbody>
-  </table>
-  <div class="footer">Lieu Secret — lieusecret-courspiano.fr</div>
-  <script>window.onload = () => { window.print(); }</script>
-</body>
-</html>`
-
-  const win = window.open('', '_blank')
-  if (win) {
-    win.document.write(html)
-    win.document.close()
-  }
+  import('jspdf').then(({ jsPDF }) => {
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' }); const W = 210
+    doc.setFillColor(245, 158, 11); doc.rect(0, 0, W, 18, 'F'); doc.setTextColor(26, 26, 46); doc.setFontSize(13); doc.setFont('helvetica', 'bold'); doc.text('LIEU SECRET — Inscriptions', 10, 12); doc.setFontSize(8); doc.text(`Exporté le ${new Date().toLocaleDateString('fr-FR')} — ${inscriptions.length} inscriptions`, 130, 12)
+    const cols = ['Nom', 'Email', 'Téléphone', 'Niveau', 'Rythme', 'Date']; const widths = [38, 50, 30, 25, 30, 22]; let x = 8, y = 28
+    doc.setFillColor(37, 37, 64); doc.rect(8, y - 5, W - 16, 8, 'F'); doc.setTextColor(245, 158, 11); doc.setFontSize(7.5); doc.setFont('helvetica', 'bold'); for (let ci = 0; ci < cols.length; ci++) { doc.text(cols[ci], x, y); x += widths[ci] }
+    doc.setFont('helvetica', 'normal')
+    for (let ri = 0; ri < inscriptions.length; ri++) {
+      const ins = inscriptions[ri]; y += 8; if (y > 270) { doc.addPage(); y = 20 }
+      if (ri % 2 === 0) { doc.setFillColor(50, 50, 80); doc.rect(8, y - 5, W - 16, 8, 'F') } else { doc.setFillColor(37, 37, 64); doc.rect(8, y - 5, W - 16, 8, 'F') }
+      doc.setTextColor(230, 230, 230); x = 8
+      const row = [`${ins.prenom} ${ins.nom}`.substring(0, 16), ins.email.substring(0, 22), ins.telephone || '-', ins.niveau?.substring(0, 10) || '-', (Array.isArray(ins.rythme) ? ins.rythme : []).join(', ').substring(0, 12) || '-', new Date(ins.created_at).toLocaleDateString('fr-FR')]
+      for (let ci = 0; ci < row.length; ci++) { doc.text(String(row[ci]), x, y); x += widths[ci] }
+    }
+    doc.save(`inscriptions-${new Date().toISOString().split('T')[0]}.pdf`)
+  }).catch(() => alert('Erreur PDF'))
 }
 
 export default function AdminInscriptions() {
@@ -188,7 +181,7 @@ export default function AdminInscriptions() {
   )
 
   return (
-    <div className="p-6 md:p-8 pb-24 md:pb-8">
+    <div className="p-4 md:p-6 lg:p-8 pb-24 md:pb-8">
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-serif text-white">Inscriptions</h1>
@@ -199,12 +192,12 @@ export default function AdminInscriptions() {
         {inscriptions.length > 0 && (
           <div className="flex items-center gap-2">
             <button
-              onClick={() => exportCSV(filtered.length > 0 ? filtered : inscriptions)}
+              onClick={() => exportExcel(filtered.length > 0 ? filtered : inscriptions)}
               className="btn-outline flex items-center gap-2 text-xs px-3 py-2"
               title="Exporter en CSV (compatible Excel)"
             >
               <Download size={14} />
-              Export Excel (.csv)
+              Export Excel
             </button>
             <button
               onClick={() => exportPDF(filtered.length > 0 ? filtered : inscriptions)}

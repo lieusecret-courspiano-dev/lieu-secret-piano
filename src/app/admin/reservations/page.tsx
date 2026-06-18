@@ -22,17 +22,37 @@ interface Reservation {
 }
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
-  confirmed: { label: 'Confirmé',   color: 'bg-green-500/10 text-green-400 border-green-500/20' },
-  pending:   { label: 'En attente', color: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' },
-  cancelled: { label: 'Annulé',     color: 'bg-red-500/10 text-red-400 border-red-500/20' },
+  confirmed:         { label: 'Confirmé',              color: 'bg-green-500/10 text-green-400 border-green-500/20'   },
+  pending:           { label: 'En attente',             color: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' },
+  pending_virement:  { label: 'Attente virement',       color: 'bg-blue-500/10 text-blue-400 border-blue-500/20'      },
+  cancelled:         { label: 'Annulé',                 color: 'bg-red-500/10 text-red-400 border-red-500/20'         },
 }
 
 export default function AdminReservations() {
   const [reservations, setReservations] = useState<Reservation[]>([])
   const [loading, setLoading]           = useState(true)
   const [search, setSearch]             = useState('')
-  const [filter, setFilter]             = useState<'all' | 'cours' | 'evenement'>('all')
+  const [filter, setFilter]             = useState<'all' | 'cours' | 'evenement' | 'virement'>('all')
   const [selected, setSelected]         = useState<Reservation | null>(null)
+  const [confirmLoading, setConfirmLoading] = useState(false)
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [packOptions, setPackOptions] = useState<{label: string; heures: number; montant: number}[]>([{label:'Pack 5h',heures:5,montant:100},{label:'Pack 8h',heures:8,montant:165},{label:'Pack 12h',heures:12,montant:250}])
+  const [confirmType, setConfirmType] = useState<'1h' | 'pack'>('1h')
+  const [confirmPackMontant, setConfirmPackMontant] = useState(100)
+  const [confirmPackLabel, setConfirmPackLabel] = useState('Pack 5h')
+  const [confirmPackHeures, setConfirmPackHeures] = useState(5)
+
+  useEffect(() => {
+    fetch('/api/settings').then(r => r.json()).then((d: Record<string, string>) => {
+      function parseH(label: string): number { const m = label.match(/(\d+)\s*h/i); return m ? parseInt(m[1]) : 5 }
+      const loaded: {label: string; heures: number; montant: number}[] = []
+      for (let i = 1; i <= 10; i++) {
+        const lbl = d[`tarif_pack_label${i}`]; const prix = d[`tarif_pack_prix${i}`]
+        if (lbl && prix && parseFloat(prix) > 0) loaded.push({ label: lbl, heures: parseH(lbl), montant: parseFloat(prix) })
+      }
+      if (loaded.length > 0) { setPackOptions(loaded); setConfirmPackLabel(loaded[0].label); setConfirmPackHeures(loaded[0].heures); setConfirmPackMontant(loaded[0].montant) }
+    }).catch(() => {})
+  }, [])
 
   useEffect(() => { fetchReservations() }, [])
 
@@ -42,6 +62,19 @@ export default function AdminReservations() {
     const data = await res.json()
     setReservations(Array.isArray(data) ? data : [])
     setLoading(false)
+  }
+
+  async function handleConfirmVirement(id: string) {
+    setConfirmLoading(true)
+    try {
+      const res = await fetch('/api/admin/reservations/confirm', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reservation_id: id }),
+      })
+      if (res.ok) { fetchReservations(); setSelected(null) }
+      else { const d = await res.json(); alert(d.error || 'Erreur') }
+    } catch { alert('Erreur réseau') }
+    finally { setConfirmLoading(false) }
   }
 
   async function handleStatus(id: string, status: string) {
@@ -74,7 +107,7 @@ export default function AdminReservations() {
   }
 
   return (
-    <div className="p-6 md:p-8 pb-24 md:pb-8">
+    <div className="p-4 md:p-6 lg:p-8 pb-24 md:pb-8">
       <div className="mb-6">
         <h1 className="text-2xl font-serif text-white">Réservations</h1>
         <p className="text-noir-400 text-sm mt-1">{reservations.length} réservation{reservations.length > 1 ? 's' : ''} au total</p>
@@ -184,6 +217,14 @@ export default function AdminReservations() {
             </div>
 
             <div className="flex gap-2 flex-wrap">
+              {selected.status === 'pending_virement' && (
+                <button
+                  onClick={() => setShowConfirmModal(true)}
+                  className="btn-gold flex items-center gap-1 text-sm w-full mb-2"
+                >
+                  Confirmer le paiement reçu
+                </button>
+              )}
               {selected.status !== 'confirmed' && (
                 <button onClick={() => handleStatus(selected.id, 'confirmed')} className="btn-gold flex items-center gap-1 text-sm flex-1">
                   <CheckCircle size={14} /> Confirmer
@@ -196,6 +237,87 @@ export default function AdminReservations() {
               )}
               <button onClick={() => handleDelete(selected.id)} className="btn-outline border-red-500/50 text-red-400 hover:bg-red-900/20 flex items-center gap-1 text-sm">
                 <Trash2 size={14} /> Supprimer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modale confirmation virement avec choix pack/1h */}
+      {showConfirmModal && selected && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="bg-noir-900 border border-noir-700 rounded-2xl w-full max-w-md p-6 shadow-2xl">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-white font-serif text-xl">Confirmer le paiement</h2>
+              <button onClick={() => setShowConfirmModal(false)} className="text-noir-400 hover:text-white p-1">
+                <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+            <p className="text-noir-400 text-sm mb-4">
+              Réservation de <strong className="text-white">{selected.student_name}</strong>
+            </p>
+
+            <div className="mb-4">
+              <label className="label mb-2 block">Type de paiement reçu</label>
+              <div className="grid grid-cols-2 gap-2">
+                <button type="button" onClick={() => setConfirmType('1h')}
+                  className={'py-2.5 rounded-xl border text-sm font-medium transition-all ' + (confirmType === '1h' ? 'bg-gold-500 text-noir-950 border-gold-500' : 'border-noir-700 text-noir-300 hover:border-gold-500')}>
+                  1 cours (22 €)
+                </button>
+                <button type="button" onClick={() => setConfirmType('pack')}
+                  className={'py-2.5 rounded-xl border text-sm font-medium transition-all ' + (confirmType === 'pack' ? 'bg-gold-500 text-noir-950 border-gold-500' : 'border-noir-700 text-noir-300 hover:border-gold-500')}>
+                  Pack de cours
+                </button>
+              </div>
+            </div>
+
+            {confirmType === 'pack' && (
+              <div className="space-y-3 mb-4">
+                <div>
+                  <label className="label mb-1 block">Formule du pack</label>
+                  <select className="input w-full" onChange={e => {
+                    const opt = packOptions.find(p => p.label === e.target.value)
+                    if (opt) { setConfirmPackLabel(opt.label); setConfirmPackHeures(opt.heures); setConfirmPackMontant(opt.montant) }
+                  }}>
+                    {packOptions.map(p => (
+                      <option key={p.label} value={p.label}>{p.label} — {p.montant} €</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="bg-gold-500/10 border border-gold-500/30 rounded-lg p-3 text-sm">
+                  <div className="flex justify-between"><span className="text-noir-400">Pack</span><span className="text-white">{confirmPackLabel}</span></div>
+                  <div className="flex justify-between mt-1"><span className="text-noir-400">Heures</span><span className="text-white">{confirmPackHeures}h</span></div>
+                  <div className="flex justify-between mt-1"><span className="text-noir-400">Montant</span><span className="text-gold-400 font-bold">{confirmPackMontant} €</span></div>
+                </div>
+                <p className="text-noir-500 text-xs">Un code PK-XXXX-XXXX sera généré et envoyé automatiquement à l&apos;élève.</p>
+              </div>
+            )}
+
+            <div className="flex gap-3">
+              <button onClick={() => setShowConfirmModal(false)} className="btn-outline flex-1">Annuler</button>
+              <button
+                onClick={async () => {
+                  setConfirmLoading(true)
+                  try {
+                    const res = await fetch('/api/admin/reservations/confirm', {
+                      method: 'POST', headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        reservation_id: selected.id,
+                        confirm_type: confirmType,
+                        pack_label: confirmType === 'pack' ? confirmPackLabel : null,
+                        pack_heures: confirmType === 'pack' ? confirmPackHeures : null,
+                        pack_montant: confirmType === 'pack' ? confirmPackMontant : null,
+                      }),
+                    })
+                    if (res.ok) { fetchReservations(); setSelected(null); setShowConfirmModal(false) }
+                    else { const d = await res.json(); alert(d.error || 'Erreur') }
+                  } catch { alert('Erreur réseau') }
+                  finally { setConfirmLoading(false) }
+                }}
+                className="btn-gold flex-1"
+                disabled={confirmLoading}
+              >
+                {confirmLoading ? 'Confirmation...' : 'Confirmer'}
               </button>
             </div>
           </div>

@@ -65,20 +65,25 @@ export async function POST(req: NextRequest) {
     .update({ status: 'cancelled' })
     .eq('id', id)
 
-  // Remettre une place pour l'événement
+  // Remettre une place pour l'événement (recalcul réel)
   if (reservation.event_id) {
-    const { data: ev } = await supabaseAdmin
-      .from('events')
-      .select('spots_remaining, max_spots')
-      .eq('id', reservation.event_id)
-      .single()
-
+    const { data: ev } = await supabaseAdmin.from('events').select('max_spots').eq('id', reservation.event_id).single()
     if (ev && ev.max_spots !== null) {
-      await supabaseAdmin
-        .from('events')
-        .update({ spots_remaining: ev.spots_remaining + 1 })
-        .eq('id', reservation.event_id)
+      const { count: totalCount } = await supabaseAdmin.from('reservations').select('*', { count: 'exact', head: true }).eq('event_id', reservation.event_id).in('status', ['confirmed', 'pending_virement'])
+      await supabaseAdmin.from('events').update({ spots_remaining: Math.max(0, ev.max_spots - (totalCount || 0)) }).eq('id', reservation.event_id)
     }
+  }
+
+  // Remettre 1h sur le pack si la réservation utilisait un code PK
+  if (reservation.pack_code && reservation.type === 'cours') {
+    try {
+      const { data: pack } = await supabaseAdmin.from('course_packs').select('id, heures_restantes, heures_total, status').eq('code', reservation.pack_code.toUpperCase()).single()
+      if (pack) {
+        const newHeures = Math.min(pack.heures_total, pack.heures_restantes + 1)
+        await supabaseAdmin.from('course_packs').update({ heures_restantes: newHeures, status: newHeures > 0 ? 'active' : pack.status }).eq('id', pack.id)
+        await supabaseAdmin.from('pack_history').insert({ pack_id: pack.id, type: 'annulation', delta: 1, note: `Remise suite à annulation du cours du ${reservation.slot_start ? new Date(reservation.slot_start).toLocaleDateString('fr-FR') : 'cours'}` })
+      }
+    } catch (packErr) { console.error('Erreur remise heures pack:', packErr) }
   }
 
   // Envoyer emails d'annulation

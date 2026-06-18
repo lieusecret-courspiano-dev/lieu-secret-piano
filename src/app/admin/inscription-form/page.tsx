@@ -99,7 +99,7 @@ export default function AdminInscriptionForm() {
   const typeLabel = (t: string) => TYPES.find(x => x.value === t)?.label || t
 
   return (
-    <div className="p-6 md:p-8 pb-24 md:pb-8">
+    <div className="p-4 md:p-6 lg:p-8 pb-24 md:pb-8">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-serif text-white">Formulaire d'inscription</h1>

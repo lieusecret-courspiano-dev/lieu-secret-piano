@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { generateAvailableSlots } from '@/lib/slots'
 import { DateTime } from 'luxon'
 import { supabaseAdmin } from '@/lib/supabase'
+import { cookies } from 'next/headers'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -32,8 +33,24 @@ export async function GET(req: NextRequest) {
 
     const validCode = (settings?.cours_access_code || '').trim().toLowerCase()
 
-    // Si un code est défini → vérification stricte obligatoire
-    if (validCode) {
+    // Bypass: si l'élève est connecté (session valide), accès direct sans code
+    let eleveConnecte = false
+    try {
+      const cookieStore = cookies()
+      const eleveSession = cookieStore.get('ls_eleve_session')?.value
+      if (eleveSession) {
+        const { data: session } = await supabaseAdmin
+          .from('eleve_sessions')
+          .select('id')
+          .eq('token', eleveSession)
+          .gt('expires_at', new Date().toISOString())
+          .single()
+        if (session) eleveConnecte = true
+      }
+    } catch {}
+
+    // Si un code est défini → vérification stricte (sauf si élève connecté)
+    if (validCode && !eleveConnecte) {
       if (!code) {
         return NextResponse.json(
           { error: 'Code d\'accès requis' },

@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { ThemeToggle } from '@/components/ThemeProvider'
+import SiteHeader from '@/components/SiteHeader'
 
 interface InscriptionForm {
   prenom: string
@@ -19,24 +20,37 @@ interface InscriptionForm {
   frequence: string[]
   objectifs: string
   message: string
+  ref_code: string
 }
 
 const NIVEAUX    = ['Débutant (jamais joué)', 'Débutant (quelques notions)', 'Intermédiaire', 'Avancé']
 const RYTHMES    = ['Matin (avant 12h)', 'Après-midi (12h–18h)', 'Soir (après 18h)', 'Week-end']
 const FREQUENCES = ['1 fois par semaine', '2 fois par semaine', '1 fois toutes les 2 semaines']
 
-export default function InscriptionPage() {
+function InscriptionContent() {
   const router = useRouter()
   const [form, setForm] = useState<InscriptionForm>({
     prenom: '', nom: '', email: '', telephone: '',
-    adresse: '', ville: '', code_postal: '', pays: 'France',
+    adresse: '', ville: '', code_postal: '', pays: '',
     niveau: '', annees_pratique: '',
     rythme: [], frequence: [],
-    objectifs: '', message: '',
+    objectifs: '', message: '', ref_code: '',
   })
+  const searchParams = useSearchParams()
   const [loading, setLoading] = useState(false)
   const [error, setError]     = useState('')
   const [success, setSuccess] = useState(false)
+  const [extraQuestions, setExtraQuestions] = useState<{id: string; label: string; type: string; options: string | null; required: boolean}[]>([])
+  const [extraAnswers, setExtraAnswers] = useState<Record<string, string | string[]>>({})
+
+  useEffect(() => {
+    const ref = searchParams.get('ref')
+    if (ref) setForm(f => ({ ...f, ref_code: ref.toUpperCase() }))
+    // Charger les questions supplémentaires depuis l'admin
+    fetch('/api/inscription-form').then(r => r.json()).then(data => {
+      if (Array.isArray(data)) setExtraQuestions(data)
+    }).catch(() => {})
+  }, [searchParams])
 
   function handleChange(key: keyof InscriptionForm, value: string) {
     setForm(f => ({ ...f, [key]: value }))
@@ -75,6 +89,11 @@ export default function InscriptionPage() {
       'Objectifs':            form.objectifs,
       'Message':              form.message,
     }
+    // Ajouter les réponses aux questions dynamiques
+    for (const q of extraQuestions) {
+      const val = extraAnswers[q.id]
+      if (val) answers[q.label] = Array.isArray(val) ? val.join(', ') : String(val)
+    }
 
     try {
       const res = await fetch('/api/inscription', {
@@ -87,6 +106,15 @@ export default function InscriptionPage() {
         throw new Error(d.error || "Erreur lors de l'inscription")
       }
       setSuccess(true)
+      // Traiter le code de parrainage si présent
+      if (form.ref_code.trim()) {
+        try {
+          await fetch('/api/parrainage', {
+            method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code: form.ref_code.trim(), filleul_email: form.email, filleul_nom: `${form.prenom} ${form.nom}`.trim() }),
+          })
+        } catch {}
+      }
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Erreur inconnue')
     } finally {
@@ -103,10 +131,21 @@ export default function InscriptionPage() {
               <polyline points="20 6 9 17 4 12"/>
             </svg>
           </div>
-          <h2 className="font-serif text-3xl text-white mb-4">Demande envoyée !</h2>
-          <p className="text-noir-300 mb-2">Merci pour votre demande d&apos;inscription à Lieu Secret.</p>
-          <p className="text-noir-400 text-sm mb-8">Vous allez recevoir un email de confirmation. Nous vous contacterons rapidement.</p>
-          <button onClick={() => router.push('/')} className="btn-gold">Retour à l&apos;accueil</button>
+          <h2 className="font-serif text-3xl text-white mb-4">Inscription envoyée !</h2>
+          <p className="text-noir-300 mb-2">Bienvenue chez Lieu Secret, {form.prenom} !</p>
+          <p className="text-noir-400 text-sm mb-4">Votre demande d&apos;inscription a bien été reçue. Vous allez recevoir un email de confirmation.</p>
+          <div className="bg-gold-500/10 border border-gold-500/30 rounded-xl p-4 mb-6 text-left">
+            <p className="text-gold-400 text-sm font-medium mb-2">Prochaines étapes :</p>
+            <ul className="space-y-1 text-noir-300 text-sm">
+              <li>• Vérifiez votre email (et vos spams)</li>
+              <li>• Vous recevrez un lien pour créer votre espace élève</li>
+              <li>• Nous vous contacterons pour planifier votre premier cours</li>
+            </ul>
+          </div>
+          <div className="flex flex-col gap-3">
+            <button onClick={() => router.push('/espace-eleve/login')} className="btn-gold">Accéder à mon espace élève</button>
+            <button onClick={() => router.push('/')} className="btn-outline">Retour à l&apos;accueil</button>
+          </div>
         </div>
       </div>
     )
@@ -114,20 +153,12 @@ export default function InscriptionPage() {
 
   return (
     <div className="min-h-screen bg-noir-950 text-noir-100">
-      <header className="border-b border-noir-800 bg-noir-900/80 backdrop-blur-sm sticky top-0 z-40">
-        <div className="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between">
-          <a href="/" className="flex items-center gap-3">
-            <div className="w-px h-5 bg-gold-500" />
-            <span className="font-serif text-lg text-gold-400 tracking-widest">LIEU SECRET</span>
-          </a>
-          <ThemeToggle />
-        </div>
-      </header>
+      <SiteHeader />
 
       <div className="max-w-2xl mx-auto px-4 py-12">
         <div className="text-center mb-10">
           <div className="text-gold-500 text-xs tracking-widest uppercase mb-3">Rejoindre Lieu Secret</div>
-          <h1 className="font-serif text-4xl text-white mb-4">Formulaire d&apos;inscription</h1>
+          <h1 className="font-serif text-4xl text-white mb-4 animate-fade-in-up">Formulaire d&apos;inscription</h1>
           <p className="text-noir-400 leading-relaxed">
             Remplissez ce formulaire pour rejoindre l&apos;école. Nous vous contacterons rapidement.
           </p>
@@ -138,7 +169,7 @@ export default function InscriptionPage() {
           {/* Informations personnelles */}
           <div className="card">
             <h2 className="text-gold-400 font-medium text-sm uppercase tracking-wider mb-4">Informations personnelles</h2>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="label mb-1 block">Prénom <span className="text-red-400">*</span></label>
                 <input value={form.prenom} onChange={e => handleChange('prenom', e.target.value)} placeholder="Votre prénom" className="input w-full" required />
@@ -166,7 +197,7 @@ export default function InscriptionPage() {
                 <label className="label mb-1 block">Adresse</label>
                 <input value={form.adresse} onChange={e => handleChange('adresse', e.target.value)} placeholder="Numéro et nom de rue" className="input w-full" />
               </div>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                 <div>
                   <label className="label mb-1 block">Code postal</label>
                   <input value={form.code_postal} onChange={e => handleChange('code_postal', e.target.value)} placeholder="75001" className="input w-full" />
@@ -178,7 +209,7 @@ export default function InscriptionPage() {
                 </div>
                 <div>
                   <label className="label mb-1 block">Pays</label>
-                  <input value={form.pays} onChange={e => handleChange('pays', e.target.value)} placeholder="France" className="input w-full" />
+                  <input value={form.pays} onChange={e => handleChange('pays', e.target.value)} placeholder="Votre pays" className="input w-full" />
                 </div>
               </div>
             </div>
@@ -192,7 +223,7 @@ export default function InscriptionPage() {
               <div className="space-y-2">
                 {NIVEAUX.map(n => (
                   <label key={n} className="flex items-center gap-3 cursor-pointer group">
-                    <input type="radio" name="niveau" value={n} checked={form.niveau === n} onChange={() => handleChange('niveau', n)} className="w-4 h-4 accent-gold-500" />
+                    <input type="radio" name="niveau" value={n} checked={form.niveau === n} onChange={() => handleChange('niveau', n)} className="mt-0.5" />
                     <span className="text-sm text-noir-300 group-hover:text-white transition-colors">{n}</span>
                   </label>
                 ))}
@@ -217,10 +248,10 @@ export default function InscriptionPage() {
             <h2 className="text-gold-400 font-medium text-sm uppercase tracking-wider mb-4">Disponibilités</h2>
             <div>
               <label className="label mb-2 block">Créneaux préférés (plusieurs choix possibles)</label>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {RYTHMES.map(r => (
                   <label key={r} className="flex items-center gap-3 cursor-pointer group bg-noir-800 rounded-lg px-3 py-2">
-                    <input type="checkbox" checked={form.rythme.includes(r)} onChange={() => handleMulti('rythme', r)} className="w-4 h-4 accent-gold-500" />
+                    <input type="checkbox" checked={form.rythme.includes(r)} onChange={() => handleMulti('rythme', r)} className="mt-0.5" />
                     <span className="text-sm text-noir-300 group-hover:text-white transition-colors">{r}</span>
                   </label>
                 ))}
@@ -231,7 +262,7 @@ export default function InscriptionPage() {
               <div className="space-y-2">
                 {FREQUENCES.map(f => (
                   <label key={f} className="flex items-center gap-3 cursor-pointer group">
-                    <input type="checkbox" checked={form.frequence.includes(f)} onChange={() => handleMulti('frequence', f)} className="w-4 h-4 accent-gold-500" />
+                    <input type="checkbox" checked={form.frequence.includes(f)} onChange={() => handleMulti('frequence', f)} className="mt-0.5" />
                     <span className="text-sm text-noir-300 group-hover:text-white transition-colors">{f}</span>
                   </label>
                 ))}
@@ -250,6 +281,63 @@ export default function InscriptionPage() {
               <label className="label mb-1 block">Message complémentaire (optionnel)</label>
               <textarea value={form.message} onChange={e => handleChange('message', e.target.value)} placeholder="Toute information utile pour votre professeur..." rows={2} className="input w-full resize-none" />
             </div>
+
+            {/* Questions supplémentaires configurées dans l'admin */}
+            {extraQuestions.length > 0 && (
+              <div className="mt-6 space-y-4 border-t border-noir-800 pt-6">
+                <p className="text-gold-400 text-xs font-bold uppercase tracking-wider">Questions complémentaires</p>
+                {extraQuestions.map(q => {
+                  const opts = q.options
+                    ? (q.options.includes('|')
+                        ? q.options.split('|')
+                        : q.options.split(',')
+                      ).map((o: string) => o.trim()).filter(Boolean)
+                    : []
+                  const val = extraAnswers[q.id]
+                  return (
+                    <div key={q.id}>
+                      <label className="label mb-1 block">{q.label}{q.required && <span className="text-red-400 ml-1">*</span>}</label>
+                      {q.type === 'text' && <input type="text" value={(val as string) || ''} onChange={e => setExtraAnswers(a => ({ ...a, [q.id]: e.target.value }))} className="input w-full" required={q.required} />}
+                      {q.type === 'textarea' && <textarea value={(val as string) || ''} onChange={e => setExtraAnswers(a => ({ ...a, [q.id]: e.target.value }))} className="input w-full h-16 resize-none" required={q.required} />}
+                      {q.type === 'email' && <input type="email" value={(val as string) || ''} onChange={e => setExtraAnswers(a => ({ ...a, [q.id]: e.target.value }))} className="input w-full" required={q.required} />}
+                      {q.type === 'tel' && <input type="tel" value={(val as string) || ''} onChange={e => setExtraAnswers(a => ({ ...a, [q.id]: e.target.value }))} className="input w-full" required={q.required} />}
+                      {q.type === 'select' && (
+                        <select value={(val as string) || ''} onChange={e => setExtraAnswers(a => ({ ...a, [q.id]: e.target.value }))} className="input w-full" required={q.required}>
+                          <option value="">Choisir...</option>
+                          {opts.map((o: string) => <option key={o} value={o}>{o}</option>)}
+                        </select>
+                      )}
+                      {q.type === 'radio' && (
+                        <div className="space-y-2 mt-1">
+                          {opts.map((o: string) => (
+                            <label key={o} className="flex items-center gap-3 cursor-pointer">
+                              <input type="radio" name={q.id} value={o} checked={val === o} onChange={() => setExtraAnswers(a => ({ ...a, [q.id]: o }))} className="mt-0.5" required={q.required} />
+                              <span className="text-sm text-noir-300">{o}</span>
+                            </label>
+                          ))}
+                        </div>
+                      )}
+                      {q.type === 'multiselect' && (
+                        <div className="space-y-2 mt-1">
+                          {opts.map((o: string) => {
+                            const checked = Array.isArray(val) && val.includes(o)
+                            return (
+                              <label key={o} className="flex items-center gap-3 cursor-pointer">
+                                <input type="checkbox" checked={checked} onChange={e => setExtraAnswers(a => {
+                                  const cur = (a[q.id] as string[]) || []
+                                  return { ...a, [q.id]: e.target.checked ? [...cur, o] : cur.filter(v => v !== o) }
+                                })} className="mt-0.5" />
+                                <span className="text-sm text-noir-300">{o}</span>
+                              </label>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
           </div>
 
           {error && (
@@ -271,5 +359,17 @@ export default function InscriptionPage() {
         </form>
       </div>
     </div>
+  )
+}
+
+export default function InscriptionPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-noir-950 flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-gold-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
+      <InscriptionContent />
+    </Suspense>
   )
 }

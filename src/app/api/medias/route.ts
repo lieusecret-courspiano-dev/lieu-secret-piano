@@ -2,7 +2,23 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabase, supabaseAdmin } from '@/lib/supabase'
 import { validateAdminSession } from '@/lib/auth'
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  // Si admin=true dans les params, retourner TOUS les médias (y compris inactifs)
+  const { searchParams } = new URL(req.url)
+  const isAdminRequest = searchParams.get('admin') === 'true'
+
+  if (isAdminRequest) {
+    const isAdmin = await validateAdminSession()
+    if (!isAdmin) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
+    const { data, error } = await supabaseAdmin
+      .from('medias')
+      .select('*')
+      .order('position', { ascending: true })
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json(data ?? [])
+  }
+
+  // Public : seulement les actifs
   const { data, error } = await supabase
     .from('medias')
     .select('*')

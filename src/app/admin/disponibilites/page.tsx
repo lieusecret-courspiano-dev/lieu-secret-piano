@@ -140,7 +140,7 @@ export default function AdminDisponibilites() {
   )
 
   return (
-    <div className="p-6 md:p-8 pb-24 md:pb-8 max-w-3xl">
+    <div className="p-4 md:p-6 lg:p-8 pb-24 md:pb-8 max-w-3xl">
       <div className="mb-6">
         <h1 className="text-2xl font-serif text-white">Disponibilites</h1>
         <p className="text-noir-400 text-sm mt-1">Gerez vos horaires, exceptions et parametres de reservation</p>
@@ -223,7 +223,7 @@ export default function AdminDisponibilites() {
         {/* Ajouter une règle */}
         <div className="bg-noir-800 rounded-xl p-4">
           <p className="text-xs text-gold-500 uppercase tracking-wider mb-3">Ajouter une disponibilite</p>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label className="label mb-1 block">Jour</label>
               <select value={newRule.day_of_week} onChange={e => setNewRule(r => ({ ...r, day_of_week: Number(e.target.value) }))} className="input w-full">

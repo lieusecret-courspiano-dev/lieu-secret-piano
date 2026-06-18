@@ -41,13 +41,12 @@ export default function AdminMessages() {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('Supprimer ce message ?')) return
+    if (!confirm('Supprimer définitivement ce message ?')) return
     await fetch(`/api/messages`, {
-      method:  'PATCH',
+      method:  'DELETE',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ id, is_read: true }),
+      body:    JSON.stringify({ id }),
     })
-    // Pour la suppression, on utilise une route dédiée si elle existe
     setMessages(m => m.filter(msg => msg.id !== id))
     setSelected(null)
   }
@@ -55,7 +54,7 @@ export default function AdminMessages() {
   const unread = messages.filter(m => !m.is_read).length
 
   return (
-    <div className="p-6 md:p-8 pb-24 md:pb-8">
+    <div className="p-4 md:p-6 lg:p-8 pb-24 md:pb-8">
       <div className="mb-6">
         <h1 className="text-2xl font-serif text-white">Messages</h1>
         <p className="text-noir-400 text-sm mt-1">

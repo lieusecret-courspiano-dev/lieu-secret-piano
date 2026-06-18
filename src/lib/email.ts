@@ -61,14 +61,19 @@ function zoomBlock(link: string | null | undefined): string {
 }
 
 export async function sendCoursConfirmation(params: {
-  studentName:  string
-  studentEmail: string
-  startISO:     string
-  endISO:       string
-  timezone:     string
-  zoomLink?:    string | null
-  message?:     string | null
-  cancelUrl?:   string | null
+  studentName:    string
+  studentEmail:   string
+  startISO:       string
+  endISO:         string
+  timezone:       string
+  zoomLink?:      string | null
+  message?:       string | null
+  cancelUrl?:     string | null
+  paymentMethod?: string | null
+  virementIban?:  string | null
+  virementNom?:   string | null
+  virementInfo?:  string | null
+  achetePack?:    string | null
 }) {
   const dateLocal  = formatDate(params.startISO, params.timezone)
   const icsContent = generateCoursICS({
@@ -94,7 +99,14 @@ export async function sendCoursConfirmation(params: {
     'Votre cours de piano individuel a bien été enregistré. Le fichier .ics joint vous permet d\'ajouter ce rendez-vous dans Outlook, Google Calendar ou Apple Calendar.',
     '</p>',
     msgBlock,
+
+    params.paymentMethod === 'virement' ? '<div style="margin-top:20px;background:#1a1a2e;border:2px solid #f59e0b;border-radius:8px;padding:20px;">' +'<p style="margin:0 0 12px;color:#f59e0b;font-size:14px;font-weight:bold;">Coordonnées pour le virement</p>' +(params.virementIban ? '<p style="margin:0 0 4px;color:#a0a0c0;font-size:12px;">IBAN</p><p style="margin:0 0 12px;color:#f0f0f0;font-size:14px;font-family:monospace;">' + params.virementIban + '</p>' : '') +'<p style="margin:0 0 4px;color:#a0a0c0;font-size:12px;">Bénéficiaire</p><p style="margin:0 0 12px;color:#f0f0f0;font-size:14px;">' + (params.virementNom || 'Lieu Secret') + '</p>' +(params.virementInfo ? '<p style="margin:8px 0 0;color:#7070a0;font-size:12px;">' + params.virementInfo + '</p>' : '') +      (params.achetePack === 'oui' ? '<p style="margin:8px 0 0;color:#f59e0b;font-size:12px;font-weight:bold;">Achat souhaite : Pack de cours</p>' : params.achetePack === 'non' ? '<p style="margin:8px 0 0;color:#f59e0b;font-size:12px;font-weight:bold;">Achat souhaite : 1 cours a l unite</p>' : '') +
+      '</div>' : '',
     '<p style="color:#707070;font-size:13px;margin-top:24px;">À très bientôt,<br/><span style="color:#f59e0b;">Lieu Secret</span></p>',
+    '<div style="margin-top:16px;background:#1a1a2e;border:1px solid rgba(245,158,11,0.2);border-radius:6px;padding:12px 16px;text-align:center;">',
+    '<p style="margin:0 0 4px;color:#a0a0c0;font-size:12px;">Vous avez un pack de cours ?</p>',
+    '<a href="' + (process.env.NEXT_PUBLIC_APP_URL || 'https://lieusecret-courspiano.fr') + '/mon-pack" style="color:#f59e0b;font-size:13px;font-weight:bold;">Consulter mes heures restantes</a>',
+    '</div>',
     cancelBlock(params.cancelUrl, 'Annuler cette réservation'),
   ].join('')
 
