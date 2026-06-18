@@ -292,6 +292,7 @@ export default function EleveQuizPage() {
     return (
       <EleveLayout>
         <div className="p-4 md:p-6 max-w-2xl mx-auto">
+          {/* Carte score */}
           <div className="card text-center mb-6">
             <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 ${
               reussi ? 'bg-green-500/10 border-2 border-green-500/30' : 'bg-red-500/10 border-2 border-red-500/30'
@@ -299,7 +300,21 @@ export default function EleveQuizPage() {
               {reussi ? <Trophy size={36} className="text-green-400" /> : <XCircle size={36} className="text-red-400" />}
             </div>
             <h2 className="font-serif text-2xl text-white mb-2">{reussi ? 'Bravo !' : 'Continuez vos efforts'}</h2>
-            
+            <p className="text-5xl font-bold mb-2" style={{ color: reussi ? '#4ade80' : '#f87171' }}>{pct}%</p>
+            <p className="text-noir-400 text-sm">Score minimum requis : {activeQuiz?.quiz.score_min}%</p>
+            <p className={`text-sm font-medium mt-2 ${reussi ? 'text-green-400' : 'text-red-400'}`}>
+              {reussi ? 'Quiz réussi !' : 'Quiz non réussi — réessayez !'}
+            </p>
+            {reussi && result.badge && (
+              <div className="mt-4 bg-gold-500/10 border border-gold-500/30 rounded-xl px-4 py-3 inline-block">
+                <p className="text-gold-400 font-bold text-sm">{result.badge.icone} Badge obtenu : {result.badge.nom}</p>
+                <p className="text-noir-400 text-xs mt-0.5">{result.badge.description}</p>
+              </div>
+            )}
+          </div>
+
+          {/* Corrections détaillées */}
+          <div className="space-y-3 mb-6">
             {result.details?.map((d: any, i: number) => (
               <div key={i} className={`card border ${d.correct ? 'border-green-500/20' : 'border-red-500/20'}`}>
                 <div className="flex items-start gap-3">
@@ -323,10 +338,11 @@ export default function EleveQuizPage() {
             ))}
           </div>
 
+          {/* Boutons */}
           <div className="flex gap-3">
             <button onClick={() => { setActiveQuiz(null); setResult(null); setSubmitted(false) }}
               className="btn-outline flex-1">Retour aux quiz</button>
-            <button onClick={() => startQuiz(activeQuiz!.quiz)}
+            <button onClick={() => { setResult(null); setSubmitted(false); startQuiz(activeQuiz!.quiz) }}
               className="btn-gold flex-1 flex items-center justify-center gap-2">
               <RotateCcw size={14} /> Recommencer
             </button>
