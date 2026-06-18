@@ -183,6 +183,12 @@ export default function EleveLayout({
   useEffect(() => { if (nbNotifsProp > 0) setNbNotifs(nbNotifsProp) }, [nbNotifsProp])
   useEffect(() => { if (nbTravauxProp > 0) setNbTravaux(nbTravauxProp) }, [nbTravauxProp])
 
+  // Scroll vers le haut du contenu principal lors de la navigation
+  useEffect(() => {
+    const main = document.getElementById('eleve-main-content')
+    if (main) main.scrollTop = 0
+  }, [pathname])
+
   function getBadge(key: string | null): number {
     if (!key) return 0
     if (key === 'notifs')    return nbNotifs
@@ -299,7 +305,7 @@ export default function EleveLayout({
         </aside>
 
         {/* ── Contenu principal ── */}
-        <main className="flex-1 min-w-0 overflow-x-hidden pb-20 md:pb-0">{children}</main>
+        
       </div>
 
       {/* ── Menu latéral mobile (slide depuis la gauche) ── */}

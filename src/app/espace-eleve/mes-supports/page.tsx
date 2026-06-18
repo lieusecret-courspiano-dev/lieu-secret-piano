@@ -72,14 +72,7 @@ function SupportViewer({ support, onClose }: { support: Support; onClose: () => 
 
       {/* Contenu */}
       <div className="flex-1 overflow-hidden" style={{ minHeight: '70vh' }}>
-        {isPdf && support.fichier_url && (
-          <iframe
-            src={`${support.fichier_url}#toolbar=1&navpanes=1&scrollbar=1`}
-            className="w-full border-0"
-            style={{ height: 'calc(100vh - 120px)', minHeight: '500px' }}
-            title={support.titre}
-          />
-        )}
+        
 
         {isVideo && support.fichier_url && (
           <div className="flex items-center justify-center h-full bg-black p-4">
