@@ -312,6 +312,9 @@ export default function EleveLayout({
         </aside>
 
         {/* ── Contenu principal ── */}
+        <main className="flex-1 min-w-0 overflow-x-hidden pb-20 md:pb-0 overflow-y-auto" id="eleve-main-content">
+          {children}
+        </main>
         
       </div>
 
