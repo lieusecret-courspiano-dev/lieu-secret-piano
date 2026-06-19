@@ -33,7 +33,7 @@ export default function MessagesPage() {
   useEffect(() => {
     fetch('/api/eleve/messages')
       .then(r => { if (r.status === 401) { router.push('/espace-eleve/login'); return null } return r.json() })
-      .then(d => { if (Array.isArray(d)) setMessages(d.reverse()) })
+      .then(d => { if (Array.isArray(d)) setMessages(d.sort((a: Message, b: Message) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())) })
       .catch(console.error)
       .finally(() => setLoading(false))
   }, [router])

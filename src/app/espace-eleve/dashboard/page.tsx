@@ -100,7 +100,14 @@ export default function DashboardPage() {
       setNotifs(Array.isArray(notifsData) ? notifsData.filter((n: Notif) => !n.lu).slice(0, 5) : [])
       setTravaux(Array.isArray(travauxData) ? travauxData.filter((t: Travail) => !t.termine).slice(0, 3) : [])
 
-      if (packData && !packData.error) setPack(packData)
+      if (packData && packData.packs) {
+        const activePack = packData.packs.find((p: any) => p.status === 'active')
+        if (activePack) {
+          setPack({ pack_label: activePack.pack_label, heures_restantes: activePack.heures_restantes, heures_total: activePack.heures_total, code: activePack.code })
+        }
+      } else if (packData && !packData.error && packData.pack_label) {
+        setPack(packData)
+      }
 
       if (Array.isArray(coursData)) {
         const now = new Date()

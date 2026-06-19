@@ -45,7 +45,7 @@ export default function NotificationsPage() {
   useEffect(() => {
     fetch('/api/eleve/notifications')
       .then(r => { if (r.status === 401) { router.push('/espace-eleve/login'); return null } return r.json() })
-      .then(d => { if (Array.isArray(d)) setNotifs(d) })
+      .then(d => { if (Array.isArray(d)) setNotifs(d.sort((a: Notif, b: Notif) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())) })
       .catch(console.error)
       .finally(() => setLoading(false))
   }, [router])
