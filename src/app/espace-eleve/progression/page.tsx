@@ -2,194 +2,150 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import EleveLayout from '@/components/EleveNav'
+import { ProgressBar } from '@/components/eleve/ProgressBar'
+import { SkeletonCard } from '@/components/eleve/SkeletonCard'
 
-interface CatStats { total: number; validees: number; pourcentage: number; certificat: boolean }
-interface ProgData {
-  categories: Record<string, { competence: string; validee: boolean; validee_at: string | null }[]>
-  statsParCategorie: Record<string, CatStats>
-  total: number; validees: number; pourcentage: number
-  certificats: { type_certificat: string; nom: string; numero: string; created_at: string }[]
-  diplome: { nom: string; numero: string; created_at: string } | null
+interface CompetenceValidee {
+  competence: string
+  categorie: string
+  validee: boolean
+  validee_at: string | null
 }
 
-const CAT_ICONS: Record<string, React.ReactNode> = {
-  'Fondamentaux': <svg width="22" height="22" fill="none" stroke="#60a5fa" strokeWidth="1.5" viewBox="0 0 24 24"><rect x="2" y="3" width="7" height="7" rx="1"/><rect x="9" y="3" width="7" height="7" rx="1"/><rect x="2" y="10" width="7" height="7" rx="1"/><rect x="9" y="10" width="7" height="7" rx="1"/></svg>,
-  'Compréhension et autonomie': <svg width="22" height="22" fill="none" stroke="#f59e0b" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>,
-  'Expression et maîtrise': <svg width="22" height="22" fill="none" stroke="#22c55e" strokeWidth="1.5" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>,
+interface ProgStats {
+  total: number
+  validees: number
+  pourcentage: number
+  statsParCategorie: Record<string, {
+    total: number
+    validees: number
+    pourcentage: number
+    certificat: boolean
+  }>
+  competences: CompetenceValidee[]
 }
 
-const CAT_COLORS: Record<string, { bar: string; badge: string }> = {
-  'Fondamentaux':                  { bar: '#3b82f6', badge: 'bg-blue-500/10 text-blue-400 border-blue-500/20'   },
-  'Compréhension et autonomie':    { bar: '#f59e0b', badge: 'bg-gold-500/10 text-gold-400 border-gold-500/20'   },
-  'Expression et maîtrise':        { bar: '#22c55e', badge: 'bg-green-500/10 text-green-400 border-green-500/20' },
+const CAT_COLORS: Record<string, { bg: string; border: string; text: string; bar: string }> = {
+  'Fondamentaux': { bg: 'bg-blue-500/10', border: 'border-blue-500/20', text: 'text-blue-400', bar: '#3b82f6' },
+  'Compréhension et autonomie': { bg: 'bg-gold-500/10', border: 'border-gold-500/20', text: 'text-gold-400', bar: '#f59e0b' },
+  'Expression et maîtrise': { bg: 'bg-green-500/10', border: 'border-green-500/20', text: 'text-green-400', bar: '#22c55e' },
 }
 
-function ProgressBar({ value, color, height = 'h-3' }: { value: number; color: string; height?: string }) {
-  return (
-    <div className={`w-full bg-noir-800 rounded-full ${height} overflow-hidden`}>
-      <div className={`${height} rounded-full transition-all duration-700`} style={{ width: `${value}%`, backgroundColor: color }} />
-    </div>
-  )
-}
+const DEFAULT_COLOR = { bg: 'bg-purple-500/10', border: 'border-purple-500/20', text: 'text-purple-400', bar: '#a78bfa' }
 
 export default function ProgressionPage() {
   const router = useRouter()
-  const [data, setData] = useState<ProgData | null>(null)
-  const [prenom, setPrenom] = useState('')
-  const [nbMedias, setNbMedias] = useState(0)
-  const [nbRessources, setNbRessources] = useState(0)
-  const [nbTravaux, setNbTravaux] = useState(0)
+  const [prog, setProg] = useState<ProgStats | null>(null)
   const [loading, setLoading] = useState(true)
-  const [openCat, setOpenCat] = useState<string | null>('Fondamentaux')
+  const [selectedCat, setSelectedCat] = useState<string | null>(null)
 
   useEffect(() => {
-    Promise.all([
-      fetch('/api/eleve/me').then(r => r.status === 401 ? null : r.json()),
-      fetch('/api/eleve/progression').then(r => r.json()),
-      fetch('/api/partitions').then(r => r.json()),
-      fetch('/api/eleve/ressources').then(r => r.json()),
-      fetch('/api/eleve/travaux').then(r => r.json()),
-    ]).then(([me, prog, medias, res, travaux]) => {
-      if (!me) { router.push('/espace-eleve/login'); return }
-      setPrenom(me.prenom)
-      setData(prog)
-      setNbMedias(Array.isArray(medias) ? medias.length : 0)
-      setNbRessources(Array.isArray(res) ? res.length : 0)
-      setNbTravaux(Array.isArray(travaux) ? travaux.filter((t: { termine: boolean }) => !t.termine).length : 0)
-    }).finally(() => setLoading(false))
+    fetch('/api/eleve/progression')
+      .then(r => { if (r.status === 401) { router.push('/espace-eleve/login'); return null } return r.json() })
+      .then(d => { if (d) setProg(d) })
+      .catch(console.error)
+      .finally(() => setLoading(false))
   }, [router])
 
   if (loading) return (
-    <div className="min-h-screen bg-noir-950 flex items-center justify-center">
-      <div className="w-8 h-8 border-2 border-gold-500 border-t-transparent rounded-full animate-spin" />
-    </div>
+    <EleveLayout>
+      <div className="p-4 md:p-6 lg:p-8 space-y-4">
+        {[...Array(4)].map((_, i) => <SkeletonCard key={i} className="h-32" />)}
+      </div>
+    </EleveLayout>
   )
 
-  const globalPct = data?.pourcentage || 0
-  const globalColor = globalPct >= 66 ? '#22c55e' : globalPct >= 33 ? '#f59e0b' : '#3b82f6'
+  if (!prog) return null
+
+  const categories = Object.entries(prog.statsParCategorie)
+  const competencesBycat = (cat: string) =>
+    (prog.competences || []).filter(c => c.categorie === cat)
 
   return (
-    <EleveLayout prenom={prenom} nbNotifs={0} nbMedias={nbMedias} nbRessources={nbRessources} nbTravaux={nbTravaux}>
-      <div className="p-4 md:p-6 lg:p-8 pb-24 md:pb-8">
+    <EleveLayout>
+      <div className="p-4 md:p-6 lg:p-8 pb-24 md:pb-8 max-w-4xl mx-auto">
 
-        {/* Titre */}
-        <div className="mb-6">
-          <h1 className="font-serif text-2xl md:text-3xl text-white mb-1 animate-fade-in-up">Ma Progression</h1>
-          <p className="text-noir-400 text-sm">Suivez votre avancement dans la formation Lieu Secret</p>
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-2xl font-serif text-white mb-1">Ma progression</h1>
+          <p className="text-noir-400 text-sm">{prog.validees} / {prog.total} compétences validées</p>
         </div>
 
-        {/* Barre globale */}
-        <div className="card border-gold-500/20 mb-6">
-          <div className="flex items-center justify-between mb-3">
+        {/* Score global */}
+        <div className="card mb-6">
+          <div className="flex items-center justify-between mb-4">
             <div>
-              <p className="text-white font-semibold">Progression générale</p>
-              <p className="text-noir-400 text-sm">{data?.validees || 0} / {data?.total || 0} compétences validées</p>
+              <p className="text-5xl font-bold text-white">{prog.pourcentage}<span className="text-2xl text-noir-400">%</span></p>
+              <p className="text-noir-400 text-sm mt-1">Progression globale</p>
             </div>
-            <span className="text-4xl font-bold" style={{ color: globalColor }}>{globalPct}%</span>
-          </div>
-          <ProgressBar value={globalPct} color={globalColor} height="h-4" />
-
-          {/* Stats par catégorie sous la barre globale */}
-          {data?.statsParCategorie && (
-            <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {Object.entries(data.statsParCategorie).map(([cat, stats]) => {
-                const cfg = CAT_COLORS[cat] || { bar: '#f59e0b', badge: '', icon: 'notes' }
-                return (
-                  <div key={cat} className="bg-noir-800/50 rounded-xl p-3">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-xs text-noir-400 font-medium truncate">{cat}</span>
-                      <span className="text-xs font-bold ml-2 shrink-0" style={{ color: cfg.bar }}>{stats.pourcentage}%</span>
-                    </div>
-                    <ProgressBar value={stats.pourcentage} color={cfg.bar} height="h-1.5" />
-                    {stats.certificat && (
-                      <div className="mt-1.5 flex items-center gap-1">
-                        <span className="text-xs text-gold-400">Certificat obtenu</span>
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* Diplôme final */}
-        {data?.diplome && (
-          <div className="card border-gold-500 bg-gold-500/5 mb-6">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-gold-500/20 border border-gold-500/40 flex items-center justify-center shrink-0">
-              <svg width="28" height="28" fill="none" stroke="#f59e0b" strokeWidth="1.5" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
-            </div>
-              <div>
-                <p className="text-gold-400 text-xs font-bold uppercase tracking-widest mb-1">Diplôme obtenu</p>
-                <p className="text-white font-bold text-lg leading-tight">{data.diplome.nom}</p>
-                <p className="text-noir-400 text-xs mt-0.5">N° {data.diplome.numero} — {new Date(data.diplome.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+            <div className="w-24 h-24 relative">
+              <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
+                <circle cx="18" cy="18" r="15.9" fill="none" stroke="#1a1a2e" strokeWidth="3" />
+                <circle cx="18" cy="18" r="15.9" fill="none" stroke="#f59e0b" strokeWidth="3"
+                  strokeDasharray={`${prog.pourcentage} ${100 - prog.pourcentage}`}
+                  strokeLinecap="round" className="transition-all duration-700" />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-gold-400 font-bold text-sm">{prog.pourcentage}%</span>
               </div>
             </div>
           </div>
-        )}
+          <ProgressBar value={prog.pourcentage} color="#f59e0b" height={8} animated />
+        </div>
 
-        {/* Catégories avec compétences */}
-        <div className="space-y-4">
-          {data?.categories && Object.entries(data.categories).map(([cat, items]) => {
-            const cfg = CAT_COLORS[cat] || { bar: '#f59e0b', badge: 'bg-gold-500/10 text-gold-400 border-gold-500/20', icon: 'notes' }
-            const stats = data.statsParCategorie?.[cat]
-            const isOpen = openCat === cat
-            const validees = items.filter(i => i.validee).length
+        {/* Catégories */}
+        <div className="space-y-4 mb-6">
+          {categories.map(([cat, stats]) => {
+            const colors = CAT_COLORS[cat] || DEFAULT_COLOR
+            const isSelected = selectedCat === cat
+            const comps = competencesBycat(cat)
 
             return (
-              <div key={cat} className="card overflow-hidden">
-                {/* Header catégorie */}
+              <div key={cat} className={`card border ${colors.border} ${colors.bg} transition-all`}>
                 <button
-                  onClick={() => setOpenCat(isOpen ? null : cat)}
-                  className="w-full flex items-center justify-between gap-3 text-left"
+                  onClick={() => setSelectedCat(isSelected ? null : cat)}
+                  className="w-full text-left"
                 >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <span className="shrink-0">{CAT_ICONS[cat] || <svg width="22" height="22" fill="none" stroke="#f59e0b" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>}</span>
-                    <div className="min-w-0">
-                      <p className="text-white font-semibold text-base leading-tight">{cat}</p>
-                      <p className="text-noir-400 text-xs mt-0.5">{validees} / {items.length} compétences</p>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-3 h-3 rounded-full`} style={{ background: colors.bar }} />
+                      <h3 className={`font-semibold text-sm ${colors.text}`}>{cat}</h3>
+                      {stats.certificat && (
+                        <span className="text-xs bg-gold-500/20 text-gold-400 border border-gold-500/30 px-2 py-0.5 rounded-full">
+                          Certificat obtenu
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-white font-bold text-sm">{stats.validees}/{stats.total}</span>
+                      <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"
+                        className={`text-noir-500 transition-transform ${isSelected ? 'rotate-180' : ''}`}>
+                        <polyline points="6 9 12 15 18 9"/>
+                      </svg>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 shrink-0">
-                    {stats?.certificat && (
-                      <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${cfg.badge}`}>
-                        Certifié
-                      </span>
-                    )}
-                    <span className="text-lg font-bold" style={{ color: cfg.bar }}>{stats?.pourcentage || 0}%</span>
-                    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"
-                      className={`text-noir-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}>
-                      <polyline points="6 9 12 15 18 9"/>
-                    </svg>
-                  </div>
+                  <ProgressBar value={stats.validees} max={stats.total} color={colors.bar} height={6} animated />
+                  <p className="text-noir-500 text-xs mt-2">{stats.pourcentage}% complété</p>
                 </button>
 
-                {/* Barre de progression catégorie */}
-                <div className="mt-3">
-                  <ProgressBar value={stats?.pourcentage || 0} color={cfg.bar} height="h-2" />
-                </div>
-
-                {/* Certificat obtenu */}
-                {stats?.certificat && (
-                  <div className="mt-3 flex items-center gap-2 bg-gold-500/10 border border-gold-500/20 rounded-xl px-3 py-2">
-                    <span className="text-gold-400 text-sm">Certificat "{cat}" obtenu</span>
-                  </div>
-                )}
-
-                {/* Liste des compétences (dépliable) */}
-                {isOpen && (
-                  <div className="mt-4 space-y-1.5 border-t border-noir-800 pt-4">
-                    {items.map((item, i) => (
-                      <div key={i} className={`flex items-center gap-3 px-2 py-2 rounded-lg transition-colors ${item.validee ? 'bg-green-500/5' : 'hover:bg-noir-800/40'}`}>
-                        <input type="checkbox" checked={item.validee} readOnly
-                          className="mt-0.5 w-5 h-5 cursor-default" style={{accentColor: '#22c55e', pointerEvents: 'none'}} />
-                        <span className={`text-sm flex-1 ${item.validee ? 'text-white' : 'text-noir-400'}`}>
-                          {item.competence}
-                        </span>
-                        {item.validee && item.validee_at && (
-                          <span className="text-xs text-noir-600 shrink-0">
-                            {new Date(item.validee_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
+                {/* Compétences détaillées */}
+                {isSelected && comps.length > 0 && (
+                  <div className="mt-4 pt-4 border-t border-noir-800/50 grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {comps.map(c => (
+                      <div key={c.competence} className="flex items-center gap-2.5 bg-noir-900/50 rounded-xl px-3 py-2">
+                        <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${
+                          c.validee ? 'bg-green-500/20 border border-green-500/40' : 'bg-noir-800 border border-noir-700'
+                        }`}>
+                          {c.validee ? (
+                            <svg width="10" height="10" fill="none" stroke="#4ade80" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                          ) : (
+                            <div className="w-2 h-2 rounded-full bg-noir-600" />
+                          )}
+                        </div>
+                        <span className={`text-xs ${c.validee ? 'text-white' : 'text-noir-500'}`}>{c.competence}</span>
+                        {c.validee && c.validee_at && (
+                          <span className="text-noir-600 text-xs ml-auto shrink-0">
+                            {new Date(c.validee_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
                           </span>
                         )}
                       </div>
@@ -202,18 +158,20 @@ export default function ProgressionPage() {
         </div>
 
         {/* Message encouragement */}
-        {globalPct < 100 && (
-          <div className="mt-6 card border-dashed border-gold-500/20 text-center py-6">
-            <p className="text-noir-400 text-sm">
-              {globalPct === 0
-                ? 'Votre parcours commence ici. Votre professeur validera vos compétences au fil des cours.'
-                : globalPct < 50
-                ? `Vous progressez bien ! Continuez sur cette lancée.`
-                : `Excellent travail ! Vous êtes à ${globalPct}% de la formation complète.`
-              }
-            </p>
-          </div>
-        )}
+        <div className="card text-center py-8 border-gold-500/20 bg-gold-500/5">
+          <p className="text-2xl mb-2">
+            {prog.pourcentage >= 100 ? '🏆' : prog.pourcentage >= 66 ? '🌟' : prog.pourcentage >= 33 ? '🎵' : '🎹'}
+          </p>
+          <p className="text-white font-medium text-sm">
+            {prog.pourcentage >= 100 ? 'Formation complète ! Félicitations !' :
+             prog.pourcentage >= 66 ? 'Excellent travail, continuez !' :
+             prog.pourcentage >= 33 ? 'Bonne progression, ne lâchez pas !' :
+             'Chaque compétence validée est une victoire !'}
+          </p>
+          <p className="text-noir-400 text-xs mt-1">
+            {prog.total - prog.validees} compétence{prog.total - prog.validees > 1 ? 's' : ''} restante{prog.total - prog.validees > 1 ? 's' : ''}
+          </p>
+        </div>
       </div>
     </EleveLayout>
   )

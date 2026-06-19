@@ -2,141 +2,172 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import EleveLayout from '@/components/EleveNav'
+import { SkeletonCard } from '@/components/eleve/SkeletonCard'
 
 interface Badge { id: string; badge_key: string; badge_nom: string; badge_desc: string | null; badge_icon: string | null; obtenu_at: string }
 
-// Tous les badges possibles (obtenus ou non)
 const ALL_BADGES = [
-  { key: 'premier_cours',    nom: 'Premier cours',         desc: 'Vous avez réservé votre premier cours',          icon: 'SVG_premier_cours', categorie: 'Parcours' },
-  { key: 'premier_journal',  nom: 'Premier pas',           desc: 'Première entrée dans le journal de pratique',    icon: 'SVG_premier_journal', categorie: 'Pratique' },
-  { key: 'pratique_10h',     nom: '10 heures de pratique', desc: 'Vous avez pratiqué 10 heures au total',          icon: 'SVG_pratique_10h', categorie: 'Pratique' },
-  { key: 'pratique_50h',     nom: '50 heures de pratique', desc: 'Vous avez pratiqué 50 heures au total',          icon: 'SVG_pratique_50h', categorie: 'Pratique' },
-  { key: 'pratique_100h',    nom: '100 heures de pratique',desc: 'Vous avez pratiqué 100 heures au total',         icon: 'SVG_pratique_100h', categorie: 'Pratique' },
-  { key: 'streak_4',         nom: 'Régularité 1 mois',     desc: '4 semaines consécutives de pratique',            icon: 'SVG_streak_4', categorie: 'Régularité' },
-  { key: 'streak_12',        nom: 'Régularité 3 mois',     desc: '12 semaines consécutives de pratique',           icon: 'SVG_streak_12', categorie: 'Régularité' },
-  { key: 'cert_fondamentaux',nom: 'Fondamentaux',          desc: 'Certificat Fondamentaux du piano obtenu',        icon: 'SVG_cert_fondamentaux', categorie: 'Certificats' },
-  { key: 'cert_comprehension',nom: 'Compréhension',        desc: 'Certificat Compréhension et autonomie obtenu',   icon: 'SVG_cert_comprehension', categorie: 'Certificats' },
-  { key: 'cert_expression',  nom: 'Expression',            desc: 'Certificat Expression et maîtrise obtenu',       icon: 'SVG_cert_expression', categorie: 'Certificats' },
-  { key: 'diplome_final',    nom: 'Diplôme final',         desc: 'Formation complète Lieu Secret validée',         icon: 'SVG_diplome_final', categorie: 'Certificats' },
-  { key: 'premier_objectif', nom: 'Visionnaire',           desc: 'Premier objectif musical défini',                icon: 'SVG_premier_objectif', categorie: 'Objectifs' },
-  { key: 'objectif_atteint', nom: 'Accomplissement',       desc: 'Premier objectif musical atteint',               icon: 'SVG_objectif_atteint', categorie: 'Objectifs' },
-  { key: 'premier_enreg',    nom: 'Première prise',        desc: 'Premier enregistrement envoyé au professeur',    icon: 'SVG_premier_enreg', categorie: 'Engagement' },
-  { key: 'premier_message',  nom: 'Communicant',           desc: 'Premier message envoyé au professeur',           icon: 'SVG_premier_message', categorie: 'Engagement' },
-  { key: 'quiz_fondamentaux', nom: 'Quiz Fondamentaux',     desc: 'Vous avez réussi un quiz de niveau Fondamentaux', icon: 'SVG_quiz_fondamentaux', categorie: 'Quiz' },
-  { key: 'quiz_comprehension',nom: 'Quiz Compréhension',    desc: 'Vous avez réussi un quiz de niveau Compréhension',icon: 'SVG_quiz_comprehension', categorie: 'Quiz' },
-  { key: 'quiz_expression',   nom: 'Quiz Expression',       desc: 'Vous avez réussi un quiz de niveau Expression',   icon: 'SVG_quiz_expression', categorie: 'Quiz' },
+  { key: 'premier_cours',     nom: 'Premier cours',          desc: 'Vous avez réservé votre premier cours',           icon: '🎹', categorie: 'Parcours' },
+  { key: 'premier_journal',   nom: 'Premier pas',            desc: 'Première entrée dans le journal de pratique',     icon: '📝', categorie: 'Pratique' },
+  { key: 'pratique_10h',      nom: '10h de pratique',        desc: 'Vous avez pratiqué 10 heures au total',           icon: '⏱️', categorie: 'Pratique' },
+  { key: 'pratique_50h',      nom: '50h de pratique',        desc: 'Vous avez pratiqué 50 heures au total',           icon: '🎯', categorie: 'Pratique' },
+  { key: 'pratique_100h',     nom: '100h de pratique',       desc: 'Vous avez pratiqué 100 heures au total',          icon: '🏆', categorie: 'Pratique' },
+  { key: 'streak_4',          nom: 'Régularité 1 mois',      desc: '4 semaines consécutives de pratique',             icon: '🔥', categorie: 'Régularité' },
+  { key: 'streak_12',         nom: 'Régularité 3 mois',      desc: '12 semaines consécutives de pratique',            icon: '⚡', categorie: 'Régularité' },
+  { key: 'cert_fondamentaux', nom: 'Fondamentaux',           desc: 'Certificat Fondamentaux du piano obtenu',         icon: '🎓', categorie: 'Certificats' },
+  { key: 'cert_comprehension',nom: 'Compréhension',          desc: 'Certificat Compréhension et autonomie obtenu',    icon: '🎵', categorie: 'Certificats' },
+  { key: 'cert_expression',   nom: 'Expression',             desc: 'Certificat Expression et maîtrise obtenu',        icon: '🌟', categorie: 'Certificats' },
+  { key: 'diplome_final',     nom: 'Diplôme final',          desc: 'Formation complète Lieu Secret validée',          icon: '🏅', categorie: 'Certificats' },
+  { key: 'premier_objectif',  nom: 'Visionnaire',            desc: 'Premier objectif musical défini',                 icon: '🎯', categorie: 'Objectifs' },
+  { key: 'objectif_atteint',  nom: 'Accomplissement',        desc: 'Premier objectif musical atteint',                icon: '✅', categorie: 'Objectifs' },
+  { key: 'premier_enreg',     nom: 'Première prise',         desc: 'Premier enregistrement envoyé au professeur',     icon: '🎙️', categorie: 'Engagement' },
+  { key: 'premier_message',   nom: 'Communicant',            desc: 'Premier message envoyé au professeur',            icon: '💬', categorie: 'Engagement' },
+  { key: 'quiz_fondamentaux', nom: 'Quiz Fondamentaux',      desc: 'Vous avez réussi un quiz de niveau Fondamentaux', icon: '🎹', categorie: 'Quiz' },
+  { key: 'quiz_comprehension',nom: 'Quiz Compréhension',     desc: 'Vous avez réussi un quiz de niveau Compréhension',icon: '🎵', categorie: 'Quiz' },
+  { key: 'quiz_expression',   nom: 'Quiz Expression',        desc: 'Vous avez réussi un quiz de niveau Expression',   icon: '🏆', categorie: 'Quiz' },
 ]
 
-const CATEGORIES = ['Tous', 'Parcours', 'Pratique', 'Régularité', 'Certificats', 'Objectifs', 'Engagement']
+const CATEGORIES = ['Tous', 'Parcours', 'Pratique', 'Régularité', 'Certificats', 'Objectifs', 'Engagement', 'Quiz']
 
-
-const BADGE_ICONS: Record<string, React.ReactNode> = {
-  premier_cours:     <svg width="32" height="32" fill="none" stroke="#f59e0b" strokeWidth="1.5" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="18" rx="2"/><line x1="7" y1="3" x2="7" y2="13"/><line x1="12" y1="3" x2="12" y2="13"/><line x1="17" y1="3" x2="17" y2="13"/></svg>,
-  premier_journal:   <svg width="32" height="32" fill="none" stroke="#fbbf24" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>,
-  pratique_10h:      <svg width="32" height="32" fill="none" stroke="#60a5fa" strokeWidth="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
-  pratique_50h:      <svg width="32" height="32" fill="none" stroke="#34d399" strokeWidth="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>,
-  pratique_100h:     <svg width="32" height="32" fill="none" stroke="#f59e0b" strokeWidth="1.5" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>,
-  streak_4:          <svg width="32" height="32" fill="none" stroke="#fb923c" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>,
-  streak_12:         <svg width="32" height="32" fill="none" stroke="#fbbf24" strokeWidth="1.5" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
-  cert_fondamentaux: <svg width="32" height="32" fill="none" stroke="#60a5fa" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>,
-  cert_comprehension:<svg width="32" height="32" fill="none" stroke="#a78bfa" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>,
-  cert_expression:   <svg width="32" height="32" fill="none" stroke="#f59e0b" strokeWidth="1.5" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
-  diplome_final:     <svg width="32" height="32" fill="none" stroke="#f59e0b" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M2 20h20M5 20l-2-9 5 4 4-8 4 8 5-4-2 9"/></svg>,
-  premier_objectif:  <svg width="32" height="32" fill="none" stroke="#34d399" strokeWidth="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2" fill="#34d399"/></svg>,
-  objectif_atteint:  <svg width="32" height="32" fill="none" stroke="#4ade80" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>,
-  premier_enreg:     <svg width="32" height="32" fill="none" stroke="#f87171" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>,
-  premier_message:   <svg width="32" height="32" fill="none" stroke="#34d399" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,
-  quiz_fondamentaux: <svg width="32" height="32" fill="none" stroke="#f59e0b" strokeWidth="1.5" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="18" rx="2"/><line x1="7" y1="3" x2="7" y2="13"/><line x1="12" y1="3" x2="12" y2="13"/><line x1="17" y1="3" x2="17" y2="13"/></svg>,
-  quiz_comprehension: <svg width="32" height="32" fill="none" stroke="#a78bfa" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>,
-  quiz_expression:   <svg width="32" height="32" fill="none" stroke="#fbbf24" strokeWidth="1.5" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
-}
-
-function BadgeIcon({ badgeKey, obtained }: { badgeKey: string; obtained: boolean }) {
-  const icon = BADGE_ICONS[badgeKey]
-  if (!icon) return <svg width="32" height="32" fill="none" stroke="#f59e0b" strokeWidth="1.5" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
-  return <span className={obtained ? '' : 'grayscale opacity-50'}>{icon}</span>
+const CAT_COLORS: Record<string, string> = {
+  Parcours: '#60a5fa', Pratique: '#34d399', Régularité: '#fb923c',
+  Certificats: '#f59e0b', Objectifs: '#a78bfa', Engagement: '#f472b6', Quiz: '#38bdf8',
 }
 
 export default function BadgesPage() {
   const router = useRouter()
   const [badges, setBadges] = useState<Badge[]>([])
-  const [prenom, setPrenom] = useState('')
   const [loading, setLoading] = useState(true)
-  const [filterCat, setFilterCat] = useState('Tous')
+  const [filter, setFilter] = useState('Tous')
+  const [showAll, setShowAll] = useState(false)
 
   useEffect(() => {
-    Promise.all([
-      fetch('/api/eleve/me').then(r => r.status === 401 ? null : r.json()),
-      fetch('/api/eleve/badges').then(r => r.json()),
-    ]).then(([me, data]) => {
-      if (!me) { router.push('/espace-eleve/login'); return }
-      setPrenom(me.prenom)
-      setBadges(Array.isArray(data) ? data : [])
-    }).finally(() => setLoading(false))
+    fetch('/api/eleve/badges')
+      .then(r => { if (r.status === 401) { router.push('/espace-eleve/login'); return null } return r.json() })
+      .then(d => { if (Array.isArray(d)) setBadges(d) })
+      .catch(console.error)
+      .finally(() => setLoading(false))
   }, [router])
 
   const obtenuKeys = new Set(badges.map(b => b.badge_key))
-  const filtered = ALL_BADGES.filter(b => filterCat === 'Tous' || b.categorie === filterCat)
-  const nbObtenus = ALL_BADGES.filter(b => obtenuKeys.has(b.key)).length
+  const nbObtenus = badges.length
   const pct = Math.round((nbObtenus / ALL_BADGES.length) * 100)
 
+  const filtered = ALL_BADGES.filter(b => {
+    if (filter === 'Tous') return true
+    if (filter === 'Obtenus') return obtenuKeys.has(b.key)
+    return b.categorie === filter
+  })
+
+  if (loading) return (
+    <EleveLayout>
+      <div className="p-4 md:p-6 lg:p-8 grid grid-cols-2 md:grid-cols-3 gap-4">
+        {[...Array(9)].map((_, i) => <SkeletonCard key={i} className="h-36" />)}
+      </div>
+    </EleveLayout>
+  )
+
   return (
-    <EleveLayout prenom={prenom} nbNotifs={0}>
-      <div className="p-4 md:p-6 lg:p-8 pb-24 md:pb-8">
+    <EleveLayout>
+      <div className="p-4 md:p-6 lg:p-8 pb-24 md:pb-8 max-w-4xl mx-auto">
+
+        {/* Header */}
         <div className="mb-6">
-          <h1 className="font-serif text-2xl md:text-3xl text-white mb-1 animate-fade-in-up">Mes badges</h1>
-          <p className="text-noir-400 text-sm">Récompenses obtenues au fil de votre parcours musical</p>
+          <h1 className="text-2xl font-serif text-white mb-1">Mes badges</h1>
+          <p className="text-noir-400 text-sm">{nbObtenus} / {ALL_BADGES.length} badges obtenus</p>
         </div>
 
-        {/* Progression globale */}
-        <div className="card border-gold-500/20 mb-6">
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <p className="text-white font-semibold">Collection de badges</p>
-              <p className="text-noir-400 text-sm">{nbObtenus} / {ALL_BADGES.length} badges obtenus</p>
+        {/* Score */}
+        <div className="card mb-6 flex items-center gap-6">
+          <div className="w-20 h-20 relative shrink-0">
+            <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
+              <circle cx="18" cy="18" r="15.9" fill="none" stroke="#111" strokeWidth="3" />
+              <circle cx="18" cy="18" r="15.9" fill="none" stroke="#f59e0b" strokeWidth="3"
+                strokeDasharray={`${pct} ${100 - pct}`} strokeLinecap="round" />
+            </svg>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-gold-400 font-bold text-sm">{pct}%</span>
             </div>
-            <span className="text-3xl font-bold text-gold-400">{pct}%</span>
           </div>
-          <div className="w-full bg-noir-800 rounded-full h-3 overflow-hidden">
-            <div className="h-3 rounded-full bg-gold-500 transition-all duration-700" style={{ width: `${pct}%` }} />
+          <div className="flex-1">
+            <p className="text-white font-bold text-xl">{nbObtenus} badge{nbObtenus > 1 ? 's' : ''}</p>
+            <p className="text-noir-400 text-sm">{ALL_BADGES.length - nbObtenus} à débloquer</p>
+            <div className="flex gap-2 mt-2 flex-wrap">
+              {Object.entries(CAT_COLORS).map(([cat, color]) => {
+                const nb = badges.filter(b => ALL_BADGES.find(a => a.key === b.badge_key)?.categorie === cat).length
+                if (nb === 0) return null
+                return (
+                  <span key={cat} className="text-xs px-2 py-0.5 rounded-full border"
+                    style={{ color, borderColor: `${color}40`, background: `${color}15` }}>
+                    {nb} {cat}
+                  </span>
+                )
+              })}
+            </div>
           </div>
         </div>
 
         {/* Filtres */}
-        <div className="flex gap-1 flex-wrap bg-noir-800 border border-noir-700 rounded-xl p-1 mb-6 w-fit">
-          {CATEGORIES.map(cat => (
-            <button key={cat} onClick={() => setFilterCat(cat)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${filterCat === cat ? 'bg-gold-500 text-noir-950' : 'text-noir-400 hover:text-white'}`}>
+        <div className="flex gap-2 mb-6 flex-wrap">
+          {[...CATEGORIES, 'Obtenus'].map(cat => (
+            <button key={cat} onClick={() => setFilter(cat)}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                filter === cat
+                  ? 'bg-gold-500/10 border-gold-500/30 text-gold-400'
+                  : 'border-noir-700 text-noir-400 hover:border-noir-600'
+              }`}>
               {cat}
+              {cat === 'Obtenus' && <span className="ml-1 text-gold-500">{nbObtenus}</span>}
             </button>
           ))}
         </div>
 
-        {loading ? (
-          <div className="text-center py-12"><div className="w-8 h-8 border-2 border-gold-500 border-t-transparent rounded-full animate-spin mx-auto" /></div>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-3">
-            {filtered.map(b => {
-              const obtained = obtenuKeys.has(b.key)
-              const obtainedBadge = badges.find(x => x.badge_key === b.key)
-              return (
-                <div key={b.key} className={`card text-center py-5 transition-all ${obtained ? 'border-gold-500/30 bg-gold-500/5' : 'opacity-40'}`}>
-                  <div className={`mb-3 flex justify-center ${obtained ? '' : 'opacity-30'}`}>
-                    <BadgeIcon badgeKey={b.key} obtained={obtained} />
-                  </div>
-                  <p className={`font-semibold text-sm mb-1 ${obtained ? 'text-white' : 'text-noir-500'}`}>{b.nom}</p>
-                  <p className="text-noir-500 text-xs leading-relaxed">{b.desc}</p>
+        {/* Grille badges */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          {filtered.map(b => {
+            const obtained = obtenuKeys.has(b.key)
+            const obtainedBadge = badges.find(x => x.badge_key === b.key)
+            const color = CAT_COLORS[b.categorie] || '#f59e0b'
+
+            return (
+              <div key={b.key}
+                className={`card flex flex-col items-center text-center gap-3 py-5 transition-all ${
+                  obtained
+                    ? 'border-gold-500/20 bg-gold-500/5 hover:border-gold-500/40'
+                    : 'opacity-50 grayscale'
+                }`}>
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-3xl ${
+                  obtained ? '' : 'bg-noir-800'
+                }`}
+                  style={obtained ? { background: `${color}20`, border: `1px solid ${color}40` } : {}}>
+                  {b.icon}
+                </div>
+                <div>
+                  <p className={`font-semibold text-sm ${obtained ? 'text-white' : 'text-noir-500'}`}>{b.nom}</p>
+                  <p className="text-noir-500 text-xs mt-0.5 line-clamp-2">{b.desc}</p>
                   {obtained && obtainedBadge && (
-                    <p className="text-gold-400 text-[10px] mt-2 font-medium">
+                    <p className="text-xs mt-1.5" style={{ color }}>
                       {new Date(obtainedBadge.obtenu_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}
                     </p>
                   )}
                   {!obtained && (
-                    <p className="text-noir-700 text-[10px] mt-2">Non obtenu</p>
+                    <p className="text-noir-700 text-xs mt-1.5">🔒 À débloquer</p>
                   )}
                 </div>
-              )
-            })}
+                <span className="text-xs px-2 py-0.5 rounded-full border"
+                  style={{ color, borderColor: `${color}30`, background: `${color}10` }}>
+                  {b.categorie}
+                </span>
+              </div>
+            )
+          })}
+        </div>
+
+        {filtered.length === 0 && (
+          <div className="text-center py-16">
+            <p className="text-4xl mb-3">🏅</p>
+            <p className="text-white font-medium">Aucun badge dans cette catégorie</p>
+            <p className="text-noir-400 text-sm mt-1">Continuez à pratiquer pour en débloquer !</p>
           </div>
         )}
       </div>
