@@ -156,7 +156,7 @@ export default function EleveLayout({
       setNbMedias(Array.isArray(medias) ? medias.length : 0)
       setNbRessources(Array.isArray(res) ? res.length : 0)
       setNbTravaux(Array.isArray(travaux) ? travaux.filter((t: { termine: boolean }) => !t.termine).length : 0)
-      setNbNotifs(Array.isArray(notifs) ? notifs.filter((n: { lu?: boolean; lue?: boolean }) => !n.lu && !n.lue).length : 0)
+      setNbNotifs(Array.isArray(notifs) ? notifs.filter((n: { lu?: boolean }) => !n.lu).length : 0)
       setNbMessages(Array.isArray(msgs) ? msgs.filter((m: { expediteur: string; lu: boolean }) => m.expediteur === 'admin' && !m.lu).length : 0)
       setNbEnregistrements(Array.isArray(enreg) ? enreg.filter((e: { commentaire_admin: string | null; lu_eleve: boolean }) => e.commentaire_admin && !e.lu_eleve).length : 0)
     } catch {}
@@ -183,25 +183,30 @@ export default function EleveLayout({
   useEffect(() => { if (nbTravauxProp > 0) setNbTravaux(nbTravauxProp) }, [nbTravauxProp])
 
   // Son de notification via Web Audio API
-  const prevNotifsRef = useRef(0)
+  const prevNotifsRef = useRef(-1)
   useEffect(() => {
-    if (nbNotifs > prevNotifsRef.current && prevNotifsRef.current >= 0) {
+    if (prevNotifsRef.current >= 0 && nbNotifs > prevNotifsRef.current) {
       try {
-        const ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
-        // Mélodie douce : deux notes courtes
-        const playNote = (freq: number, start: number, dur: number) => {
-          const osc = ctx.createOscillator()
-          const gain = ctx.createGain()
-          osc.connect(gain); gain.connect(ctx.destination)
-          osc.type = 'sine'; osc.frequency.value = freq
-          gain.gain.setValueAtTime(0, ctx.currentTime + start)
-          gain.gain.linearRampToValueAtTime(0.25, ctx.currentTime + start + 0.02)
-          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur)
-          osc.start(ctx.currentTime + start)
-          osc.stop(ctx.currentTime + start + dur)
+        const AudioCtx = window.AudioContext || (window as any).webkitAudioContext
+        if (!AudioCtx) { prevNotifsRef.current = nbNotifs; return }
+        const ctx = new AudioCtx()
+        const play = () => {
+          const playNote = (freq: number, start: number, dur: number) => {
+            const osc = ctx.createOscillator()
+            const gain = ctx.createGain()
+            osc.connect(gain); gain.connect(ctx.destination)
+            osc.type = 'sine'; osc.frequency.value = freq
+            gain.gain.setValueAtTime(0, ctx.currentTime + start)
+            gain.gain.linearRampToValueAtTime(0.2, ctx.currentTime + start + 0.02)
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur)
+            osc.start(ctx.currentTime + start)
+            osc.stop(ctx.currentTime + start + dur)
+          }
+          playNote(880, 0, 0.15)
+          playNote(1047, 0.18, 0.2)
         }
-        playNote(880, 0, 0.15)    // La5 — première note
-        playNote(1047, 0.18, 0.2) // Do6 — deuxième note plus haute
+        if (ctx.state === 'suspended') { ctx.resume().then(play).catch(() => {}) }
+        else { play() }
       } catch {}
     }
     prevNotifsRef.current = nbNotifs

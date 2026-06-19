@@ -44,6 +44,10 @@ export default function MetronomePage() {
         audioCtxRef.current = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)()
       }
       const ctx = audioCtxRef.current
+      // Résoudre le problème mobile : reprendre le contexte suspendu
+      if (ctx.state === 'suspended') {
+        ctx.resume()
+      }
       const osc = ctx.createOscillator()
       const gain = ctx.createGain()
       osc.connect(gain)
