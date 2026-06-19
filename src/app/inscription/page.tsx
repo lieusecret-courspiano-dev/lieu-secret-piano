@@ -46,10 +46,7 @@ function InscriptionContent() {
   useEffect(() => {
     const ref = searchParams.get('ref')
     if (ref) setForm(f => ({ ...f, ref_code: ref.toUpperCase() }))
-    // Charger les questions supplémentaires depuis l'admin
-    fetch('/api/inscription-form').then(r => r.json()).then(data => {
-      if (Array.isArray(data)) setExtraQuestions(data)
-    }).catch(() => {})
+    
   }, [searchParams])
 
   function handleChange(key: keyof InscriptionForm, value: string) {
