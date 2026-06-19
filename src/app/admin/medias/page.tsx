@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Trash2, ToggleLeft, ToggleRight, Star } from 'lucide-react'
+import { Plus, Trash2, ToggleLeft, ToggleRight, Star, Pencil } from 'lucide-react'
 
 interface Media {
   id: string
@@ -26,6 +26,7 @@ export default function AdminMedias() {
   const [medias, setMedias]     = useState<Media[]>([])
   const [loading, setLoading]   = useState(true)
   const [showForm, setShowForm] = useState(false)
+  const [editItem, setEditItem] = useState<Media | null>(null)
   const [form, setForm]         = useState(EMPTY)
   const [saving, setSaving]     = useState(false)
   const [error, setError]       = useState('')
@@ -43,20 +44,44 @@ export default function AdminMedias() {
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault()
-    if (!form.url) { setError('URL requise'); return }
+    if (!form.url && !editItem) { setError('URL requise'); return }
     setSaving(true); setError('')
-    const res = await fetch('/api/medias', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
-    })
-    if (res.ok) {
-      setShowForm(false); setForm(EMPTY)
-      setSuccess('Média ajouté'); setTimeout(() => setSuccess(''), 3000)
-      fetchMedias()
+
+    if (editItem) {
+      // Modification
+      const res = await fetch(`/api/medias/${editItem.id}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ titre: form.titre, description: form.description, url: form.url, auteur: form.auteur }),
+      })
+      if (res.ok) {
+        setShowForm(false); setEditItem(null); setForm(EMPTY)
+        setSuccess('Média modifié'); setTimeout(() => setSuccess(''), 3000)
+        fetchMedias()
+      } else {
+        const d = await res.json(); setError(d.error || 'Erreur')
+      }
     } else {
-      const d = await res.json(); setError(d.error)
+      // Ajout
+      const res = await fetch('/api/medias', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      })
+      if (res.ok) {
+        setShowForm(false); setForm(EMPTY)
+        setSuccess('Média ajouté'); setTimeout(() => setSuccess(''), 3000)
+        fetchMedias()
+      } else {
+        const d = await res.json(); setError(d.error)
+      }
     }
     setSaving(false)
+  }
+
+  function openEdit(m: Media) {
+    setEditItem(m)
+    setForm({ type: m.type, titre: m.titre || '', description: m.description || '', url: m.url, auteur: m.auteur || '', position: m.position })
+    setShowForm(true)
+    setError('')
   }
 
   async function handleToggle(m: Media) {
@@ -136,14 +161,7 @@ export default function AdminMedias() {
                           {m.titre && <p className="text-white text-sm font-medium truncate">{m.titre}</p>}
                           {m.auteur && <p className="text-noir-500 text-xs">{m.auteur}</p>}
                         </div>
-                        <div className="flex items-center gap-1 shrink-0">
-                          <button onClick={() => handleToggle(m)} className={`text-xs px-2 py-1 rounded transition-colors ${m.is_active ? 'text-green-400' : 'text-noir-600'}`}>
-                            {m.is_active ? <ToggleRight size={16} /> : <ToggleLeft size={16} />}
-                          </button>
-                          <button onClick={() => handleDelete(m.id)} className="text-noir-600 hover:text-red-400 transition-colors">
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
+                        
                       </div>
                     </div>
                   ))}
@@ -159,7 +177,7 @@ export default function AdminMedias() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm overflow-y-auto">
           <div className="bg-noir-900 border border-noir-700 rounded-2xl w-full max-w-md p-6 shadow-2xl my-4">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-white font-serif text-xl">Ajouter un média</h2>
+              <h2 className="text-white font-serif text-xl">{editItem ? 'Modifier le média' : 'Ajouter un média'}</h2>
               <button onClick={() => setShowForm(false)} className="text-noir-400 hover:text-white">
                 <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
@@ -206,9 +224,9 @@ export default function AdminMedias() {
               </div>
               {error && <div className="bg-red-900/30 border border-red-500/50 text-red-300 text-sm rounded-lg px-4 py-3">{error}</div>}
               <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setShowForm(false)} className="btn-outline flex-1">Annuler</button>
+                <button type="button" onClick={() => { setShowForm(false); setEditItem(null); setForm(EMPTY) }} className="btn-outline flex-1">Annuler</button>
                 <button type="submit" className="btn-gold flex-1" disabled={saving}>
-                  {saving ? 'Ajout...' : 'Ajouter'}
+                  {saving ? 'Enregistrement...' : editItem ? 'Enregistrer' : 'Ajouter'}
                 </button>
               </div>
             </form>
