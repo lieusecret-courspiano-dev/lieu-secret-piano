@@ -1,6 +1,12 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { Plus, Pencil, Trash2, Eye, EyeOff, ExternalLink } from 'lucide-react'
+import dynamic from 'next/dynamic'
+
+const RichTextEditor = dynamic(() => import('@/components/admin/RichTextEditor'), {
+  ssr: false,
+  loading: () => <div className="h-64 bg-noir-800/40 border border-noir-700 rounded-xl animate-pulse" />,
+})
 
 interface Article {
   id: string; titre: string; slug: string; extrait: string; contenu: string
@@ -147,10 +153,12 @@ export default function AdminBlogPage() {
 
             <div className="card">
               <label className="label mb-3 block">Contenu de l'article</label>
-              <p className="text-noir-500 text-xs mb-3">Vous pouvez utiliser du texte simple. Les sauts de ligne seront respectés.</p>
-              <textarea value={form.contenu} onChange={e => setForm(f => ({ ...f, contenu: e.target.value }))}
-                className="input w-full resize-y font-mono text-sm" rows={20}
-                placeholder="Rédigez votre article ici...&#10;&#10;Utilisez des sauts de ligne pour séparer les paragraphes.&#10;&#10;## Titre de section&#10;&#10;Votre contenu..." />
+              <RichTextEditor
+                value={form.contenu}
+                onChange={html => setForm(f => ({ ...f, contenu: html }))}
+                placeholder="Rédigez votre article ici... Utilisez la barre d'outils pour mettre en forme votre texte."
+                minHeight="400px"
+              />
             </div>
 
             <div className="flex gap-3">
