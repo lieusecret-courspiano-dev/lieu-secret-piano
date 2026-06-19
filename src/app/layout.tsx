@@ -2,21 +2,33 @@ import type { Metadata, Viewport } from 'next'
 import { Toaster } from 'sonner'
 import './globals.css'
 
-const SITE_URL = 'https://www.lieusecret-courspiano.fr'
+const SITE_URL  = 'https://www.lieusecret-courspiano.fr'
 const SITE_NAME = 'Lieu Secret — École de Piano en Ligne'
-const SITE_DESC = 'Apprenez le piano en ligne avec une pédagogie bienveillante et personnalisée. Cours individuels, ateliers de groupe et masterclass pour tous niveaux. Premier cours d\'essai gratuit.'
+const SITE_DESC = 'Apprenez le piano en ligne via Zoom avec une pédagogie bienveillante et personnalisée. Cours individuels, ateliers de groupe et masterclass pour tous niveaux. Premier cours d\'essai gratuit.'
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
     default: SITE_NAME,
-    template: `%s — Lieu Secret`,
+    template: '%s — Lieu Secret',
   },
   description: SITE_DESC,
   keywords: [
-    'cours de piano en ligne', 'école de piano', 'apprendre le piano', 'piano débutant',
-    'cours piano individuel', 'atelier piano', 'masterclass piano', 'piano zoom',
-    'lieu secret piano', 'cours piano adulte', 'cours piano enfant',
+    'cours de piano en ligne',
+    'école de piano en ligne',
+    'apprendre le piano',
+    'piano débutant',
+    'cours piano individuel',
+    'cours piano zoom',
+    'atelier piano en ligne',
+    'masterclass piano',
+    'piano zoom',
+    'lieu secret piano',
+    'cours piano adulte',
+    'cours piano enfant',
+    'cours piano tous niveaux',
+    'réserver cours piano',
+    'cours piano gratuit essai',
   ],
   authors: [{ name: 'Lieu Secret' }],
   creator: 'Lieu Secret',
@@ -24,7 +36,13 @@ export const metadata: Metadata = {
   robots: {
     index: true,
     follow: true,
-    googleBot: { index: true, follow: true, 'max-video-preview': -1, 'max-image-preview': 'large', 'max-snippet': -1 },
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
   },
   manifest: '/manifest.json',
   icons: {
@@ -51,7 +69,7 @@ export const metadata: Metadata = {
         url: `${SITE_URL}/og-image.jpg`,
         width: 1200,
         height: 630,
-        alt: 'Lieu Secret — École de Piano en Ligne',
+        alt: 'Lieu Secret — École de Piano en Ligne via Zoom',
       },
     ],
   },
@@ -63,6 +81,9 @@ export const metadata: Metadata = {
   },
   alternates: {
     canonical: SITE_URL,
+    languages: {
+      'fr-FR': SITE_URL,
+    },
   },
   appleWebApp: {
     capable: true,
@@ -86,12 +107,12 @@ export const viewport: Viewport = {
   maximumScale: 5,
   userScalable: true,
   themeColor: [
-    { media: '(prefers-color-scheme: dark)', color: '#1a1a2e' },
+    { media: '(prefers-color-scheme: dark)',  color: '#1a1a2e' },
     { media: '(prefers-color-scheme: light)', color: '#f8f5f0' },
   ],
 }
 
-// Schema.org JSON-LD
+// Schema.org JSON-LD enrichi
 const schemaOrg = {
   '@context': 'https://schema.org',
   '@graph': [
@@ -99,37 +120,53 @@ const schemaOrg = {
       '@type': 'MusicSchool',
       '@id': `${SITE_URL}/#organization`,
       name: 'Lieu Secret',
+      alternateName: 'Lieu Secret Piano',
       description: SITE_DESC,
       url: SITE_URL,
-      logo: `${SITE_URL}/icons/icon-512x512.png`,
+      logo: {
+        '@type': 'ImageObject',
+        url: `${SITE_URL}/icons/icon-512x512.png`,
+        width: 512,
+        height: 512,
+      },
       contactPoint: {
         '@type': 'ContactPoint',
         email: 'contact@lieusecret-courspiano.fr',
         contactType: 'customer service',
         availableLanguage: 'French',
+        contactOption: 'TollFree',
       },
       sameAs: [
         'https://www.instagram.com/lieusecret',
         'https://www.youtube.com/@lieusecret',
       ],
-      offers: [
-        {
-          '@type': 'Offer',
-          name: 'Cours de piano individuel',
-          description: 'Cours de piano individuel en ligne via Zoom',
-          price: '22',
-          priceCurrency: 'EUR',
-          availability: 'https://schema.org/InStock',
-        },
-        {
-          '@type': 'Offer',
-          name: "Cours d'essai gratuit",
-          description: "Premier cours de piano gratuit d'une heure",
-          price: '0',
-          priceCurrency: 'EUR',
-          availability: 'https://schema.org/InStock',
-        },
-      ],
+      hasOfferCatalog: {
+        '@type': 'OfferCatalog',
+        name: 'Cours de piano en ligne',
+        itemListElement: [
+          {
+            '@type': 'Offer',
+            name: 'Cours de piano individuel via Zoom',
+            description: 'Cours de piano individuel en ligne via Zoom, programme personnalisé pour tous niveaux',
+            price: '22',
+            priceCurrency: 'EUR',
+            availability: 'https://schema.org/InStock',
+            deliveryLeadTime: { '@type': 'QuantitativeValue', value: 1, unitCode: 'DAY' },
+          },
+          {
+            '@type': 'Offer',
+            name: "Cours d'essai gratuit",
+            description: "Premier cours de piano gratuit d'une heure via Zoom, sans engagement",
+            price: '0',
+            priceCurrency: 'EUR',
+            availability: 'https://schema.org/InStock',
+          },
+        ],
+      },
+      courseMode: 'online',
+      educationalLevel: 'Beginner to Advanced',
+      teaches: 'Piano',
+      inLanguage: 'fr',
     },
     {
       '@type': 'WebSite',
@@ -138,11 +175,63 @@ const schemaOrg = {
       name: SITE_NAME,
       description: SITE_DESC,
       publisher: { '@id': `${SITE_URL}/#organization` },
+      inLanguage: 'fr',
       potentialAction: {
         '@type': 'SearchAction',
-        target: { '@type': 'EntryPoint', urlTemplate: `${SITE_URL}/blog?q={search_term_string}` },
+        target: {
+          '@type': 'EntryPoint',
+          urlTemplate: `${SITE_URL}/blog?q={search_term_string}`,
+        },
         'query-input': 'required name=search_term_string',
       },
+    },
+    {
+      '@type': 'WebPage',
+      '@id': `${SITE_URL}/#webpage`,
+      url: SITE_URL,
+      name: SITE_NAME,
+      description: SITE_DESC,
+      isPartOf: { '@id': `${SITE_URL}/#website` },
+      about: { '@id': `${SITE_URL}/#organization` },
+      inLanguage: 'fr',
+    },
+    {
+      '@type': 'FAQPage',
+      '@id': `${SITE_URL}/#faq`,
+      mainEntity: [
+        {
+          '@type': 'Question',
+          name: 'Comment se déroulent les cours de piano en ligne ?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Les cours se déroulent via Zoom. Vous recevez le lien par email après réservation. Une connexion internet stable et un clavier ou piano suffisent.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'Quel niveau faut-il pour commencer ?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Aucun niveau requis. Nous accueillons les débutants complets comme les pianistes confirmés. Chaque parcours est adapté à votre niveau et vos objectifs.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'Le cours d\'essai est-il vraiment gratuit ?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Oui, le cours d\'essai dure 1 heure et est entièrement gratuit, sans engagement. Il se déroule via Zoom.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'Quel matériel est nécessaire pour les cours de piano en ligne ?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Un clavier ou piano (au moins 61 touches avec toucher dynamique recommandé), un ordinateur ou tablette avec caméra, et une connexion internet stable.',
+          },
+        },
+      ],
     },
   ],
 }

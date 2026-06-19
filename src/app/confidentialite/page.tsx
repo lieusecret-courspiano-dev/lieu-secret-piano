@@ -1,9 +1,13 @@
 import PublicNav from '@/components/PublicNav'
 import PublicFooter from '@/components/PublicFooter'
 
-export const metadata = {
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
   title: 'Politique de confidentialité — Lieu Secret',
-  description: 'Politique de confidentialité et protection des données personnelles de Lieu Secret.',
+  description: 'Politique de confidentialité et protection des données personnelles de Lieu Secret, école de piano en ligne. RGPD, cookies, droits des utilisateurs.',
+  robots: { index: false, follow: false },
+  alternates: { canonical: 'https://www.lieusecret-courspiano.fr/confidentialite' },
 }
 
 export default function ConfidentialitePage() {

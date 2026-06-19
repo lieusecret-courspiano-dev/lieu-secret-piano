@@ -1,9 +1,13 @@
 import PublicNav from '@/components/PublicNav'
 import PublicFooter from '@/components/PublicFooter'
 
-export const metadata = {
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
   title: 'Mentions légales — Lieu Secret',
-  description: 'Mentions légales de Lieu Secret, école de piano en ligne.',
+  description: 'Mentions légales de Lieu Secret, école de piano en ligne via Zoom. Éditeur, hébergement, propriété intellectuelle et droit applicable.',
+  robots: { index: false, follow: false },
+  alternates: { canonical: 'https://www.lieusecret-courspiano.fr/mentions-legales' },
 }
 
 export default function MentionsLegalesPage() {
