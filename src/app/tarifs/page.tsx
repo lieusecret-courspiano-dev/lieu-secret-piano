@@ -25,7 +25,7 @@ interface TarifSettings {
 }
 
 const INCLUS = [
-  'Cours via Zoom ou Google Meet',
+  'Cours via Zoom',
   'Notes de cours après chaque séance',
   'Ressources pédagogiques',
   'Suivi de progression',
@@ -91,7 +91,7 @@ export default function TarifsPage() {
                 </div>
                 <div>
                   <h2 className="text-white font-semibold text-xl">Cours individuel — 1 heure</h2>
-                  <p className="text-noir-400 text-sm mt-1">Cours en tête-à-tête via Zoom ou Google Meet</p>
+                  <p className="text-noir-400 text-sm mt-1">Cours en tête-à-tête via Zoom</p>
                   <div className="flex flex-wrap gap-2 mt-3">
                     {INCLUS.slice(0, 3).map((item, i) => (
                       <span key={i} className="text-xs bg-noir-800 text-noir-300 px-2.5 py-1 rounded-full">{item}</span>
