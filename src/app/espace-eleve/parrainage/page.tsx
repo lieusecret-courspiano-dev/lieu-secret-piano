@@ -18,7 +18,7 @@ export default function ParrainagePage() {
   const [copied, setCopied] = useState(false)
 
   useEffect(() => {
-    fetch('/api/eleve/parrainage')
+    fetch('/api/parrainage')
       .then(r => { if (r.status === 401) { router.push('/espace-eleve/login'); return null } return r.json() })
       .then(d => { if (d && !d.error) setData(d) })
       .catch(console.error)

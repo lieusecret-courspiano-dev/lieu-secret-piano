@@ -10,13 +10,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json(data || [])
 }
 
-export async function PATCH(req: NextRequest) {
-  const eleve = await getEleveFromSession()
-  if (!eleve) return NextResponse.json({ error: 'Non connecté' }, { status: 401 })
-  const { id } = await req.json()
-  await supabaseAdmin.from('eleve_notifications').update({ lu: true }).eq('id', id).eq('eleve_id', eleve.id)
-  return NextResponse.json({ success: true })
-}
+
 
 export async function DELETE(req: NextRequest) {
   const eleve = await getEleveFromSession()

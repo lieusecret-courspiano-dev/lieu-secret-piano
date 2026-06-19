@@ -5,24 +5,12 @@ import EleveLayout from '@/components/EleveNav'
 import { ProgressBar } from '@/components/eleve/ProgressBar'
 import { SkeletonCard } from '@/components/eleve/SkeletonCard'
 
-interface CompetenceValidee {
-  competence: string
-  categorie: string
-  validee: boolean
-  validee_at: string | null
-}
-
 interface ProgStats {
   total: number
   validees: number
   pourcentage: number
-  statsParCategorie: Record<string, {
-    total: number
-    validees: number
-    pourcentage: number
-    certificat: boolean
-  }>
-  competences: CompetenceValidee[]
+  statsParCategorie: Record<string, { total: number; validees: number; pourcentage: number; certificat: boolean }>
+  categories: Record<string, { competence: string; validee: boolean; validee_at: string | null }[]>
 }
 
 const CAT_COLORS: Record<string, { bg: string; border: string; text: string; bar: string }> = {
@@ -30,7 +18,6 @@ const CAT_COLORS: Record<string, { bg: string; border: string; text: string; bar
   'Compréhension et autonomie': { bg: 'bg-gold-500/10', border: 'border-gold-500/20', text: 'text-gold-400', bar: '#f59e0b' },
   'Expression et maîtrise': { bg: 'bg-green-500/10', border: 'border-green-500/20', text: 'text-green-400', bar: '#22c55e' },
 }
-
 const DEFAULT_COLOR = { bg: 'bg-purple-500/10', border: 'border-purple-500/20', text: 'text-purple-400', bar: '#a78bfa' }
 
 export default function ProgressionPage() {
@@ -58,8 +45,6 @@ export default function ProgressionPage() {
   if (!prog) return null
 
   const categories = Object.entries(prog.statsParCategorie)
-  const competencesBycat = (cat: string) =>
-    (prog.competences || []).filter(c => c.categorie === cat)
 
   return (
     <EleveLayout>
@@ -98,17 +83,14 @@ export default function ProgressionPage() {
           {categories.map(([cat, stats]) => {
             const colors = CAT_COLORS[cat] || DEFAULT_COLOR
             const isSelected = selectedCat === cat
-            const comps = competencesBycat(cat)
+            const comps = prog.categories?.[cat] || []
 
             return (
               <div key={cat} className={`card border ${colors.border} ${colors.bg} transition-all`}>
-                <button
-                  onClick={() => setSelectedCat(isSelected ? null : cat)}
-                  className="w-full text-left"
-                >
+                <button onClick={() => setSelectedCat(isSelected ? null : cat)} className="w-full text-left">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
-                      <div className={`w-3 h-3 rounded-full`} style={{ background: colors.bar }} />
+                      <div className="w-3 h-3 rounded-full" style={{ background: colors.bar }} />
                       <h3 className={`font-semibold text-sm ${colors.text}`}>{cat}</h3>
                       {stats.certificat && (
                         <span className="text-xs bg-gold-500/20 text-gold-400 border border-gold-500/30 px-2 py-0.5 rounded-full">
@@ -128,19 +110,17 @@ export default function ProgressionPage() {
                   <p className="text-noir-500 text-xs mt-2">{stats.pourcentage}% complété</p>
                 </button>
 
-                {/* Compétences détaillées */}
                 {isSelected && comps.length > 0 && (
                   <div className="mt-4 pt-4 border-t border-noir-800/50 grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {comps.map(c => (
-                      <div key={c.competence} className="flex items-center gap-2.5 bg-noir-900/50 rounded-xl px-3 py-2">
+                    {comps.map((c, i) => (
+                      <div key={i} className="flex items-center gap-2.5 bg-noir-900/50 rounded-xl px-3 py-2">
                         <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${
                           c.validee ? 'bg-green-500/20 border border-green-500/40' : 'bg-noir-800 border border-noir-700'
                         }`}>
-                          {c.validee ? (
-                            <svg width="10" height="10" fill="none" stroke="#4ade80" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-                          ) : (
-                            <div className="w-2 h-2 rounded-full bg-noir-600" />
-                          )}
+                          {c.validee
+                            ? <svg width="10" height="10" fill="none" stroke="#4ade80" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                            : <div className="w-2 h-2 rounded-full bg-noir-600" />
+                          }
                         </div>
                         <span className={`text-xs ${c.validee ? 'text-white' : 'text-noir-500'}`}>{c.competence}</span>
                         {c.validee && c.validee_at && (

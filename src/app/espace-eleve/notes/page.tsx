@@ -8,9 +8,25 @@ import { EmptyState } from '@/components/eleve/EmptyState'
 interface Note {
   id: string
   titre: string | null
-  contenu: string
+  contenu?: string
+  resume?: string | null
+  notions?: string | null
+  exercices?: string | null
+  objectifs?: string | null
+  commentaires?: string | null
   date_cours: string | null
   created_at: string
+}
+
+function getNoteContent(note: Note): string {
+  if (note.contenu) return note.contenu
+  const parts = []
+  if (note.resume) parts.push(`📝 Résumé\n${note.resume}`)
+  if (note.notions) parts.push(`🎵 Notions travaillées\n${note.notions}`)
+  if (note.exercices) parts.push(`🎯 Exercices\n${note.exercices}`)
+  if (note.objectifs) parts.push(`⭐ Objectifs\n${note.objectifs}`)
+  if (note.commentaires) parts.push(`💬 Commentaires\n${note.commentaires}`)
+  return parts.join('\n\n') || 'Aucun contenu'
 }
 
 export default function NotesPage() {
@@ -31,7 +47,7 @@ export default function NotesPage() {
   const filtered = notes.filter(n =>
     !search ||
     (n.titre || '').toLowerCase().includes(search.toLowerCase()) ||
-    n.contenu.toLowerCase().includes(search.toLowerCase())
+    getNoteContent(n).toLowerCase().includes(search.toLowerCase())
   )
 
   if (loading) return (
@@ -79,7 +95,7 @@ export default function NotesPage() {
                       {new Date(note.date_cours).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </p>
                   )}
-                  <p className="text-noir-600 text-xs mt-1 line-clamp-2">{note.contenu}</p>
+                  <p className="text-noir-600 text-xs mt-1 line-clamp-2">{getNoteContent(note)}</p>
                 </button>
               ))}
               {filtered.length === 0 && (
@@ -105,7 +121,7 @@ export default function NotesPage() {
                     </span>
                   </div>
                   <div className="prose prose-invert prose-sm max-w-none">
-                    <p className="text-noir-300 leading-relaxed whitespace-pre-wrap">{selected.contenu}</p>
+                    <p className="text-noir-300 leading-relaxed whitespace-pre-wrap">{getNoteContent(selected)}</p>
                   </div>
                 </div>
               ) : (
