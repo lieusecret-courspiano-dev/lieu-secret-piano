@@ -7,12 +7,10 @@ import PublicNav from '@/components/PublicNav'
 import PublicFooter from '@/components/PublicFooter'
 import ContactModal from '@/components/ContactModal'
 
+/* ─── Types ─── */
 interface Settings {
-  site_title?: string; hero_title?: string; hero_title2?: string; hero_subtitle?: string
-  contact_email?: string; phone?: string; instagram?: string; facebook?: string
-  youtube?: string; tiktok?: string; whatsapp?: string
-  apropos_titre?: string; apropos_texte1?: string; apropos_texte2?: string
-  apropos_point1?: string; apropos_point2?: string; apropos_point3?: string; apropos_point4?: string
+  hero_title?: string; hero_title2?: string; hero_subtitle?: string
+  contact_email?: string; instagram?: string; facebook?: string; youtube?: string; tiktok?: string
   offres_titre?: string; offres_sous_titre?: string
   offre1_titre?: string; offre1_sous?: string; offre1_desc?: string; offre1_btn?: string
   offre1_f1?: string; offre1_f2?: string; offre1_f3?: string; offre1_f4?: string
@@ -22,24 +20,25 @@ interface Settings {
   offre3_f1?: string; offre3_f2?: string; offre3_f3?: string; offre3_f4?: string
   cta_titre?: string; cta_sous_titre?: string
   stats_label1?: string; stats_label2?: string; stats_label3?: string; stats_label4?: string
-  hero_btn1?: string; hero_btn2?: string; steps_label?: string; steps_titre?: string
+  hero_btn1?: string; steps_label?: string; steps_titre?: string
   prof_nom?: string; prof_titre?: string; prof_photo?: string; prof_bio?: string
   prof_vision?: string; prof_pedagogie?: string
   banner_actif?: string; banner_message?: string; banner_type?: string
-  tarif_cours_1h?: string; tarif_pack_label1?: string; tarif_pack_prix1?: string; tarif_pack_desc1?: string
+  tarif_cours_1h?: string
+  tarif_pack_label1?: string; tarif_pack_prix1?: string; tarif_pack_desc1?: string
   tarif_pack_label2?: string; tarif_pack_prix2?: string; tarif_pack_desc2?: string
   tarif_pack_label3?: string; tarif_pack_prix3?: string; tarif_pack_desc3?: string
   tarif_pack_label4?: string; tarif_pack_prix4?: string; tarif_pack_desc4?: string
 }
 interface EventItem {
-  id: string; title: string; description: string | null; type: string; date_heure: string
-  duration_minutes: number; max_spots: number | null; spots_remaining: number
+  id: string; title: string; description: string | null; type: string
   price: number; is_free: boolean; is_featured: boolean
 }
 interface Temoignage {
-  id: string; nom: string; note: number; commentaire: string; created_at: string; est_publie: boolean
+  id: string; nom: string; note: number; commentaire: string; est_publie: boolean
 }
 
+/* ─── Helpers animation ─── */
 function FadeUp({ children, delay = 0, className = '' }: { children: React.ReactNode; delay?: number; className?: string }) {
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
@@ -75,6 +74,16 @@ function StarRating({ note }: { note: number }) {
   )
 }
 
+function PianoIcon({ size = 20 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <rect x="2" y="4" width="20" height="16" rx="2"/>
+      <path d="M7 4v8M10 4v5M14 4v8M17 4v5"/>
+    </svg>
+  )
+}
+
+/* ─── Données statiques ─── */
 const FAQ_ITEMS = [
   { q: "Quel niveau faut-il pour commencer ?", a: "Aucun niveau requis. Nous accueillons les débutants complets comme les pianistes confirmés. Chaque parcours est adapté à votre niveau et vos objectifs." },
   { q: "Comment se déroulent les cours en ligne ?", a: "Les cours se déroulent via Zoom. Vous recevez le lien par email après réservation. Une connexion internet stable et un clavier ou piano suffisent." },
@@ -91,18 +100,10 @@ const STEPS = [
   { n: '04', title: 'Obtenez votre certificat', desc: 'Validez vos compétences et recevez un certificat officiel Lieu Secret à chaque étape franchie.' },
 ]
 
-// Icône piano SVG sans émoji
-function PianoIcon({ size = 20 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <rect x="2" y="4" width="20" height="16" rx="2"/>
-      <path d="M7 4v8M10 4v5M14 4v8M17 4v5"/>
-    </svg>
-  )
-}
-
+/* ─── Page principale ─── */
 export default function AccueilPage() {
   const [settings, setSettings] = useState<Settings | null>(null)
+  const [settingsLoaded, setSettingsLoaded] = useState(false)
   const [featuredEvent, setFeaturedEvent] = useState<EventItem | null>(null)
   const [temoignages, setTemoignages] = useState<Temoignage[]>([])
   const [showContact, setShowContact] = useState(false)
@@ -110,22 +111,34 @@ export default function AccueilPage() {
   const [testimonialIdx, setTestimonialIdx] = useState(0)
 
   useEffect(() => {
-    fetch('/api/settings').then(r => r.json()).then(setSettings).catch(() => {})
-    fetch('/api/events').then(r => r.json()).then((d: EventItem[]) => {
-      if (Array.isArray(d)) setFeaturedEvent(d.find(e => e.is_featured) || null)
-    }).catch(() => {})
-    fetch('/api/temoignages').then(r => r.json()).then((d: Temoignage[]) => {
-      if (Array.isArray(d)) setTemoignages(d.filter(t => t.est_publie).slice(0, 6))
-    }).catch(() => {})
+    fetch('/api/settings')
+      .then(r => r.json())
+      .then(d => { setSettings(d); setSettingsLoaded(true) })
+      .catch(() => setSettingsLoaded(true))
+
+    fetch('/api/events')
+      .then(r => r.json())
+      .then((d: EventItem[]) => {
+        if (Array.isArray(d)) setFeaturedEvent(d.find(e => e.is_featured) || null)
+      })
+      .catch(() => {})
+
+    fetch('/api/temoignages')
+      .then(r => r.json())
+      .then((d: Temoignage[]) => {
+        if (Array.isArray(d)) setTemoignages(d.filter(t => t.est_publie).slice(0, 6))
+      })
+      .catch(() => {})
   }, [])
 
   useEffect(() => {
     if (temoignages.length < 2) return
-    const t = setInterval(() => setTestimonialIdx(i => (i + 1) % temoignages.length), 5000)
+    const t = setInterval(() => setTestimonialIdx((i: number) => (i + 1) % temoignages.length), 5000)
     return () => clearInterval(t)
   }, [temoignages.length])
 
   const s = settings
+
   const packs = [
     s?.tarif_pack_label1 && { label: s.tarif_pack_label1, prix: s.tarif_pack_prix1 || '', desc: s.tarif_pack_desc1 || '', popular: false },
     s?.tarif_pack_label2 && { label: s.tarif_pack_label2, prix: s.tarif_pack_prix2 || '', desc: s.tarif_pack_desc2 || '', popular: true },
@@ -137,7 +150,7 @@ export default function AccueilPage() {
     <div className="min-h-screen bg-noir-950 text-noir-100 overflow-x-hidden">
       <PublicNav settings={s || undefined} />
 
-      {/* ── HERO ── */}
+      {/* ══ HERO ══ */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0">
           <Image src="/piano-hero.jpg" alt="Piano" fill className="object-cover object-center opacity-25" priority />
@@ -145,11 +158,10 @@ export default function AccueilPage() {
           <div className="absolute inset-0 bg-gradient-to-r from-noir-950/80 via-transparent to-noir-950/40" />
         </div>
 
-        {/* Particules décoratives */}
+        {/* Particules */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           {[...Array(5)].map((_, i) => (
-            <motion.div key={i}
-              className="absolute w-1 h-1 rounded-full bg-gold-500/30"
+            <motion.div key={i} className="absolute w-1 h-1 rounded-full bg-gold-500/30"
               style={{ left: `${15 + i * 17}%`, top: `${25 + (i % 3) * 20}%` }}
               animate={{ y: [-15, 15, -15], opacity: [0.2, 0.7, 0.2] }}
               transition={{ duration: 3 + i * 0.5, repeat: Infinity, delay: i * 0.4 }} />
@@ -163,22 +175,26 @@ export default function AccueilPage() {
             <span className="text-gold-400 text-xs font-medium tracking-widest uppercase">École de Piano en Ligne</span>
           </motion.div>
 
-          <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.1 }}
+          {/* Titre — masqué tant que settings non chargés pour éviter le flash */}
+          <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: settingsLoaded ? 1 : 0, y: settingsLoaded ? 0 : 30 }}
+            transition={{ duration: 0.7, delay: 0.1 }}
             className="font-serif text-5xl sm:text-6xl md:text-7xl lg:text-8xl text-white leading-[1.05] mb-6">
             {s?.hero_title || "L'art du piano,"}
             <br />
             <span className="text-gold-400">{s?.hero_title2 || 'à votre rythme'}</span>
           </motion.h1>
 
-          <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.2 }}
+          <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: settingsLoaded ? 1 : 0, y: settingsLoaded ? 0 : 20 }}
+            transition={{ duration: 0.7, delay: 0.2 }}
             className="text-noir-300 text-lg sm:text-xl max-w-2xl mx-auto mb-10 leading-relaxed">
             {s?.hero_subtitle || 'Cours individuels, ateliers de groupe et masterclass via Zoom. Une pédagogie bienveillante pour tous les niveaux.'}
           </motion.p>
 
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.3 }}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: settingsLoaded ? 1 : 0, y: settingsLoaded ? 0 : 20 }}
+            transition={{ duration: 0.7, delay: 0.3 }}
             className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link href="/essai"
-              className="inline-flex items-center gap-2 bg-gold-500 hover:bg-gold-400 text-noir-950 font-semibold px-8 py-4 rounded-2xl transition-all duration-200 text-base shadow-2xl shadow-gold-500/30 hover:shadow-gold-500/50 hover:-translate-y-0.5 w-full sm:w-auto justify-center">
+              className="inline-flex items-center gap-2 bg-gold-500 hover:bg-gold-400 text-noir-950 font-semibold px-8 py-4 rounded-2xl transition-all duration-200 text-base shadow-2xl shadow-gold-500/30 hover:-translate-y-0.5 w-full sm:w-auto justify-center">
               <PianoIcon size={18} />
               Cours d'essai gratuit
             </Link>
@@ -193,7 +209,8 @@ export default function AccueilPage() {
           </motion.div>
 
           {/* Stats */}
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8, delay: 0.5 }}
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: settingsLoaded ? 1 : 0 }}
+            transition={{ duration: 0.8, delay: 0.5 }}
             className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-3 max-w-3xl mx-auto">
             {[
               { val: '100%', label: s?.stats_label1 || 'En ligne' },
@@ -217,7 +234,7 @@ export default function AccueilPage() {
         </motion.div>
       </section>
 
-      {/* ── ÉVÉNEMENT EN VEDETTE ── */}
+      {/* ══ ÉVÉNEMENT EN VEDETTE ══ */}
       {featuredEvent && (
         <section className="py-6 px-4">
           <div className="max-w-4xl mx-auto">
@@ -245,7 +262,7 @@ export default function AccueilPage() {
         </section>
       )}
 
-      {/* ── COMMENT CA MARCHE ── */}
+      {/* ══ COMMENT CA MARCHE ══ */}
       <section className="py-20 sm:py-24 px-4">
         <div className="max-w-6xl mx-auto">
           <FadeUp className="text-center mb-12 sm:mb-16">
@@ -271,7 +288,7 @@ export default function AccueilPage() {
         </div>
       </section>
 
-      {/* ── OFFRES ── */}
+      {/* ══ OFFRES ══ */}
       <section id="offres" className="py-20 sm:py-24 px-4 bg-noir-900/30">
         <div className="max-w-6xl mx-auto">
           <FadeUp className="text-center mb-12 sm:mb-16">
@@ -345,7 +362,7 @@ export default function AccueilPage() {
         </div>
       </section>
 
-      {/* ── VOTRE PROFESSEUR ── */}
+      {/* ══ VOTRE PROFESSEUR ══ */}
       {(s?.prof_nom || s?.prof_bio) && (
         <section id="apropos" className="py-20 sm:py-24 px-4">
           <div className="max-w-6xl mx-auto">
@@ -354,19 +371,13 @@ export default function AccueilPage() {
                 <div className="relative max-w-sm mx-auto lg:max-w-none">
                   <div className="aspect-[4/5] rounded-3xl overflow-hidden bg-noir-900 border border-noir-800">
                     {s?.prof_photo ? (
-                      <Image
-                        src={s.prof_photo}
-                        alt={s.prof_nom || 'Professeur'}
-                        fill
-                        className="object-cover"
-                        onError={() => {}}
-                      />
+                      <Image src={s.prof_photo} alt={s.prof_nom || 'Professeur'} fill className="object-cover" onError={() => {}} />
                     ) : (
                       <div className="w-full h-full flex flex-col items-center justify-center gap-3 text-noir-700">
                         <svg width="64" height="64" fill="none" stroke="currentColor" strokeWidth="1" viewBox="0 0 24 24">
                           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
                         </svg>
-                        <span className="text-xs text-noir-600">Photo à configurer dans les paramètres</span>
+                        <span className="text-xs text-noir-600 text-center px-4">Photo à configurer dans les paramètres admin</span>
                       </div>
                     )}
                   </div>
@@ -416,7 +427,7 @@ export default function AccueilPage() {
         </section>
       )}
 
-      {/* ── TARIFS ── */}
+      {/* ══ TARIFS ══ */}
       <section id="tarifs" className="py-20 sm:py-24 px-4 bg-noir-900/30">
         <div className="max-w-5xl mx-auto">
           <FadeUp className="text-center mb-12 sm:mb-16">
@@ -478,7 +489,7 @@ export default function AccueilPage() {
         </div>
       </section>
 
-      {/* ── TÉMOIGNAGES ── */}
+      {/* ══ TÉMOIGNAGES ══ */}
       {temoignages.length > 0 && (
         <section className="py-20 sm:py-24 px-4">
           <div className="max-w-5xl mx-auto">
@@ -487,7 +498,6 @@ export default function AccueilPage() {
               <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl text-white mt-3">Ce que disent nos élèves</h2>
             </FadeUp>
 
-            {/* Témoignage vedette */}
             <FadeIn className="mb-6">
               <AnimatePresence mode="wait">
                 <motion.div key={testimonialIdx}
@@ -505,7 +515,6 @@ export default function AccueilPage() {
               </AnimatePresence>
             </FadeIn>
 
-            {/* Dots navigation */}
             {temoignages.length > 1 && (
               <div className="flex justify-center gap-2 mb-10">
                 {temoignages.map((_, i) => (
@@ -515,7 +524,6 @@ export default function AccueilPage() {
               </div>
             )}
 
-            {/* Grille témoignages */}
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {temoignages.slice(0, 6).map((t, i) => (
                 <FadeUp key={t.id} delay={i * 0.08}>
@@ -531,7 +539,7 @@ export default function AccueilPage() {
         </section>
       )}
 
-      {/* ── FAQ ── */}
+      {/* ══ FAQ ══ */}
       <section className="py-20 sm:py-24 px-4 bg-noir-900/30">
         <div className="max-w-3xl mx-auto">
           <FadeUp className="text-center mb-12 sm:mb-16">
@@ -579,7 +587,7 @@ export default function AccueilPage() {
         </div>
       </section>
 
-      {/* ── CTA FINAL ── */}
+      {/* ══ CTA FINAL ══ */}
       <section className="py-20 sm:py-24 px-4">
         <div className="max-w-4xl mx-auto">
           <FadeUp>
