@@ -59,6 +59,7 @@ const NAV_GROUPS = [
   {
     label: 'Communication',
     items: [
+      { href: '/admin/newsletter',       label: 'Newsletter',      icon: Mail         },
       { href: '/admin/emails',           label: 'Emails envoyés',  icon: Mail         },
       { href: '/admin/messages',         label: 'Messages',        icon: MessageSquare},
     ],

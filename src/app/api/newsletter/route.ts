@@ -74,7 +74,8 @@ Réserver un cours d'essai gratuit
 </a>
 </div>
 <p style="color:#7070a0;font-size:12px;margin:0;">
-Pour vous désabonner, répondez à cet email avec "Désabonnement".
+Pour vous désabonner, cliquez ici :
+<a href="https://www.lieusecret-courspiano.fr/api/newsletter/unsubscribe?email=${encodeURIComponent(emailLower)}" style="color:#505080;text-decoration:underline;">Se désabonner</a>
 </p>
 </td></tr>
 <tr><td style="background:#1a1a2e;padding:20px;text-align:center;border-top:1px solid #3a3a5c;">
@@ -118,7 +119,7 @@ Pour vous désabonner, répondez à cet email avec "Désabonnement".
 }
 
 // GET — liste des abonnés (admin)
-export async function GET(req: NextRequest) {
+export async function GET() {
   const { data, error } = await supabaseAdmin
     .from('newsletter_subscribers')
     .select('id, email, source, actif, created_at')
@@ -126,4 +127,32 @@ export async function GET(req: NextRequest) {
 
   if (error) return NextResponse.json([], { status: 200 })
   return NextResponse.json(data || [])
+}
+
+// PATCH — activer/désactiver un abonné (admin)
+export async function PATCH(req: NextRequest) {
+  const { id, actif } = await req.json()
+  if (!id) return NextResponse.json({ error: 'ID requis' }, { status: 400 })
+
+  const { error } = await supabaseAdmin
+    .from('newsletter_subscribers')
+    .update({ actif, updated_at: new Date().toISOString() })
+    .eq('id', id)
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ success: true })
+}
+
+// DELETE — supprimer un abonné (admin)
+export async function DELETE(req: NextRequest) {
+  const { id } = await req.json()
+  if (!id) return NextResponse.json({ error: 'ID requis' }, { status: 400 })
+
+  const { error } = await supabaseAdmin
+    .from('newsletter_subscribers')
+    .delete()
+    .eq('id', id)
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ success: true })
 }

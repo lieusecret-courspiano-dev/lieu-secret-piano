@@ -23,12 +23,7 @@ interface Article {
 
 const CATEGORIES = ['Tous', 'Conseils', 'Technique', 'Pédagogie', 'Matériel', 'Actualités']
 
-// Articles par défaut si aucun article en base
-const DEFAULT_ARTICLES: Article[] = [
-  { id: '1', titre: "Apprendre le piano à l'âge adulte : mythe ou réalité ?", slug: 'apprendre-piano-adulte', extrait: "Beaucoup pensent qu'il est trop tard pour apprendre le piano passé un certain âge. Découvrez pourquoi c'est faux.", categorie: 'Conseils', image_url: null, created_at: new Date().toISOString(), temps_lecture: '5 min' },
-  { id: '2', titre: 'Comment choisir son premier clavier ou piano numérique ?', slug: 'choisir-clavier-piano', extrait: 'Toucher dynamique, nombre de touches, polyphonie... Voici les critères essentiels pour choisir l\'instrument idéal.', categorie: 'Matériel', image_url: null, created_at: new Date().toISOString(), temps_lecture: '7 min' },
-  { id: '3', titre: '5 conseils pour progresser rapidement au piano en ligne', slug: 'progresser-piano-en-ligne', extrait: 'Les cours en ligne offrent une flexibilité incomparable. Voici comment en tirer le meilleur parti.', categorie: 'Pédagogie', image_url: null, created_at: new Date().toISOString(), temps_lecture: '6 min' },
-]
+
 
 export default function BlogPage() {
   const [articles, setArticles] = useState<Article[]>([])
@@ -41,8 +36,8 @@ export default function BlogPage() {
 
   useEffect(() => {
     fetch('/api/blog').then(r => r.json()).then((d: Article[]) => {
-      setArticles(Array.isArray(d) && d.length > 0 ? d : DEFAULT_ARTICLES)
-    }).catch(() => setArticles(DEFAULT_ARTICLES)).finally(() => setLoading(false))
+      setArticles(Array.isArray(d) ? d : [])
+    }).catch(() => setArticles([])).finally(() => setLoading(false))
   }, [])
 
   const filtered = categorie === 'Tous' ? articles : articles.filter(a => a.categorie === categorie)
