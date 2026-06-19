@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { ThemeToggle } from '@/components/ThemeProvider'
-import SiteHeader from '@/components/SiteHeader'
+import PublicNav from '@/components/PublicNav'
 
 interface PackOption { label: string; heures: number; montant: number; desc: string; popular?: boolean }
 
@@ -92,8 +92,8 @@ export default function PacksPage() {
 
   return (
     <div className="min-h-screen bg-noir-950 text-noir-100">
-      <SiteHeader />
-      <div className="max-w-4xl mx-auto px-4 py-8 md:py-12">
+      <PublicNav />
+      <div className="max-w-4xl mx-auto px-4 pt-28 sm:pt-32 pb-8 md:pb-12">
         <div className="text-center mb-6 md:mb-10"><div className="text-gold-500 text-xs tracking-widest uppercase mb-3">{pageTexts.label}</div><h1 className="font-serif text-3xl md:text-4xl text-white mb-4 animate-fade-in-up">{pageTexts.titre}</h1><p className="text-noir-400 max-w-xl mx-auto">{pageTexts.sous_titre}</p></div>
         {!packsLoaded ? (<div className="flex justify-center py-12"><div className="w-8 h-8 border-2 border-gold-500 border-t-transparent rounded-full animate-spin" /></div>) : (
           <div className={`grid gap-4 mb-10 ${packs.length <= 2 ? 'md:grid-cols-2' : packs.length === 3 ? 'md:grid-cols-3' : 'md:grid-cols-2 lg:grid-cols-4'}`}>

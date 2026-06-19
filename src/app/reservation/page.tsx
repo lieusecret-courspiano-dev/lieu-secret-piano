@@ -11,7 +11,7 @@ import ContactModal from '@/components/ContactModal'
 import FeaturedEvent from '@/components/FeaturedEvent'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { ThemeToggle } from '@/components/ThemeProvider'
-import SiteHeader from '@/components/SiteHeader'
+import PublicNav from '@/components/PublicNav'
 
 interface GeneratedSlot {
   start: string
@@ -247,7 +247,7 @@ function ReservationContent() {
     <div className="min-h-screen bg-noir-950 text-noir-100 transition-colors duration-200">
 
       {/* HEADER */}
-      <SiteHeader />
+      <PublicNav />
 
       {/* ÉVÉNEMENT EN VEDETTE */}
       {featuredEvent && !loading && (
@@ -255,7 +255,7 @@ function ReservationContent() {
       )}
 
       {/* HERO */}
-      <section className="max-w-5xl mx-auto px-4 pt-6 md:pt-10 pb-4 md:pb-6 text-center">
+      <section className="max-w-5xl mx-auto px-4 pt-24 sm:pt-28 md:pt-32 pb-4 md:pb-6 text-center">
         <div className="flex justify-center mb-5">
           <div className="relative w-20 h-14 rounded-xl overflow-hidden border border-gold-500/30">
             <img src="/piano-hero.jpg" alt="Piano" className="w-full h-full object-cover opacity-80" />

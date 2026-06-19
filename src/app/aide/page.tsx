@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { ThemeToggle } from '@/components/ThemeProvider'
-import SiteHeader from '@/components/SiteHeader'
+import PublicNav from '@/components/PublicNav'
 
 const FAQ = [
   // ── Cours d'essai ──
@@ -118,8 +118,8 @@ export default function AidePage() {
 
   return (
     <div className="min-h-screen bg-noir-950 text-noir-100">
-      <SiteHeader />
-      <div className="max-w-4xl mx-auto px-4 py-12">
+      <PublicNav />
+      <div className="max-w-4xl mx-auto px-4 pt-28 sm:pt-32 pb-12">
         <div className="text-center mb-10"><div className="text-gold-500 text-xs tracking-widest uppercase mb-3">Centre d&apos;aide</div><h1 className="font-serif text-4xl text-white mb-4 animate-fade-in-up">Questions fréquentes</h1><p className="text-noir-400 max-w-xl mx-auto">Trouvez rapidement les réponses à vos questions sur l&apos;utilisation de votre espace élève et des services Lieu Secret.</p></div>
         <div className="relative mb-8"><svg className="absolute left-4 top-1/2 -translate-y-1/2 text-noir-400" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher une question..." className="input w-full pl-12 py-4 text-base" /></div>
         <div className="flex flex-wrap gap-2 mb-8">{['Tous', ...CATS].map(cat => (<button key={cat} onClick={() => setActiveCat(cat)} className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${activeCat === cat ? 'bg-gold-500 text-noir-950' : 'bg-noir-800 text-noir-400 hover:text-white hover:bg-noir-700'}`}>{cat}</button>))}</div>

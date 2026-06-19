@@ -5,8 +5,6 @@ const COOKIE_NAME = 'ls_admin_session'
 const SESSION_DURATION_HOURS = 24
 
 export async function createAdminSession(): Promise<string> {
-  const array = new Uint8Array(32)
-  // Génération côté serveur Node.js
   const { randomBytes } = await import('crypto')
   const token = randomBytes(32).toString('hex')
 

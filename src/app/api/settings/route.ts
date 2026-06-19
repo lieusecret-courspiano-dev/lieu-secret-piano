@@ -2,10 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSiteSettings, updateSiteSettings } from '@/lib/settings'
 import { validateAdminSession } from '@/lib/auth'
 
-// GET — paramètres publics
+// GET — paramètres publics (cache 60s)
 export async function GET() {
   const settings = await getSiteSettings()
-  return NextResponse.json(settings)
+  return NextResponse.json(settings, {
+    headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' },
+  })
 }
 
 // PATCH — mettre à jour les paramètres (admin)

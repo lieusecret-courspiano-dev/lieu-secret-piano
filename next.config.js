@@ -16,35 +16,76 @@ const withPWA = require('next-pwa')({
       options: { cacheName: 'gstatic-fonts', expiration: { maxEntries: 4, maxAgeSeconds: 365 * 24 * 60 * 60 } },
     },
     {
-      // Cache les pages statiques
       urlPattern: /\/_next\/static\/.*/i,
       handler: 'CacheFirst',
       options: { cacheName: 'next-static', expiration: { maxEntries: 200, maxAgeSeconds: 365 * 24 * 60 * 60 } },
     },
     {
-      // Cache les images
       urlPattern: /\/_next\/image\?.*/i,
       handler: 'StaleWhileRevalidate',
       options: { cacheName: 'next-image', expiration: { maxEntries: 64, maxAgeSeconds: 24 * 60 * 60 } },
     },
     {
-      // Page métronome en cache pour mode hors-ligne
       urlPattern: /\/espace-eleve\/metronome/i,
       handler: 'NetworkFirst',
       options: { cacheName: 'metronome-page', expiration: { maxEntries: 1, maxAgeSeconds: 7 * 24 * 60 * 60 } },
     },
-    {
-      // Page bibliothèque en cache
-      urlPattern: /\/espace-eleve\/bibliotheque/i,
-      handler: 'NetworkFirst',
-      options: { cacheName: 'bibliotheque-page', expiration: { maxEntries: 1, maxAgeSeconds: 7 * 24 * 60 * 60 } },
-    },
   ],
 })
 
+/** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Security headers
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'X-XSS-Protection', value: '1; mode=block' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'Permissions-Policy', value: 'camera=(), microphone=(self), geolocation=()' },
+        ],
+      },
+      // Cache agressif pour les assets statiques
+      {
+        source: '/icons/(.*)',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+      },
+      {
+        source: '/piano-hero.jpg',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' }],
+      },
+    ]
+  },
+
+  // Optimisation images
+  images: {
+    formats: ['image/avif', 'image/webp'],
+    minimumCacheTTL: 86400,
+    remotePatterns: [
+      { protocol: 'https', hostname: '**' },
+    ],
+  },
+
+  // Compression
+  compress: true,
+
+  // Optimisation bundle
   experimental: {
-    scrollRestoration: true,
+    optimizePackageImports: ['framer-motion', 'lucide-react'],
+  },
+
+  // Redirections utiles
+  async redirects() {
+    return [
+      {
+        source: '/accueil',
+        destination: '/',
+        permanent: true,
+      },
+    ]
   },
 }
 

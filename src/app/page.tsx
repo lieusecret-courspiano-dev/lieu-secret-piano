@@ -111,24 +111,25 @@ export default function AccueilPage() {
   const [testimonialIdx, setTestimonialIdx] = useState(0)
 
   useEffect(() => {
-    fetch('/api/settings')
-      .then(r => r.json())
-      .then(d => { setSettings(d); setSettingsLoaded(true) })
-      .catch(() => setSettingsLoaded(true))
+    // Fetch parallèles pour optimiser le temps de chargement
+    Promise.allSettled([
+      fetch('/api/settings').then(r => r.json()),
+      fetch('/api/events').then(r => r.json()),
+      fetch('/api/temoignages').then(r => r.json()),
+    ]).then(([settingsRes, eventsRes, temoignagesRes]) => {
+      if (settingsRes.status === 'fulfilled') {
+        setSettings(settingsRes.value)
+      }
+      setSettingsLoaded(true)
 
-    fetch('/api/events')
-      .then(r => r.json())
-      .then((d: EventItem[]) => {
-        if (Array.isArray(d)) setFeaturedEvent(d.find(e => e.is_featured) || null)
-      })
-      .catch(() => {})
+      if (eventsRes.status === 'fulfilled' && Array.isArray(eventsRes.value)) {
+        setFeaturedEvent(eventsRes.value.find((e: EventItem) => e.is_featured) || null)
+      }
 
-    fetch('/api/temoignages')
-      .then(r => r.json())
-      .then((d: Temoignage[]) => {
-        if (Array.isArray(d)) setTemoignages(d.filter(t => t.est_publie).slice(0, 6))
-      })
-      .catch(() => {})
+      if (temoignagesRes.status === 'fulfilled' && Array.isArray(temoignagesRes.value)) {
+        setTemoignages(temoignagesRes.value.filter((t: Temoignage) => t.est_publie).slice(0, 6))
+      }
+    })
   }, [])
 
   useEffect(() => {

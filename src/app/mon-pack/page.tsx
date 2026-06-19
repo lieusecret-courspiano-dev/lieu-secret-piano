@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { ThemeToggle } from '@/components/ThemeProvider'
-import SiteHeader from '@/components/SiteHeader'
+import PublicNav from '@/components/PublicNav'
 import { DateTime } from 'luxon'
 
 interface HistoryEntry { id: string; type: string; delta: number; note: string | null; commentaire: string | null; created_at: string }
@@ -74,9 +74,9 @@ export default function MonPackPage() {
  return (
  <div className="min-h-screen bg-noir-950 text-noir-100">
  {/* Header */}
- <SiteHeader />
+ <PublicNav />
 
- <div className="max-w-2xl mx-auto px-4 py-12">
+ <div className="max-w-2xl mx-auto px-4 pt-28 sm:pt-32 pb-12">
  {/* Titre */}
  <div className="text-center mb-10">
  <div className="text-gold-500 text-xs tracking-widest uppercase mb-3">Espace élève</div>

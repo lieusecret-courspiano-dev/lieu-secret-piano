@@ -1,5 +1,5 @@
 'use client'
-import SiteHeader from '@/components/SiteHeader'
+import PublicNav from '@/components/PublicNav'
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
@@ -128,9 +128,9 @@ export default function CadeauPage() {
 
  return (
  <div className="min-h-screen bg-noir-950 text-noir-100">
- <SiteHeader />
+ <PublicNav />
 
- <div className="max-w-lg mx-auto px-4 py-12">
+ <div className="max-w-lg mx-auto px-4 pt-28 sm:pt-32 pb-12">
  <div className="text-center mb-10">
  <div className="text-gold-500 text-xs tracking-widest uppercase mb-3">Offrir la musique</div>
  <h1 className="font-serif text-3xl md:text-4xl text-white mb-4 animate-fade-in-up">Bon cadeau</h1>

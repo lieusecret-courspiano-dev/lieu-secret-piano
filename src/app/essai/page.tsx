@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
-import SiteHeader from '@/components/SiteHeader'
+import PublicNav from '@/components/PublicNav'
 import { TIMEZONES } from '@/types'
 import { Check } from 'lucide-react'
 
@@ -62,8 +62,8 @@ export default function EssaiPage() {
 
   return (
     <div className="min-h-screen bg-noir-950 text-noir-100">
-      <SiteHeader />
-      <div className="max-w-2xl mx-auto px-4 py-16">
+      <PublicNav />
+      <div className="max-w-2xl mx-auto px-4 pt-28 sm:pt-32 pb-16">
         {success ? (
           <div className="card border-green-500/30 text-center py-12">
             <div className="w-16 h-16 rounded-full bg-green-500/10 border border-green-500/30 flex items-center justify-center mx-auto mb-6">
