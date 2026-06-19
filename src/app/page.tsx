@@ -127,7 +127,7 @@ export default function AccueilPage() {
       }
 
       if (temoignagesRes.status === 'fulfilled' && Array.isArray(temoignagesRes.value)) {
-        setTemoignages(temoignagesRes.value.filter((t: Temoignage) => t.est_publie).slice(0, 6))
+        setTemoignages(temoignagesRes.value.slice(0, 6))
       }
     })
   }, [])
