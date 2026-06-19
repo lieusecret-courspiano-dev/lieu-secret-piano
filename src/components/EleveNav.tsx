@@ -166,15 +166,7 @@ export default function EleveLayout({
     loadCounters()
   }, [loadCounters])
 
-  // Écouter les mises à jour du badge notifications depuis la page notifications
-  useEffect(() => {
-    function handleNotifUpdate(e: Event) {
-      const detail = (e as CustomEvent).detail
-      if (typeof detail?.count === 'number') setNbNotifs(detail.count)
-    }
-    window.addEventListener('notif-count-update', handleNotifUpdate)
-    return () => window.removeEventListener('notif-count-update', handleNotifUpdate)
-  }, [])
+  
 
   // Écouter les mises à jour du badge enregistrements
   useEffect(() => {

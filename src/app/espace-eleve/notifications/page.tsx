@@ -73,18 +73,20 @@ export default function NotificationsPage() {
       .finally(() => setLoading(false))
   }, [router])
 
+  function dispatchCount(count: number) {
+    window.dispatchEvent(new CustomEvent('notif-count-update', { detail: { count } }))
+  }
+
   async function markAsRead(id: string) {
     await fetch('/api/eleve/notifications', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id }),
     })
-    setNotifs(prev => {
-      const updated = prev.map(n => n.id === id ? { ...n, lu: true } : n)
-      const nonLues = updated.filter(n => !n.lu).length
-      window.dispatchEvent(new CustomEvent('notif-count-update', { detail: { count: nonLues } }))
-      return updated
-    })
+    const updated = notifs.map(n => n.id === id ? { ...n, lu: true } : n)
+    const nonLues = updated.filter(n => !n.lu).length
+    setNotifs(updated)
+    dispatchCount(nonLues)
   }
 
   async function markAllAsRead() {
@@ -93,11 +95,8 @@ export default function NotificationsPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ all: true }),
     })
-    setNotifs(prev => {
-      const updated = prev.map(n => ({ ...n, lu: true }))
-      window.dispatchEvent(new CustomEvent('notif-count-update', { detail: { count: 0 } }))
-      return updated
-    })
+    setNotifs(notifs.map(n => ({ ...n, lu: true })))
+    dispatchCount(0)
   }
 
   async function deleteNotif(id: string) {
@@ -106,12 +105,10 @@ export default function NotificationsPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id }),
     })
-    setNotifs(prev => {
-      const updated = prev.filter(n => n.id !== id)
-      const nonLues = updated.filter(n => !n.lu).length
-      window.dispatchEvent(new CustomEvent('notif-count-update', { detail: { count: nonLues } }))
-      return updated
-    })
+    const updated = notifs.filter(n => n.id !== id)
+    const nonLues = updated.filter(n => !n.lu).length
+    setNotifs(updated)
+    dispatchCount(nonLues)
   }
 
   const nonLues = notifs.filter(n => !n.lu).length
