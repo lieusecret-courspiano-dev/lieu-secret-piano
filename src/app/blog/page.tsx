@@ -36,6 +36,8 @@ export default function BlogPage() {
   const [categorie, setCategorie] = useState('Tous')
   const [email, setEmail] = useState('')
   const [subscribed, setSubscribed] = useState(false)
+  const [subscribing, setSubscribing] = useState(false)
+  const [subscribeError, setSubscribeError] = useState('')
 
   useEffect(() => {
     fetch('/api/blog').then(r => r.json()).then((d: Article[]) => {
@@ -187,12 +189,36 @@ export default function BlogPage() {
             <h2 className="font-serif text-2xl sm:text-3xl text-white mb-3">Restez inspiré</h2>
             <p className="text-noir-400 mb-6 text-sm">Recevez nos meilleurs articles et conseils directement dans votre boîte mail.</p>
             {subscribed ? (
-              <p className="text-green-400 font-medium">Merci pour votre inscription !</p>
+              <div className="text-center">
+                <div className="w-12 h-12 rounded-full bg-green-500/10 border border-green-500/30 flex items-center justify-center mx-auto mb-3">
+                  <svg width="22" height="22" fill="none" stroke="#22c55e" strokeWidth="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <p className="text-green-400 font-medium">Inscription confirmée !</p>
+                <p className="text-noir-500 text-sm mt-1">Vérifiez votre boîte mail.</p>
+              </div>
             ) : (
-              <form className="flex flex-col sm:flex-row gap-2" onSubmit={e => { e.preventDefault(); if (email) setSubscribed(true) }}>
+              <form className="flex flex-col sm:flex-row gap-2" onSubmit={async e => {
+                e.preventDefault()
+                if (!email) return
+                setSubscribing(true); setSubscribeError('')
+                try {
+                  const res = await fetch('/api/newsletter', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, source: 'blog' }),
+                  })
+                  const data = await res.json()
+                  if (res.ok) { setSubscribed(true); setEmail('') }
+                  else setSubscribeError(data.error || 'Une erreur est survenue.')
+                } catch { setSubscribeError('Une erreur est survenue.') }
+                setSubscribing(false)
+              }}>
                 <input type="email" value={email} onChange={e => setEmail(e.target.value)}
                   placeholder="votre@email.com" className="input flex-1" required />
-                <button type="submit" className="btn-gold shrink-0">S'abonner</button>
+                <button type="submit" disabled={subscribing} className="btn-gold shrink-0">
+                  {subscribing ? 'Inscription...' : "S'abonner"}
+                </button>
+                {subscribeError && <p className="text-red-400 text-xs w-full">{subscribeError}</p>}
               </form>
             )}
           </FadeUp>
