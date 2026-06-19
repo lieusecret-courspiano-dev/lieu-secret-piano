@@ -526,15 +526,7 @@ export default function AccueilPage() {
             )}
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {temoignages.slice(0, 6).map((t, i) => (
-                <FadeUp key={t.id} delay={i * 0.08}>
-                  <div className="bg-noir-900 border border-noir-800 rounded-2xl p-5 hover:border-noir-700 transition-all h-full flex flex-col">
-                    <StarRating note={t.note} />
-                    <p className="text-noir-300 text-sm leading-relaxed my-4 flex-1 line-clamp-5">"{t.commentaire}"</p>
-                    <div className="text-gold-400 text-sm font-semibold">{t.nom}</div>
-                  </div>
-                </FadeUp>
-              ))}
+              
             </div>
           </div>
         </section>
