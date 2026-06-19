@@ -98,7 +98,7 @@ export async function POST(req: NextRequest) {
       // Notifier l'admin
       await resend.emails.send({
         from: 'Lieu Secret <noreply@lieusecret-courspiano.fr>',
-        to: settings.contact_email || 'contact@lieusecret-courspiano.fr',
+        to: settings.contact_email || 'lieusecret-courspiano@outlook.fr',
         subject: `Demande d'achat support : ${support.titre} — ${eleve.prenom} ${eleve.nom}`,
         html: `<div style="font-family:Arial;background:#1a1a2e;padding:32px;color:#f0f0f0;max-width:500px;margin:0 auto;border-radius:12px;"><h2 style="color:#f59e0b;">Nouvelle demande d'achat</h2><p>${eleve.prenom} ${eleve.nom} (${eleve.email}) souhaite accéder à <strong>${support.titre}</strong> (${support.prix} €) par virement.</p><p>Confirmez le paiement dans Admin → Supports pédagogiques.</p></div>`,
       }).catch(console.error)

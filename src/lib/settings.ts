@@ -3,7 +3,7 @@ import type { SiteSettings } from '@/types'
 
 const DEFAULT_SETTINGS: SiteSettings = {
   site_title: 'Lieu Secret — École de Piano', site_description: 'Réservez vos cours de piano en ligne',
-  contact_email: 'contact@lieusecret-courspiano.fr', phone: '',
+  contact_email: 'lieusecret-courspiano@outlook.fr', phone: '',
   instagram: '', facebook: '', youtube: '', tiktok: '',
   virement_iban: '', virement_nom: 'Lieu Secret', virement_info: 'Virement bancaire — précisez votre nom et la date du cours en référence',
   hero_title: '', hero_title2: '', hero_subtitle: '', hero_btn1: 'Réserver un créneau', hero_btn2: 'Découvrir les offres',

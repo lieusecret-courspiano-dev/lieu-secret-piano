@@ -26,7 +26,7 @@ export default function MentionsLegalesPage() {
             {[
               {
                 titre: '1. Éditeur du site',
-                contenu: `Le site www.lieusecret-courspiano.fr est édité par :\n\nLieu Secret — École de Piano en Ligne\nActivité d'enseignement musical en ligne\nContact : contact@lieusecret-courspiano.fr`,
+                contenu: `Le site www.lieusecret-courspiano.fr est édité par :\n\nLieu Secret — École de Piano en Ligne\nActivité d'enseignement musical en ligne\nContact : lieusecret-courspiano@outlook.fr`,
               },
               {
                 titre: '2. Hébergement',
@@ -50,7 +50,7 @@ export default function MentionsLegalesPage() {
               },
               {
                 titre: '7. Contact',
-                contenu: `Pour toute question relative aux présentes mentions légales, vous pouvez nous contacter à :\ncontact@lieusecret-courspiano.fr`,
+                contenu: `Pour toute question relative aux présentes mentions légales, vous pouvez nous contacter à :\nlieusecret-courspiano@outlook.fr`,
               },
             ].map((section, i) => (
               <section key={i} className="bg-noir-900/50 border border-noir-800 rounded-2xl p-6">

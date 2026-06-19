@@ -69,7 +69,7 @@ export function generateCoursICS(params: {
 }): string {
   return generateICS({
     title:       'Cours de piano — Lieu Secret',
-    description: `Bonjour ${params.studentName},\n\nVotre cours de piano est confirmé.\n\nLieu Secret — École de Piano en Ligne\ncontact@lieusecret-courspiano.fr`,
+    description: `Bonjour ${params.studentName},\n\nVotre cours de piano est confirmé.\n\nLieu Secret — École de Piano en Ligne\nlieusecret-courspiano@outlook.fr`,
     startISO:    params.startISO,
     endISO:      params.endISO,
     location:    params.zoomLink || 'En ligne (lien envoyé par email)',
@@ -86,7 +86,7 @@ export function generateEventICS(params: {
 }): string {
   return generateICS({
     title:       `${params.eventTitle} — Lieu Secret`,
-    description: `Bonjour ${params.studentName},\n\nVotre inscription à "${params.eventTitle}" est confirmée.\n\nLieu Secret — École de Piano en Ligne\ncontact@lieusecret-courspiano.fr`,
+    description: `Bonjour ${params.studentName},\n\nVotre inscription à "${params.eventTitle}" est confirmée.\n\nLieu Secret — École de Piano en Ligne\nlieusecret-courspiano@outlook.fr`,
     startISO:    params.startISO,
     endISO:      params.endISO,
     location:    params.zoomLink || 'En ligne (lien envoyé par email)',

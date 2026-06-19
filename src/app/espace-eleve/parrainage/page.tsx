@@ -18,6 +18,7 @@ export default function ParrainagePage() {
   const [data, setData] = useState<ParrainageData | null>(null)
   const [loading, setLoading] = useState(true)
   const [copied, setCopied] = useState(false)
+  const [copiedLink, setCopiedLink] = useState(false)
   const [creating, setCreating] = useState(false)
 
   useEffect(() => {
@@ -57,6 +58,12 @@ export default function ParrainagePage() {
   }
 
   const shareUrl = `https://www.lieusecret-courspiano.fr/inscription?ref=${data?.code}`
+
+  function copyLink() {
+    navigator.clipboard.writeText(shareUrl)
+    setCopiedLink(true)
+    setTimeout(() => setCopiedLink(false), 2000)
+  }
 
   if (loading || creating) return (
     <EleveLayout>
@@ -99,10 +106,10 @@ export default function ParrainagePage() {
             {/* Code parrainage */}
             <div className="card mb-4 border-gold-500/20 bg-gold-500/5">
               <p className="text-noir-400 text-xs mb-2 uppercase tracking-wider label">Votre code de parrainage</p>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 mb-4">
                 <p className="text-white font-mono text-2xl font-bold flex-1 tracking-widest">{data.code}</p>
                 <button onClick={copyCode}
-                  className={`px-4 py-2 rounded-xl border text-sm font-medium transition-all ${
+                  className={`px-4 py-2 rounded-xl border text-sm font-medium transition-all shrink-0 ${
                     copied ? 'bg-green-500/10 border-green-500/30 text-green-400' : 'border-gold-500/30 text-gold-400 hover:bg-gold-500/10'
                   }`}>
                   {copied ? (
@@ -113,10 +120,34 @@ export default function ParrainagePage() {
                   ) : (
                     <span className="flex items-center gap-1.5">
                       <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                      Copier
+                      Copier le code
                     </span>
                   )}
                 </button>
+              </div>
+
+              {/* Lien complet avec bouton copier */}
+              <div className="border-t border-gold-500/10 pt-4">
+                <p className="text-noir-400 text-xs mb-2 uppercase tracking-wider label">Votre lien de parrainage</p>
+                <div className="flex items-center gap-2 bg-noir-800/60 border border-noir-700 rounded-xl px-3 py-2.5">
+                  <p className="text-noir-300 text-xs flex-1 truncate font-mono">{shareUrl}</p>
+                  <button onClick={copyLink}
+                    className={`shrink-0 px-3 py-1.5 rounded-lg border text-xs font-medium transition-all ${
+                      copiedLink ? 'bg-green-500/10 border-green-500/30 text-green-400' : 'border-noir-600 text-noir-400 hover:border-gold-500/40 hover:text-gold-400'
+                    }`}>
+                    {copiedLink ? (
+                      <span className="flex items-center gap-1">
+                        <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                        Copié !
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1">
+                        <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                        Copier le lien
+                      </span>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
 

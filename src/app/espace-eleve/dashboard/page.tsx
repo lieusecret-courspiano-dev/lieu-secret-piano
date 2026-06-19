@@ -52,8 +52,7 @@ function AvatarIcon({ key: k, size = 28 }: { key: string; size?: number }) {
 
 function getGreeting(prenom: string): string {
   const h = new Date().getHours()
-  if (h < 12) return `Bonjour, ${prenom} !`
-  if (h < 18) return `Bon après-midi, ${prenom} !`
+  if (h >= 5 && h < 17) return `Bonjour, ${prenom} !`
   return `Bonsoir, ${prenom} !`
 }
 

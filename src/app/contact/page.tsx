@@ -63,12 +63,12 @@ export default function ContactPage() {
                 <h2 className="font-serif text-xl text-white mb-6">Nous trouver</h2>
                 <div className="space-y-5">
                   {[
-                    { icon: '✉', label: 'Email', value: 'contact@lieusecret-courspiano.fr', href: 'mailto:contact@lieusecret-courspiano.fr' },
-                    { icon: '💬', label: 'Réponse', value: 'Sous 24-48h ouvrées', href: null },
-                    { icon: '🕐', label: 'Disponibilité', value: 'Lun–Sam, 9h–20h', href: null },
+                    { label: 'Email', value: 'lieusecret-courspiano@outlook.fr', href: 'mailto:lieusecret-courspiano@outlook.fr', svg: <svg width="18" height="18" fill="none" stroke="#f59e0b" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> },
+                    { label: 'Réponse', value: 'Sous 24-48h ouvrées', href: null, svg: <svg width="18" height="18" fill="none" stroke="#f59e0b" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> },
+                    { label: 'Disponibilité', value: 'Lun–Sam, 9h–20h', href: null, svg: <svg width="18" height="18" fill="none" stroke="#f59e0b" strokeWidth="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> },
                   ].map((item, i) => (
                     <div key={i} className="flex items-start gap-3">
-                      <div className="w-9 h-9 rounded-xl bg-gold-500/10 flex items-center justify-center shrink-0 text-base">{item.icon}</div>
+                      <div className="w-9 h-9 rounded-xl bg-gold-500/10 flex items-center justify-center shrink-0">{item.svg}</div>
                       <div>
                         <div className="text-noir-500 text-xs mb-0.5">{item.label}</div>
                         {item.href

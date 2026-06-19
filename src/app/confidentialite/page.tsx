@@ -26,7 +26,7 @@ export default function ConfidentialitePage() {
             {[
               {
                 titre: '1. Responsable du traitement',
-                contenu: `Lieu Secret — École de Piano en Ligne est responsable du traitement de vos données personnelles.\nContact : contact@lieusecret-courspiano.fr`,
+                contenu: `Lieu Secret — École de Piano en Ligne est responsable du traitement de vos données personnelles.\nContact : lieusecret-courspiano@outlook.fr`,
               },
               {
                 titre: '2. Données collectées',
@@ -50,7 +50,7 @@ export default function ConfidentialitePage() {
               },
               {
                 titre: '7. Vos droits',
-                contenu: `Conformément au RGPD, vous disposez des droits suivants :\n\n• Droit d'accès à vos données\n• Droit de rectification\n• Droit à l'effacement (droit à l'oubli)\n• Droit à la portabilité\n• Droit d'opposition\n• Droit à la limitation du traitement\n\nPour exercer ces droits, contactez-nous à : contact@lieusecret-courspiano.fr`,
+                contenu: `Conformément au RGPD, vous disposez des droits suivants :\n\n• Droit d'accès à vos données\n• Droit de rectification\n• Droit à l'effacement (droit à l'oubli)\n• Droit à la portabilité\n• Droit d'opposition\n• Droit à la limitation du traitement\n\nPour exercer ces droits, contactez-nous à : lieusecret-courspiano@outlook.fr`,
               },
               {
                 titre: '8. Cookies',
@@ -62,7 +62,7 @@ export default function ConfidentialitePage() {
               },
               {
                 titre: '10. Contact & réclamations',
-                contenu: `Pour toute question relative à vos données personnelles :\ncontact@lieusecret-courspiano.fr\n\nVous avez également le droit d'introduire une réclamation auprès de la CNIL (www.cnil.fr).`,
+                contenu: `Pour toute question relative à vos données personnelles :\nlieusecret-courspiano@outlook.fr\n\nVous avez également le droit d'introduire une réclamation auprès de la CNIL (www.cnil.fr).`,
               },
             ].map((section, i) => (
               <section key={i} className="bg-noir-900/50 border border-noir-800 rounded-2xl p-6">

@@ -131,7 +131,7 @@ const schemaOrg = {
       },
       contactPoint: {
         '@type': 'ContactPoint',
-        email: 'contact@lieusecret-courspiano.fr',
+        email: 'lieusecret-courspiano@outlook.fr',
         contactType: 'customer service',
         availableLanguage: 'French',
         contactOption: 'TollFree',

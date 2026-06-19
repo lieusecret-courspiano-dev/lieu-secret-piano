@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
     try {
       const { getSiteSettings } = await import('@/lib/settings')
       const settings = await getSiteSettings()
-      const adminEmail = settings.contact_email || 'contact@lieusecret-courspiano.fr'
+      const adminEmail = settings.contact_email || 'lieusecret-courspiano@outlook.fr'
       const { Resend } = await import('resend')
       const resend = new Resend(process.env.RESEND_API_KEY!)
       const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.lieusecret-courspiano.fr'

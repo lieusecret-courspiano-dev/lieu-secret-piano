@@ -109,7 +109,7 @@ export async function PUT(req: NextRequest) {
       })
 
       // Email admin
-      const adminEmail = settings.contact_email || process.env.ADMIN_EMAIL_FROM || process.env.ADMIN_EMAIL || 'contact@lieusecret-courspiano.fr'
+      const adminEmail = settings.contact_email || process.env.ADMIN_EMAIL_FROM || process.env.ADMIN_EMAIL || 'lieusecret-courspiano@outlook.fr'
       const adminUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.lieusecret-courspiano.fr'
       await resend.emails.send({
         from: 'Lieu Secret <noreply@lieusecret-courspiano.fr>',

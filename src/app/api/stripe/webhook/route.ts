@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
         // Notifier admin
         await resend.emails.send({
           from: process.env.RESEND_FROM_EMAIL || 'Lieu Secret <noreply@lieusecret-courspiano.fr>',
-          to: siteSettings.contact_email || 'contact@lieusecret-courspiano.fr',
+          to: siteSettings.contact_email || 'lieusecret-courspiano@outlook.fr',
           subject: `Achat support : ${support?.titre} — ${eleve?.prenom} ${eleve?.nom}`,
           html: `<p>${eleve?.prenom} ${eleve?.nom} (${eleve_email}) a acheté <strong>${support?.titre}</strong> (${montant} €) via Stripe.</p>`,
         }).catch(console.error)

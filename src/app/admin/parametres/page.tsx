@@ -96,7 +96,7 @@ const TAB_CONTENT: Record<string, SubSection[]> = {
       fields: [
         { key: 'site_title',       label: 'Nom du site',          type: 'text',  placeholder: 'Lieu Secret' },
         { key: 'site_description', label: 'Description',          type: 'textarea', placeholder: 'École de piano en ligne...' },
-        { key: 'contact_email',    label: 'Email de contact',     type: 'email', placeholder: 'contact@lieusecret-courspiano.fr', hint: 'Utilisé pour recevoir les notifications admin' },
+        { key: 'contact_email',    label: 'Email de contact',     type: 'email', placeholder: 'lieusecret-courspiano@outlook.fr', hint: 'Utilisé pour recevoir les notifications admin' },
         { key: 'phone',            label: 'Téléphone (optionnel)',type: 'text',  placeholder: '+33 6 00 00 00 00' },
       ],
     },

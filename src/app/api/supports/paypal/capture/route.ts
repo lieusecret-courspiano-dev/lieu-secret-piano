@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
       const resend = new Resend(process.env.RESEND_API_KEY!)
       const { data: settings } = await supabaseAdmin.from('site_settings').select('contact_email, site_title').eq('id', 1).single()
       const siteTitle = settings?.site_title || 'Lieu Secret'
-      const fromEmail = settings?.contact_email || 'contact@lieusecret-courspiano.fr'
+      const fromEmail = settings?.contact_email || 'lieusecret-courspiano@outlook.fr'
 
       await resend.emails.send({
         from: `${siteTitle} <${fromEmail}>`,
