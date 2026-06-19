@@ -2,199 +2,195 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import EleveLayout from '@/components/EleveNav'
-import { Plus, Pencil, Trash2, ExternalLink, Music } from 'lucide-react'
+import { SkeletonCard } from '@/components/eleve/SkeletonCard'
+import { EmptyState } from '@/components/eleve/EmptyState'
 
 interface Morceau {
-  id: string; titre: string; compositeur: string | null; statut: string
-  notes: string | null; lien_url: string | null; created_at: string
+  id: string
+  titre: string
+  compositeur: string | null
+  tonalite: string | null
+  niveau: string | null
+  statut: 'en_cours' | 'maitrise' | 'a_apprendre'
+  notes: string | null
+  created_at: string
 }
 
-const STATUTS = [
-  { value: 'souhaite',  label: 'À apprendre',  color: 'text-blue-400 bg-blue-500/10 border-blue-500/20',   dot: 'bg-blue-400' },
-  { value: 'en_cours', label: 'En cours',      color: 'text-orange-400 bg-orange-500/10 border-orange-500/20', dot: 'bg-orange-400' },
-  { value: 'maitrise', label: 'Maîtrisé',      color: 'text-green-400 bg-green-500/10 border-green-500/20',  dot: 'bg-green-400' },
-]
+const STATUT_CONFIG = {
+  en_cours:    { label: 'En cours',     emoji: '🎵', color: 'text-blue-400',   bg: 'bg-blue-500/10 border-blue-500/20' },
+  maitrise:    { label: 'Maîtrisé',     emoji: '⭐', color: 'text-gold-400',   bg: 'bg-gold-500/10 border-gold-500/20' },
+  a_apprendre: { label: 'À apprendre',  emoji: '📋', color: 'text-noir-400',   bg: 'bg-noir-800/50 border-noir-700' },
+}
 
-const EMPTY = { titre: '', compositeur: '', statut: 'en_cours', notes: '', lien_url: '' }
+const NIVEAUX = ['Débutant', 'Intermédiaire', 'Avancé']
 
 export default function RepertoirePage() {
   const router = useRouter()
   const [morceaux, setMorceaux] = useState<Morceau[]>([])
-  const [prenom, setPrenom] = useState('')
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
-  const [editTarget, setEditTarget] = useState<Morceau | null>(null)
-  const [form, setForm] = useState({ ...EMPTY })
   const [saving, setSaving] = useState(false)
-  const [filterStatut, setFilterStatut] = useState('tous')
+  const [filter, setFilter] = useState('tous')
+  const [search, setSearch] = useState('')
+  const [form, setForm] = useState({ titre: '', compositeur: '', tonalite: '', niveau: '', statut: 'a_apprendre', notes: '' })
 
   useEffect(() => {
-    Promise.all([
-      fetch('/api/eleve/me').then(r => r.status === 401 ? null : r.json()),
-      fetch('/api/eleve/repertoire').then(r => r.json()),
-    ]).then(([me, data]) => {
-      if (!me) { router.push('/espace-eleve/login'); return }
-      setPrenom(me.prenom)
-      setMorceaux(Array.isArray(data) ? data : [])
-    }).finally(() => setLoading(false))
+    fetch('/api/eleve/repertoire')
+      .then(r => { if (r.status === 401) { router.push('/espace-eleve/login'); return null } return r.json() })
+      .then(d => { if (Array.isArray(d)) setMorceaux(d) })
+      .catch(console.error)
+      .finally(() => setLoading(false))
   }, [router])
 
-  function openCreate() { setForm({ ...EMPTY }); setEditTarget(null); setShowForm(true) }
-  function openEdit(m: Morceau) {
-    setForm({ titre: m.titre, compositeur: m.compositeur || '', statut: m.statut, notes: m.notes || '', lien_url: m.lien_url || '' })
-    setEditTarget(m); setShowForm(true)
+  async function handleCreate(e: React.FormEvent) {
+    e.preventDefault()
+    setSaving(true)
+    const res = await fetch('/api/eleve/repertoire', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...form, compositeur: form.compositeur || null, tonalite: form.tonalite || null, niveau: form.niveau || null, notes: form.notes || null }),
+    })
+    const data = await res.json()
+    if (res.ok) { setMorceaux(prev => [data, ...prev]); setShowForm(false); setForm({ titre: '', compositeur: '', tonalite: '', niveau: '', statut: 'a_apprendre', notes: '' }) }
+    setSaving(false)
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault(); setSaving(true)
-    const payload = { titre: form.titre, compositeur: form.compositeur || null, statut: form.statut, notes: form.notes || null, lien_url: form.lien_url || null }
-    if (editTarget) {
-      const res = await fetch('/api/eleve/repertoire', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: editTarget.id, ...payload }) })
-      if (res.ok) { const updated = await res.json(); setMorceaux(prev => prev.map(m => m.id === editTarget.id ? updated : m)) }
-    } else {
-      const res = await fetch('/api/eleve/repertoire', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
-      if (res.ok) { const created = await res.json(); setMorceaux(prev => [created, ...prev]) }
-    }
-    setShowForm(false); setSaving(false)
+  async function updateStatut(id: string, statut: string) {
+    const res = await fetch('/api/eleve/repertoire', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, statut }) })
+    if (res.ok) setMorceaux(prev => prev.map(m => m.id === id ? { ...m, statut: statut as any } : m))
   }
 
-  async function handleDelete(id: string) {
+  async function deleteMorceau(id: string) {
     if (!confirm('Supprimer ce morceau ?')) return
     await fetch('/api/eleve/repertoire', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) })
     setMorceaux(prev => prev.filter(m => m.id !== id))
   }
 
-  async function changeStatut(m: Morceau, statut: string) {
-    const res = await fetch('/api/eleve/repertoire', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: m.id, statut }) })
-    if (res.ok) { const updated = await res.json(); setMorceaux(prev => prev.map(x => x.id === m.id ? updated : x)) }
-  }
+  const filtered = morceaux.filter(m => {
+    const matchFilter = filter === 'tous' || m.statut === filter
+    const matchSearch = !search || m.titre.toLowerCase().includes(search.toLowerCase()) || (m.compositeur || '').toLowerCase().includes(search.toLowerCase())
+    return matchFilter && matchSearch
+  })
 
-  const filtered = filterStatut === 'tous' ? morceaux : morceaux.filter(m => m.statut === filterStatut)
-  const stats = { souhaite: morceaux.filter(m => m.statut === 'souhaite').length, en_cours: morceaux.filter(m => m.statut === 'en_cours').length, maitrise: morceaux.filter(m => m.statut === 'maitrise').length }
+  if (loading) return <EleveLayout><div className="p-4 md:p-6 grid grid-cols-1 md:grid-cols-2 gap-3">{[...Array(6)].map((_, i) => <SkeletonCard key={i} className="h-28" />)}</div></EleveLayout>
 
   return (
-    <EleveLayout prenom={prenom} nbNotifs={0}>
-      <div className="p-4 md:p-6 lg:p-8 pb-24 md:pb-8">
-
-        {/* Titre */}
+    <EleveLayout>
+      <div className="p-4 md:p-6 lg:p-8 pb-24 md:pb-8 max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
           <div>
-            <h1 className="font-serif text-2xl md:text-3xl text-white mb-1 animate-fade-in-up">Mon Répertoire</h1>
-            <p className="text-noir-400 text-sm">Gérez les morceaux que vous apprenez ou souhaitez apprendre</p>
+            <h1 className="text-2xl font-serif text-white">Mon répertoire</h1>
+            <p className="text-noir-400 text-sm mt-0.5">{morceaux.length} morceau{morceaux.length > 1 ? 'x' : ''}</p>
           </div>
-          <button onClick={openCreate} className="btn-gold flex items-center gap-2">
-            <Plus size={16} /> Ajouter un morceau
+          <button onClick={() => setShowForm(true)} className="btn-gold flex items-center gap-2 text-sm">
+            <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Ajouter
           </button>
         </div>
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-3 mb-6">
-          {STATUTS.map(s => (
-            <div key={s.value} className="card text-center py-3 cursor-pointer hover:border-gold-500/30 transition-all" onClick={() => setFilterStatut(filterStatut === s.value ? 'tous' : s.value)}>
-              <p className={`text-2xl font-bold ${s.color.split(' ')[0]}`}>{stats[s.value as keyof typeof stats]}</p>
-              <p className="text-xs text-noir-400 mt-0.5">{s.label}</p>
+          {Object.entries(STATUT_CONFIG).map(([key, cfg]) => (
+            <div key={key} className={`card text-center py-3 border ${cfg.bg}`}>
+              <p className="text-xl mb-1">{cfg.emoji}</p>
+              <p className="text-white font-bold">{morceaux.filter(m => m.statut === key).length}</p>
+              <p className="text-xs text-noir-400">{cfg.label}</p>
             </div>
           ))}
         </div>
 
-        {/* Filtres */}
-        <div className="flex gap-1 bg-noir-800 border border-noir-700 rounded-xl p-1 mb-6 w-fit flex-wrap">
-          <button onClick={() => setFilterStatut('tous')} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${filterStatut === 'tous' ? 'bg-gold-500 text-noir-950' : 'text-noir-400 hover:text-white'}`}>
-            Tous ({morceaux.length})
-          </button>
-          {STATUTS.map(s => (
-            <button key={s.value} onClick={() => setFilterStatut(s.value)} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${filterStatut === s.value ? 'bg-gold-500 text-noir-950' : 'text-noir-400 hover:text-white'}`}>
-              {s.label}
+        {/* Recherche + filtres */}
+        <div className="flex gap-3 mb-4 flex-wrap">
+          <input value={search} onChange={e => setSearch(e.target.value)} className="input flex-1 min-w-48" placeholder="Rechercher un morceau..." />
+        </div>
+        <div className="flex gap-2 mb-6 flex-wrap">
+          {[{ key: 'tous', label: 'Tous' }, ...Object.entries(STATUT_CONFIG).map(([k, v]) => ({ key: k, label: v.label }))].map(f => (
+            <button key={f.key} onClick={() => setFilter(f.key)}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${filter === f.key ? 'bg-gold-500/10 border-gold-500/30 text-gold-400' : 'border-noir-700 text-noir-400 hover:border-noir-600'}`}>
+              {f.label}
             </button>
           ))}
         </div>
 
-        {loading ? (
-          <div className="text-center py-12"><div className="w-8 h-8 border-2 border-gold-500 border-t-transparent rounded-full animate-spin mx-auto" /></div>
-        ) : filtered.length === 0 ? (
-          <div className="card text-center py-16">
-            <Music size={40} className="text-noir-600 mx-auto mb-4" />
-            <p className="text-noir-400 text-lg font-medium">
-              {filterStatut === 'tous' ? 'Votre répertoire est vide' : `Aucun morceau "${STATUTS.find(s => s.value === filterStatut)?.label}"`}
-            </p>
-            <p className="text-noir-600 text-sm mt-1">Ajoutez les morceaux que vous travaillez ou souhaitez apprendre.</p>
-          </div>
+        {filtered.length === 0 ? (
+          <EmptyState
+            icon={<svg width="32" height="32" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>}
+            title="Aucun morceau"
+            description="Ajoutez vos morceaux pour suivre votre répertoire"
+            action={<button onClick={() => setShowForm(true)} className="btn-gold text-xs px-4 py-2">Ajouter un morceau</button>}
+          />
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+          <div className="grid md:grid-cols-2 gap-3">
             {filtered.map(m => {
-              const statut = STATUTS.find(s => s.value === m.statut) || STATUTS[1]
+              const cfg = STATUT_CONFIG[m.statut]
               return (
-                <div key={m.id} className="card hover:border-gold-500/30 transition-all group">
-                  <div className="flex items-start justify-between gap-2 mb-3">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <div className={`w-2 h-2 rounded-full shrink-0 ${statut.dot}`} />
-                      <div className="min-w-0">
-                        <h3 className="text-white font-semibold text-sm leading-tight truncate">{m.titre}</h3>
-                        {m.compositeur && <p className="text-noir-500 text-xs mt-0.5 truncate">{m.compositeur}</p>}
+                <div key={m.id} className={`card border ${cfg.bg} transition-all`}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-start gap-3 flex-1 min-w-0">
+                      <span className="text-2xl shrink-0">{cfg.emoji}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white font-semibold text-sm truncate">{m.titre}</p>
+                        {m.compositeur && <p className="text-noir-400 text-xs">{m.compositeur}</p>}
+                        <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                          {m.tonalite && <span className="text-xs bg-noir-800 text-noir-400 px-2 py-0.5 rounded-full">{m.tonalite}</span>}
+                          {m.niveau && <span className="text-xs bg-noir-800 text-noir-400 px-2 py-0.5 rounded-full">{m.niveau}</span>}
+                        </div>
+                        {m.notes && <p className="text-noir-500 text-xs mt-1 line-clamp-1">{m.notes}</p>}
                       </div>
                     </div>
-                    <div className="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button onClick={() => openEdit(m)} className="text-noir-500 hover:text-gold-400 p-1 rounded transition-colors"><Pencil size={12} /></button>
-                      <button onClick={() => handleDelete(m.id)} className="text-noir-500 hover:text-red-400 p-1 rounded transition-colors"><Trash2 size={12} /></button>
+                    <div className="flex flex-col gap-1 shrink-0">
+                      <select value={m.statut} onChange={e => updateStatut(m.id, e.target.value)}
+                        className="text-xs bg-noir-800 border border-noir-700 text-noir-300 rounded-lg px-2 py-1 cursor-pointer">
+                        {Object.entries(STATUT_CONFIG).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+                      </select>
+                      <button onClick={() => deleteMorceau(m.id)} className="text-noir-700 hover:text-red-400 transition-colors text-xs text-center">Supprimer</button>
                     </div>
                   </div>
-
-                  {/* Sélecteur de statut */}
-                  <div className="flex gap-1 mb-3">
-                    {STATUTS.map(s => (
-                      <button key={s.value} onClick={() => changeStatut(m, s.value)}
-                        className={`flex-1 text-[10px] py-1 rounded-lg border transition-all font-medium ${m.statut === s.value ? s.color : 'text-noir-600 border-noir-700 hover:border-noir-600'}`}>
-                        {s.label}
-                      </button>
-                    ))}
-                  </div>
-
-                  {m.notes && <p className="text-noir-400 text-xs mb-2 line-clamp-2 leading-relaxed">{m.notes}</p>}
-
-                  {m.lien_url && (
-                    <a href={m.lien_url} target="_blank" rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 text-xs text-gold-400 hover:text-gold-300 transition-colors mt-2">
-                      <ExternalLink size={11} /> Voir la partition / vidéo
-                    </a>
-                  )}
                 </div>
               )
             })}
           </div>
         )}
 
-        {/* Modale ajout/modification */}
+        {/* Modale */}
         {showForm && (
           <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/70 backdrop-blur-sm">
-            <div className="bg-noir-900 border border-noir-700 rounded-t-2xl sm:rounded-2xl w-full shadow-2xl max-h-[92vh] flex flex-col" style={{maxWidth:'440px'}}>
+            <div className="bg-noir-900 border border-noir-700 rounded-t-2xl sm:rounded-2xl w-full shadow-2xl max-h-[92vh] flex flex-col" style={{maxWidth:'480px'}}>
               <div className="flex items-center justify-between px-6 py-4 border-b border-noir-800 shrink-0">
-                <h2 className="text-white font-serif text-xl">{editTarget ? 'Modifier' : 'Ajouter un morceau'}</h2>
+                <h2 className="text-white font-serif text-xl">Nouveau morceau</h2>
                 <button onClick={() => setShowForm(false)} className="text-noir-400 hover:text-white p-1">
                   <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
               </div>
               <div className="overflow-y-auto flex-1 px-6 py-4">
-                <form onSubmit={handleSubmit} id="rep-form" className="space-y-4">
-                  <div><label className="label mb-1 block">Titre du morceau *</label><input value={form.titre} onChange={e => setForm(f => ({ ...f, titre: e.target.value }))} className="input w-full" required placeholder="Ex: Clair de Lune" /></div>
-                  <div><label className="label mb-1 block">Compositeur</label><input value={form.compositeur} onChange={e => setForm(f => ({ ...f, compositeur: e.target.value }))} className="input w-full" placeholder="Ex: Claude Debussy" /></div>
-                  <div>
-                    <label className="label mb-2 block">Statut</label>
+                <form onSubmit={handleCreate} id="rep-form" className="space-y-4">
+                  <div><label className="label mb-1 block">Titre *</label><input value={form.titre} onChange={e => setForm(f => ({ ...f, titre: e.target.value }))} className="input w-full" required placeholder="Ex: Nocturne Op.9 No.2" /></div>
+                  <div><label className="label mb-1 block">Compositeur</label><input value={form.compositeur} onChange={e => setForm(f => ({ ...f, compositeur: e.target.value }))} className="input w-full" placeholder="Ex: Chopin" /></div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div><label className="label mb-1 block">Tonalité</label><input value={form.tonalite} onChange={e => setForm(f => ({ ...f, tonalite: e.target.value }))} className="input w-full" placeholder="Ex: Mi bémol" /></div>
+                    <div><label className="label mb-1 block">Niveau</label>
+                      <select value={form.niveau} onChange={e => setForm(f => ({ ...f, niveau: e.target.value }))} className="input w-full">
+                        <option value="">Choisir...</option>
+                        {NIVEAUX.map(n => <option key={n} value={n}>{n}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                  <div><label className="label mb-2 block">Statut</label>
                     <div className="grid grid-cols-3 gap-2">
-                      {STATUTS.map(s => (
-                        <button key={s.value} type="button" onClick={() => setForm(f => ({ ...f, statut: s.value }))}
-                          className={`py-2 rounded-xl border text-xs font-medium transition-all ${form.statut === s.value ? s.color : 'text-noir-500 border-noir-700 hover:border-noir-600'}`}>
-                          {s.label}
+                      {Object.entries(STATUT_CONFIG).map(([k, v]) => (
+                        <button key={k} type="button" onClick={() => setForm(f => ({ ...f, statut: k }))}
+                          className={`py-2 rounded-xl border text-xs font-medium transition-all ${form.statut === k ? 'bg-gold-500/10 border-gold-500/30 text-gold-400' : 'border-noir-700 text-noir-400'}`}>
+                          {v.emoji} {v.label}
                         </button>
                       ))}
                     </div>
                   </div>
-                  <div><label className="label mb-1 block">Notes personnelles</label><textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} className="input w-full h-16 resize-none" placeholder="Difficultés, objectifs, remarques..." /></div>
-                  <div><label className="label mb-1 block">Lien (YouTube, partition...)</label><input type="url" value={form.lien_url} onChange={e => setForm(f => ({ ...f, lien_url: e.target.value }))} className="input w-full" placeholder="https://..." /></div>
+                  <div><label className="label mb-1 block">Notes</label><textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} className="input w-full h-16 resize-none" placeholder="Difficultés, objectifs..." /></div>
                 </form>
               </div>
               <div className="px-6 py-4 border-t border-noir-800 shrink-0 flex gap-3">
                 <button type="button" onClick={() => setShowForm(false)} className="btn-outline flex-1">Annuler</button>
-                <button type="submit" form="rep-form" disabled={saving} className="btn-gold flex-1">{saving ? 'Enregistrement...' : editTarget ? 'Enregistrer' : 'Ajouter'}</button>
+                <button type="submit" form="rep-form" disabled={saving} className="btn-gold flex-1">{saving ? 'Ajout...' : 'Ajouter'}</button>
               </div>
             </div>
           </div>
