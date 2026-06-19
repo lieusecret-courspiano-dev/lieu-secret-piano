@@ -105,13 +105,18 @@ export default function CertificatsPage() {
                     )}
 
                     {/* Actions */}
-                    {cert.pdf_url && (
-                      <a href={cert.pdf_url} target="_blank" rel="noopener noreferrer"
-                        className="mt-4 btn-outline text-xs px-4 py-2 inline-flex items-center gap-2">
-                        <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                        Télécharger le PDF
-                      </a>
-                    )}
+                    <div className="flex gap-2 mt-4 flex-wrap">
+                      {cert.pdf_url && (
+                        <a href={cert.pdf_url} target="_blank" rel="noopener noreferrer"
+                          className="btn-gold text-xs px-4 py-2 inline-flex items-center gap-2">
+                          <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                          Télécharger le PDF
+                        </a>
+                      )}
+                      {!cert.pdf_url && (
+                        <p className="text-noir-600 text-xs italic">PDF en cours de génération</p>
+                      )}
+                    </div>
                   </div>
                 </div>
               )

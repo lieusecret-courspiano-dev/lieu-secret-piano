@@ -139,9 +139,7 @@ export default function ProgressionPage() {
 
         {/* Message encouragement */}
         <div className="card text-center py-8 border-gold-500/20 bg-gold-500/5">
-          <p className="text-2xl mb-2">
-            {prog.pourcentage >= 100 ? '🏆' : prog.pourcentage >= 66 ? '🌟' : prog.pourcentage >= 33 ? '🎵' : '🎹'}
-          </p>
+          
           <p className="text-white font-medium text-sm">
             {prog.pourcentage >= 100 ? 'Formation complète ! Félicitations !' :
              prog.pourcentage >= 66 ? 'Excellent travail, continuez !' :

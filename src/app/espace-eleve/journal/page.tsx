@@ -122,7 +122,10 @@ export default function JournalPage() {
             <p className="text-xs text-noir-400">Séances</p>
           </div>
           <div className="card text-center py-4">
-            <p className="text-2xl font-bold text-white">{streak}🔥</p>
+            <p className="text-2xl font-bold text-white">{streak}</p>
+            <div className="flex items-center justify-center gap-1 mt-0.5">
+              <svg width="12" height="12" fill="none" stroke="#fb923c" strokeWidth="2" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            </div>
             <p className="text-xs text-noir-400">Jours consécutifs</p>
           </div>
         </div>
@@ -161,7 +164,10 @@ export default function JournalPage() {
                           )}
                         </div>
                         {entry.morceaux && (
-                          <p className="text-noir-400 text-xs mt-1">🎼 {entry.morceaux}</p>
+                          <p className="text-noir-400 text-xs mt-1 flex items-center gap-1">
+                          <svg width="10" height="10" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                          {entry.morceaux}
+                        </p>
                         )}
                         {entry.notes && (
                           <p className="text-noir-500 text-xs mt-1 line-clamp-2">{entry.notes}</p>
