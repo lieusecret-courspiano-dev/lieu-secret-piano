@@ -8,6 +8,7 @@ import {
   LayoutDashboard, ClipboardList, Image, Gift, Mail, BookOpen,
   TrendingUp, CheckSquare, Music, Mic, HelpCircle, Library
 } from 'lucide-react'
+import { GlobalSearch } from '@/components/admin/ui/SearchBar'
 
 const NAV_GROUPS = [
   {
@@ -110,6 +111,9 @@ export default function AdminNav() {
             <span className="font-serif text-sm text-gold-400 tracking-widest">LIEU SECRET</span>
           </Link>
           <p className="text-[10px] text-noir-600 mt-1 ml-4">Administration</p>
+          <div className="mt-3">
+            <GlobalSearch />
+          </div>
         </div>
 
         {/* Navigation groupée */}
