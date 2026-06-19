@@ -67,7 +67,7 @@ export default function CertificatsPage() {
             description="Vos certificats apparaîtront ici une fois validés par votre professeur"
           />
         ) : (
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {certificats.map(cert => {
               const cfg = getNiveauConfig(cert.niveau)
               return (

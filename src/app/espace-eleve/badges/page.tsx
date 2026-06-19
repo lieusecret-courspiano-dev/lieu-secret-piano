@@ -79,7 +79,7 @@ export default function BadgesPage() {
 
         {/* Score */}
         <div className="card mb-6 flex items-center gap-6">
-          <div className="w-20 h-20 relative shrink-0">
+          <div className="w-16 h-16 md:w-20 md:h-20 relative shrink-0">
             <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
               <circle cx="18" cy="18" r="15.9" fill="none" stroke="#111" strokeWidth="3" />
               <circle cx="18" cy="18" r="15.9" fill="none" stroke="#f59e0b" strokeWidth="3"

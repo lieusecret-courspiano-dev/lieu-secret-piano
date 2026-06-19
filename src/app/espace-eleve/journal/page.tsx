@@ -205,7 +205,7 @@ export default function JournalPage() {
                   </div>
                   <div>
                     <label className="label mb-2 block">Durée</label>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                       {DUREES.map(d => (
                         <button key={d} type="button" onClick={() => setForm(f => ({ ...f, duree_minutes: d }))}
                           className={`py-2 rounded-xl border text-sm font-medium transition-all ${
@@ -220,7 +220,7 @@ export default function JournalPage() {
                   </div>
                   <div>
                     <label className="label mb-2 block">Humeur</label>
-                    <div className="grid grid-cols-4 gap-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                       {HUMEURS.map(h => (
                         <button key={h.key} type="button" onClick={() => setForm(f => ({ ...f, humeur: h.key }))}
                           className={`flex flex-col items-center gap-1 py-2 rounded-xl border text-xs transition-all ${

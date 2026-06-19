@@ -176,7 +176,7 @@ export default function RepertoirePage() {
                     </div>
                   </div>
                   <div><label className="label mb-2 block">Statut</label>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                       {Object.entries(STATUT_CONFIG).map(([k, v]) => (
                         <button key={k} type="button" onClick={() => setForm(f => ({ ...f, statut: k }))}
                           className={`py-2 rounded-xl border text-xs font-medium transition-all ${form.statut === k ? 'bg-gold-500/10 border-gold-500/30 text-gold-400' : 'border-noir-700 text-noir-400'}`}>

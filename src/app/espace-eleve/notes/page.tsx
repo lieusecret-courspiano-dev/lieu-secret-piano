@@ -52,7 +52,7 @@ export default function NotesPage() {
 
   if (loading) return (
     <EleveLayout>
-      <div className="p-4 md:p-6 grid md:grid-cols-3 gap-4">
+      <div className="p-4 md:p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="space-y-3">{[...Array(4)].map((_, i) => <SkeletonCard key={i} className="h-20" />)}</div>
         <div className="md:col-span-2"><SkeletonCard className="h-96" /></div>
       </div>

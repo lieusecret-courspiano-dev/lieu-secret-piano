@@ -206,7 +206,7 @@ export default function DashboardPage() {
           <p className="text-noir-500 text-xs mt-2">{prog?.validees || 0} / {prog?.total || 0} compétences validées</p>
 
           {prog?.statsParCategorie && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-3">
               {Object.entries(prog.statsParCategorie).map(([cat, stats]) => (
                 <div key={cat} className="bg-noir-800/50 rounded-xl p-3">
                   <p className="text-xs text-noir-400 mb-2 truncate">{cat}</p>
@@ -366,7 +366,7 @@ export default function DashboardPage() {
               </h2>
               <Link href="/espace-eleve/badges" className="text-xs text-gold-400 hover:text-gold-300">Voir tous →</Link>
             </div>
-            <div className="flex gap-3 flex-wrap">
+            <div className="flex gap-2 flex-wrap">
               {badges.map(b => (
                 <div key={b.badge_key} className="flex flex-col items-center gap-1 bg-noir-800/50 rounded-xl p-3 min-w-[72px]">
                   <span className="text-2xl">{b.badge_icon || '🏅'}</span>

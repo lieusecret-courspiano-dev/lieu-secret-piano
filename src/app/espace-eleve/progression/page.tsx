@@ -60,10 +60,10 @@ export default function ProgressionPage() {
         <div className="card mb-6">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <p className="text-5xl font-bold text-white">{prog.pourcentage}<span className="text-2xl text-noir-400">%</span></p>
+              <p className="text-4xl md:text-5xl font-bold text-white">{prog.pourcentage}<span className="text-2xl text-noir-400">%</span></p>
               <p className="text-noir-400 text-sm mt-1">Progression globale</p>
             </div>
-            <div className="w-24 h-24 relative">
+            <div className="w-20 h-20 md:w-24 md:h-24 relative">
               <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
                 <circle cx="18" cy="18" r="15.9" fill="none" stroke="#1a1a2e" strokeWidth="3" />
                 <circle cx="18" cy="18" r="15.9" fill="none" stroke="#f59e0b" strokeWidth="3"

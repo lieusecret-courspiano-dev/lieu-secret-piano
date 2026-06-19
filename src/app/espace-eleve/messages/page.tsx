@@ -69,7 +69,7 @@ export default function MessagesPage() {
 
   return (
     <EleveLayout>
-      <div className="flex flex-col h-[calc(100vh-120px)] md:h-[calc(100vh-80px)]">
+      <div className="flex flex-col h-[calc(100dvh-120px)] md:h-[calc(100dvh-80px)]">
 
         {/* Header */}
         <div className="px-4 md:px-6 py-4 border-b border-noir-800 bg-noir-950 shrink-0">
