@@ -41,6 +41,7 @@ const NAV_GROUPS = [
   {
     label: 'Contenu',
     items: [
+      { href: '/admin/blog',             label: 'Blog',                 icon: BookOpen     },
       { href: '/admin/ressources-admin', label: 'Ressources',           icon: BookOpen     },
       { href: '/admin/partitions',       label: 'Médiathèque',          icon: Music        },
       { href: '/admin/medias',           label: 'Médias & Avis',        icon: Image        },
