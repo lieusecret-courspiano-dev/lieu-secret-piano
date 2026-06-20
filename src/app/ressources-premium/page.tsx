@@ -114,6 +114,7 @@ export default function RessourcesPremiumPage() {
                 <FadeUp key={r.id} delay={i * 0.07}>
                   <Link href={`/ressources-premium/${r.id}`}
                     className="group block bg-noir-900 border border-noir-800 rounded-2xl overflow-hidden hover:border-gold-500/30 transition-all hover:-translate-y-1 h-full">
+
                     {/* Image / placeholder */}
                     <div className="aspect-video bg-gradient-to-br from-gold-500/10 to-noir-800 flex items-center justify-center relative overflow-hidden">
                       {r.image_url ? (
@@ -128,10 +129,29 @@ export default function RessourcesPremiumPage() {
                           {TYPE_LABELS[r.type] || r.type}
                         </span>
                       </div>
-                      
                     </div>
 
-                    
+                    {/* Contenu texte */}
+                    <div className="p-5">
+                      {/* Titre + Prix sur la même ligne */}
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <h3 className="font-serif text-base sm:text-lg text-white group-hover:text-gold-400 transition-colors line-clamp-2 flex-1">
+                          {r.titre}
+                        </h3>
+                        <span className={`shrink-0 text-sm font-bold px-3 py-1 rounded-xl whitespace-nowrap ${
+                          r.est_gratuit
+                            ? 'bg-green-500/15 text-green-400 border border-green-500/30'
+                            : 'bg-gold-500 text-noir-950'
+                        }`}>
+                          {r.est_gratuit ? 'Gratuit' : `${r.prix} €`}
+                        </span>
+                      </div>
+
+                      {r.description && (
+                        <p className="text-noir-400 text-sm leading-relaxed line-clamp-3 mb-3">{r.description}</p>
+                      )}
+
+                      <div className="flex items-center gap-3 text-xs text-noir-500 flex-wrap">
                         {r.duree_minutes && <span>{r.duree_minutes} min</span>}
                         {r.date_coaching && (
                           <span className="text-blue-400">
