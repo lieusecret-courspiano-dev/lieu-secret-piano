@@ -39,6 +39,28 @@ export default function ReservationsPage() {
       .finally(() => setLoading(false))
   }, [router])
 
+  async function handleAnnuler(reservationId: string, slotStart: string) {
+    const heuresAvant = (new Date(slotStart).getTime() - Date.now()) / 3600000
+    if (heuresAvant < 15) {
+      alert('Annulation impossible : le cours est dans moins de 15 heures.')
+      return
+    }
+    if (!confirm('Confirmer l\'annulation de ce cours ?')) return
+    try {
+      const res = await fetch(`/api/eleve/reservations/${reservationId}`, { method: 'DELETE' })
+      if (res.ok) {
+        setReservations(prev => prev.map(r =>
+          r.id === reservationId ? { ...r, status: 'cancelled' } : r
+        ))
+      } else {
+        const d = await res.json()
+        alert(d.error || 'Erreur lors de l\'annulation.')
+      }
+    } catch {
+      alert('Erreur lors de l\'annulation.')
+    }
+  }
+
   const now = new Date()
   const aVenir = reservations.filter(r => new Date(r.slot_start) > now && r.status !== 'cancelled')
   const passes = reservations.filter(r => new Date(r.slot_start) <= now || r.status === 'cancelled')
@@ -74,7 +96,7 @@ export default function ReservationsPage() {
             { key: 'a_venir', label: `À venir (${aVenir.length})` },
             { key: 'passes', label: `Passés (${passes.length})` },
           ].map(f => (
-            <button key={f.key} onClick={() => setFilter(f.key as any)}
+            <button key={f.key} onClick={() => setFilter(f.key as 'a_venir' | 'passes')}
               className={`px-4 py-1.5 rounded-full text-xs font-medium border transition-all ${
                 filter === f.key ? 'bg-gold-500/10 border-gold-500/30 text-gold-400' : 'border-noir-700 text-noir-400 hover:border-noir-600'
               }`}>
@@ -98,40 +120,58 @@ export default function ReservationsPage() {
               const start = DateTime.fromISO(r.slot_start)
               const end = DateTime.fromISO(r.slot_end)
               const isPast = new Date(r.slot_start) <= now
+              const heuresAvant = (new Date(r.slot_start).getTime() - Date.now()) / 3600000
+              const peutAnnuler = !isPast && r.status !== 'cancelled' && heuresAvant >= 15
 
               return (
                 <div key={r.id} className={`card transition-all ${isPast ? 'opacity-70' : 'hover:border-gold-500/20'}`}>
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-start gap-3 flex-1 min-w-0">
-                      {/* Date badge */}
-                      <div className={`w-12 h-12 rounded-xl flex flex-col items-center justify-center shrink-0 ${
-                        isPast ? 'bg-noir-800 border border-noir-700' : 'bg-gold-500/10 border border-gold-500/30'
-                      }`}>
-                        <p className={`text-xs font-bold ${isPast ? 'text-noir-400' : 'text-gold-400'}`}>
-                          {start.toFormat('dd')}
-                        </p>
-                        <p className={`text-xs ${isPast ? 'text-noir-600' : 'text-gold-500'}`}>
-                          {start.setLocale('fr').toFormat('MMM')}
-                        </p>
+                  <div className="flex items-start gap-3">
+                    {/* Date badge */}
+                    <div className={`w-12 h-12 rounded-xl flex flex-col items-center justify-center shrink-0 ${
+                      isPast ? 'bg-noir-800 border border-noir-700' : 'bg-gold-500/10 border border-gold-500/30'
+                    }`}>
+                      <p className={`text-xs font-bold ${isPast ? 'text-noir-400' : 'text-gold-400'}`}>
+                        {start.toFormat('dd')}
+                      </p>
+                      <p className={`text-xs ${isPast ? 'text-noir-600' : 'text-gold-500'}`}>
+                        {start.setLocale('fr').toFormat('MMM')}
+                      </p>
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white font-semibold text-sm">
+                        {start.setLocale('fr').toFormat('EEEE d MMMM yyyy')}
+                      </p>
+                      <p className="text-noir-400 text-xs mt-0.5">
+                        {start.toFormat('HH:mm')} — {end.toFormat('HH:mm')}
+                      </p>
+                      <div className="flex items-center gap-2 mt-2 flex-wrap">
+                        <span className={`text-xs px-2 py-0.5 rounded-full border ${cfg.bg} ${cfg.color}`}>
+                          {cfg.label}
+                        </span>
+                        {r.amount > 0 && (
+                          <span className="text-xs text-noir-500">{r.amount} €</span>
+                        )}
+                        <span className="text-xs text-noir-600 capitalize">{r.payment_method?.replace('_', ' ')}</span>
                       </div>
 
-                      <div className="flex-1 min-w-0">
-                        <p className="text-white font-semibold text-sm">
-                          {start.setLocale('fr').toFormat('EEEE d MMMM yyyy')}
-                        </p>
-                        <p className="text-noir-400 text-xs mt-0.5">
-                          {start.toFormat('HH:mm')} — {end.toFormat('HH:mm')}
-                        </p>
-                        <div className="flex items-center gap-2 mt-2 flex-wrap">
-                          <span className={`text-xs px-2 py-0.5 rounded-full border ${cfg.bg} ${cfg.color}`}>
-                            {cfg.label}
-                          </span>
-                          {r.amount > 0 && (
-                            <span className="text-xs text-noir-500">{r.amount} €</span>
+                      {/* Bouton annulation */}
+                      {!isPast && r.status !== 'cancelled' && (
+                        <div className="mt-3 pt-3 border-t border-noir-800">
+                          {peutAnnuler ? (
+                            <button
+                              onClick={() => handleAnnuler(r.id, r.slot_start)}
+                              className="text-xs text-noir-500 hover:text-red-400 transition-colors flex items-center gap-1.5">
+                              <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                              Annuler ce cours
+                            </button>
+                          ) : (
+                            <p className="text-xs text-noir-600 italic">
+                              Annulation impossible (moins de 15h avant le cours)
+                            </p>
                           )}
-                          <span className="text-xs text-noir-600 capitalize">{r.payment_method?.replace('_', ' ')}</span>
                         </div>
-                      </div>
+                      )}
                     </div>
                   </div>
                 </div>

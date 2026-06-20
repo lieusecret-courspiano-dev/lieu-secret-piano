@@ -212,11 +212,7 @@ export default function EleveLayout({
     prevNotifsRef.current = nbNotifs
   }, [nbNotifs])
 
-  // Scroll vers le haut du contenu principal lors de la navigation
-  useEffect(() => {
-    const main = document.getElementById('eleve-main-content')
-    if (main) main.scrollTop = 0
-  }, [pathname])
+  // Scroll supprimé — le contenu reste positionné là où l'élève se trouve
 
   function getBadge(key: string | null): number {
     if (!key) return 0

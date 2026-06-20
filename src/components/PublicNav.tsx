@@ -18,6 +18,8 @@ const NAV_LINKS = [
   { href: '/cours', label: 'Cours' },
   { href: '/tarifs', label: 'Tarifs' },
   { href: '/essai', label: "Cours d'essai", highlight: true },
+  { href: '/inscription', label: 'Inscription' },
+  { href: '/cadeau', label: 'Bon cadeau' },
   { href: '/blog', label: 'Blog' },
   { href: '/contact', label: 'Contact' },
 ]

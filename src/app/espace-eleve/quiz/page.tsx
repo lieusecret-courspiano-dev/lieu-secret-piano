@@ -63,6 +63,9 @@ interface Quiz {
   statut: string
   quiz_questions?: { count: number }[]
   quiz_resultats?: { score: number; reussi: boolean; created_at: string }[]
+  meilleur_score?: number
+  reussi?: boolean
+  nb_tentatives?: number
 }
 
 interface Question {
@@ -163,7 +166,13 @@ export default function EleveQuizPage() {
   }
 
   const nbQ = (q: Quiz) => q.quiz_questions?.[0]?.count || 0
-  const lastResult = (q: Quiz) => q.quiz_resultats?.[0]
+  // Utilise meilleur_score/reussi/nb_tentatives retournés par l'API, ou quiz_resultats en fallback
+  const lastResult = (q: Quiz) => {
+    if (q.nb_tentatives && q.nb_tentatives > 0) {
+      return { score: q.meilleur_score ?? 0, reussi: q.reussi ?? false }
+    }
+    return q.quiz_resultats?.[0] || null
+  }
   const filtered = filter === 'tous' ? quiz : quiz.filter(q => q.niveau === filter || q.niveau === 'tous')
 
   // ── Vue quiz actif ──
@@ -406,10 +415,16 @@ export default function EleveQuizPage() {
                         <span>·</span>
                         <span>Score min : {q.score_min}%</span>
                       </div>
-                      {last && (
-                        <div className={`mt-2 flex items-center gap-1.5 text-xs ${last.reussi ? 'text-green-400' : 'text-red-400'}`}>
+                      {last ? (
+                        <div className={`mt-2 flex items-center gap-1.5 text-xs font-medium ${last.reussi ? 'text-green-400' : 'text-red-400'}`}>
                           {last.reussi ? <CheckCircle size={12} /> : <XCircle size={12} />}
-                          Dernier score : {Math.round(last.score)}%
+                          Quiz terminé — Score : {Math.round(last.score)}%
+                          {last.reussi && <span className="text-green-500 ml-1">(Réussi)</span>}
+                        </div>
+                      ) : (
+                        <div className="mt-2 flex items-center gap-1.5 text-xs text-noir-600">
+                          <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                          Non réalisé
                         </div>
                       )}
                     </div>
