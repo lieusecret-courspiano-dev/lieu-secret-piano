@@ -86,7 +86,7 @@ export default function PublicNav({ settings }: { settings?: Settings }) {
           <div className="flex items-center justify-between h-16 lg:h-20">
 
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-3 group" aria-label="Lieu Secret — Accueil">
+            <Link href="/" className="flex items-center gap-3 group shrink-0" aria-label="Lieu Secret — Accueil">
               <div className="w-8 h-8 rounded-lg bg-gold-500/10 border border-gold-500/30 flex items-center justify-center group-hover:bg-gold-500/20 transition-colors">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="1.5" aria-hidden="true">
                   <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
@@ -98,10 +98,34 @@ export default function PublicNav({ settings }: { settings?: Settings }) {
               </div>
             </Link>
 
-            
+            {/* Nav desktop */}
+            <nav className="hidden lg:flex items-center gap-0.5 flex-1 justify-center" aria-label="Navigation principale">
+              {NAV_LINKS.map(link => {
+                const active = pathname === link.href
+                if (link.highlight) return (
+                  <Link key={link.href} href={link.href}
+                    className="mx-1 px-3 py-1.5 rounded-xl bg-gold-500/10 border border-gold-500/30 text-gold-400 text-xs font-semibold hover:bg-gold-500/20 transition-all whitespace-nowrap"
+                    aria-current={active ? 'page' : undefined}>
+                    {link.label}
+                  </Link>
+                )
+                return (
+                  <Link key={link.href} href={link.href}
+                    className={`relative px-2.5 py-2 text-xs font-medium transition-colors rounded-xl whitespace-nowrap ${active ? 'text-white' : 'text-noir-400 hover:text-white'}`}
+                    aria-current={active ? 'page' : undefined}>
+                    {active && (
+                      <motion.span layoutId="nav-pill"
+                        className="absolute inset-0 bg-noir-800 rounded-xl"
+                        transition={{ type: 'spring', bounce: 0.2, duration: 0.4 }} />
+                    )}
+                    <span className="relative">{link.label}</span>
+                  </Link>
+                )
+              })}
+            </nav>
 
             {/* Actions desktop */}
-            <div className="hidden lg:flex items-center gap-2">
+            <div className="hidden lg:flex items-center gap-2 shrink-0">
               {socialLinks.map(s => (
                 <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer"
                   className="text-noir-500 hover:text-gold-400 transition-colors p-1.5 rounded-lg hover:bg-noir-800"
@@ -112,11 +136,11 @@ export default function PublicNav({ settings }: { settings?: Settings }) {
               {socialLinks.length > 0 && <div className="w-px h-5 bg-noir-800" aria-hidden="true" />}
               <ThemeToggle />
               <Link href="/espace-eleve/login"
-                className="text-sm text-noir-400 hover:text-white transition-colors px-3 py-2 rounded-xl hover:bg-noir-800">
+                className="text-xs text-noir-400 hover:text-white transition-colors px-3 py-2 rounded-xl hover:bg-noir-800 whitespace-nowrap">
                 Connexion
               </Link>
               <Link href="/reservation"
-                className="btn-gold text-sm px-5 py-2.5 shadow-lg shadow-gold-500/20">
+                className="btn-gold text-xs px-4 py-2 shadow-lg shadow-gold-500/20 whitespace-nowrap">
                 Réserver
               </Link>
             </div>
