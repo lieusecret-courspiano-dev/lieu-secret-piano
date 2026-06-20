@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('medias')
-      .select('id, auteur, description, titre, created_at, is_active')
+      .select('id, auteur, description, titre, url, created_at, is_active')
       .eq('type', 'temoignage')
       .eq('is_active', true)
       .order('created_at', { ascending: false })
@@ -31,11 +31,16 @@ export async function GET() {
         }
       }
 
+      // Commentaire : description en priorité, sinon url si c'est du texte
+      const urlFallback = item.url && item.url !== '#' && !item.url.startsWith('http') && !item.url.startsWith('avis:')
+        ? item.url : ''
+      const commentaire = (item.description || '').trim() || urlFallback
+
       return {
         id: item.id,
         nom: item.auteur || 'Élève',
         note: Math.min(5, Math.max(1, note)),
-        commentaire: item.description || '',
+        commentaire,
         created_at: item.created_at,
         est_publie: item.is_active,
       }
