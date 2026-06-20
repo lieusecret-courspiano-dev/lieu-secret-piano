@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getEleveFromSession } from '@/lib/eleve-auth'
 import { supabaseAdmin } from '@/lib/supabase'
 import { generateCancelICS } from '@/lib/ics'
+import { sendCancellationEmail } from '@/lib/email'
 import { Resend } from 'resend'
 import { formatDateLocal } from '@/lib/utils'
 
@@ -68,23 +69,36 @@ export async function DELETE(
       .eq('is_available', false)
   }
 
-  // Envoyer ICS d'annulation pour supprimer l'événement du calendrier
+  // Envoyer emails d'annulation (élève + admin) + ICS d'annulation
   try {
-    const timezone = reservation.student_timezone || 'Europe/Paris'
+    const timezone  = reservation.student_timezone || 'Europe/Paris'
     const dateLocal = reservation.slot_start ? formatDateLocal(reservation.slot_start, timezone) : ''
-    const icsContent = generateCancelICS({
-      studentName: reservation.student_name,
-      startISO:    reservation.slot_start,
-      endISO:      reservation.slot_end || reservation.slot_start,
-      uid:         reservation.ics_uid || undefined,
-    })
-    await resend.emails.send({
-      from: FROM,
-      to:   reservation.student_email,
-      subject: 'Annulation — Cours de piano Lieu Secret',
-      html: `<p>Bonjour ${reservation.student_name},</p><p>Votre cours${dateLocal ? ` du ${dateLocal}` : ''} a bien été annulé. Votre calendrier sera mis à jour automatiquement.</p><p>Lieu Secret</p>`,
-      attachments: [{ filename: 'annulation.ics', content: Buffer.from(icsContent).toString('base64') }],
+
+    // 1. Emails d'annulation bidirectionnels (élève + admin)
+    await sendCancellationEmail({
+      studentName:  reservation.student_name,
+      studentEmail: reservation.student_email,
+      type:         'Cours individuel',
+      dateLocal,
+      cancelledBy:  'student',
     }).catch(() => {})
+
+    // 2. ICS d'annulation pour supprimer l'événement du calendrier de l'élève
+    if (reservation.slot_start) {
+      const icsContent = generateCancelICS({
+        studentName: reservation.student_name,
+        startISO:    reservation.slot_start,
+        endISO:      reservation.slot_end || reservation.slot_start,
+        uid:         reservation.ics_uid || undefined,
+      })
+      await resend.emails.send({
+        from: FROM,
+        to:   reservation.student_email,
+        subject: 'Annulation — Cours de piano Lieu Secret',
+        html: `<p>Bonjour ${reservation.student_name},</p><p>Votre cours${dateLocal ? ` du ${dateLocal}` : ''} a bien été annulé. Votre calendrier sera mis à jour automatiquement.</p><p>Lieu Secret</p>`,
+        attachments: [{ filename: 'annulation.ics', content: Buffer.from(icsContent).toString('base64') }],
+      }).catch(() => {})
+    }
   } catch {}
 
   return NextResponse.json({ success: true, message: 'Réservation annulée avec succès.' })
