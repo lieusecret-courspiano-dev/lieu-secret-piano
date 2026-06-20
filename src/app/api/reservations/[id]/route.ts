@@ -44,20 +44,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         await supabaseAdmin.from('events').update({ spots_remaining: ev.spots_remaining + 1 }).eq('id', reservation.event_id)
       }
     }
-    // Envoyer email d'annulation
-    try {
-      const timezone = reservation.student_timezone || 'Europe/Paris'
-      let dateLocal  = ''
-      if (reservation.slot_start) {
-        dateLocal = formatDateLocal(reservation.slot_start, timezone)
-      } else if (reservation.event_id) {
-        const { data: ev } = await supabaseAdmin.from('events').select('date_heure').eq('id', reservation.event_id).single()
-        if (ev) dateLocal = formatDateLocal(ev.date_heure, timezone)
-      }
-      
-    } catch (emailErr) {
-      console.error('Erreur email annulation admin:', emailErr)
-    }
+    
   }
 
   return NextResponse.json(data)
