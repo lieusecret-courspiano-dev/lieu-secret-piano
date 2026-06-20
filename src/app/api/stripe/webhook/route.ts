@@ -101,16 +101,7 @@ export async function POST(req: NextRequest) {
           .eq('id', achat_id)
           .single()
 
-        const titre = (achat?.ressources_premium as unknown as { titre: string } | null)?.titre || 'Ressource Premium'
-        const accessUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.lieusecret-courspiano.fr'}/ressources-premium/acces/${token_acces}`
-
-        const resend = new Resend(process.env.RESEND_API_KEY!)
-        await resend.emails.send({
-          from: process.env.RESEND_FROM_EMAIL || 'Lieu Secret <onboarding@resend.dev>',
-          to:   acheteur_email,
-          subject: `Accès confirmé — ${titre}`,
-          html: `<div style="background:#1a1a2e;padding:40px 20px;font-family:Georgia,serif;"><div style="max-width:600px;margin:0 auto;background:#252540;border:1px solid #f59e0b;border-radius:8px;overflow:hidden;"><div style="background:#1a1a2e;padding:24px;text-align:center;border-bottom:1px solid #f59e0b;"><div style="font-size:22px;color:#f59e0b;letter-spacing:3px;">LIEU SECRET</div></div><div style="padding:32px;"><h2 style="color:#f59e0b;margin:0 0 16px;">Paiement confirmé — Accès débloqué !</h2><p style="color:#d0d0e8;">Bonjour ${acheteur_nom},</p><p style="color:#d0d0e8;">Votre accès à <strong style="color:#fff;">${titre}</strong> est maintenant disponible.</p><div style="text-align:center;margin:24px 0;"><a href="${accessUrl}" style="background:#f59e0b;color:#1a1a2e;font-weight:700;padding:14px 28px;border-radius:8px;text-decoration:none;font-size:15px;">Accéder à ma ressource</a></div><p style="color:#7070a0;font-size:12px;">Lien permanent : <a href="${accessUrl}" style="color:#f59e0b;">${accessUrl}</a></p></div></div></div>`,
-        }).catch(() => {})
+        
       } catch (err) { console.error('Erreur ressource premium Stripe:', err) }
       return NextResponse.json({ received: true })
     }
