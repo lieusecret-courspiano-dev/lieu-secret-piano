@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
 
   const { data: reservation, error } = await supabaseAdmin
     .from('reservations')
-    .select('*')
+    .select('*, ics_uid')
     .eq('id', id)
     .single()
 
@@ -118,6 +118,7 @@ export async function POST(req: NextRequest) {
         studentName: reservation.student_name,
         startISO:    reservation.slot_start,
         endISO:      reservation.slot_end,
+        uid:         reservation.ics_uid || undefined,
       })
       await resend.emails.send({
         from: FROM,

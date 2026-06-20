@@ -23,7 +23,7 @@ export async function DELETE(
   // Vérifier que la réservation appartient à cet élève
   const { data: reservation, error: fetchError } = await supabaseAdmin
     .from('reservations')
-    .select('id, student_name, student_email, slot_start, slot_end, student_timezone, status')
+    .select('id, student_name, student_email, slot_start, slot_end, student_timezone, status, ics_uid')
     .eq('id', reservationId)
     .single()
 
@@ -76,6 +76,7 @@ export async function DELETE(
       studentName: reservation.student_name,
       startISO:    reservation.slot_start,
       endISO:      reservation.slot_end || reservation.slot_start,
+      uid:         reservation.ics_uid || undefined,
     })
     await resend.emails.send({
       from: FROM,

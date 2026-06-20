@@ -17,10 +17,10 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const body   = await req.json()
   const { status } = body
 
-  // Récupérer la réservation avant modification
+  // Récupérer la réservation avant modification (avec ics_uid pour l'annulation)
   const { data: reservation } = await supabaseAdmin
     .from('reservations')
-    .select('*')
+    .select('*, ics_uid')
     .eq('id', params.id)
     .single()
 
@@ -68,6 +68,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
           studentName: reservation.student_name,
           startISO:    reservation.slot_start,
           endISO:      reservation.slot_end,
+          uid:         reservation.ics_uid || undefined,
         })
         await resend.emails.send({
           from: FROM,

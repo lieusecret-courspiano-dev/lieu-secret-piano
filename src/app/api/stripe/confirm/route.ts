@@ -163,6 +163,10 @@ export async function GET(req: NextRequest) {
 
       const amount = parseFloat(siteSettings.tarif_cours_1h || '22')
 
+      // Générer l'UID ICS avant l'insertion
+      const { generateUID: genUID } = await import('@/lib/ics')
+      const stripeIcsUid = genUID()
+
       // Créer la réservation
       const { data: reservation } = await supabaseAdmin.from('reservations').insert({
         slot_start,
@@ -178,6 +182,7 @@ export async function GET(req: NextRequest) {
         amount,
         stripe_session_id: sessionId,
         gift_code,
+        ics_uid:           stripeIcsUid,
       }).select().single()
 
       // Déduire le bon cadeau si utilisé
@@ -202,7 +207,7 @@ export async function GET(req: NextRequest) {
       })
 
       const dateLocal = formatDateLocal(slot_start, student_timezone)
-      const adminICS  = generateCoursICS({ studentName: student_name, startISO: slot_start, endISO: slot_end, zoomLink: zoomLink ?? undefined })
+      const { ics: adminICS, uid: adminICSUid } = generateCoursICS({ studentName: student_name, startISO: slot_start, endISO: slot_end, zoomLink: zoomLink ?? undefined, uid: stripeIcsUid })
       await sendAdminNotification({ studentName: student_name, studentEmail: student_email, type: 'Cours individuel (CB)', dateLocal, timezone: student_timezone, zoomLink, message, icsContent: adminICS })
 
       return NextResponse.json({ success: true, student_name, student_email })
@@ -256,7 +261,7 @@ export async function GET(req: NextRequest) {
     })
 
     const dateLocal = formatDateLocal(ev.date_heure, student_timezone)
-    const adminICS  = generateEventICS({ studentName: student_name, eventTitle: ev.title, startISO: ev.date_heure, endISO, zoomLink: zoomLink ?? undefined })
+    const { ics: adminICS, uid: adminICSUid } = generateEventICS({ studentName: student_name, eventTitle: ev.title, startISO: ev.date_heure, endISO, zoomLink: zoomLink ?? undefined })
     await sendAdminNotification({ studentName: student_name, studentEmail: student_email, type: ev.title, dateLocal, timezone: student_timezone, zoomLink, message, icsContent: adminICS })
 
     return NextResponse.json({ success: true, student_name, student_email, event_title: ev.title })

@@ -108,6 +108,10 @@ export async function POST(req: NextRequest) {
     } catch {}
   }
 
+  // Générer l'UID ICS avant l'insertion pour pouvoir le stocker
+  const { generateUID } = await import('@/lib/ics')
+  const reservationIcsUid = generateUID()
+
   // Créer la réservation
   const { data: reservation, error: rErr } = await supabaseAdmin
     .from('reservations')
@@ -127,6 +131,7 @@ export async function POST(req: NextRequest) {
       stripe_session_id: stripe_session_id || null,
       gift_code:         gift_code || null,
       pack_code:         pack_code || null,
+      ics_uid:           reservationIcsUid,
     })
     .select()
     .single()
@@ -237,7 +242,7 @@ export async function POST(req: NextRequest) {
       })
 
       const dateLocal = formatDateLocal(slot_start, timezone)
-      const adminICS  = generateCoursICS({ studentName: student_name, startISO: slot_start, endISO: slot_end, zoomLink: zoomLink ?? undefined })
+      const { ics: adminICS, uid: adminICSUid } = generateCoursICS({ studentName: student_name, startISO: slot_start, endISO: slot_end, zoomLink: zoomLink ?? undefined, uid: reservationIcsUid })
       await sendAdminNotification({
         studentName: student_name, studentEmail: student_email,
         type: 'Cours individuel', dateLocal, timezone, zoomLink, message, icsContent: adminICS,
@@ -261,7 +266,7 @@ export async function POST(req: NextRequest) {
         })
 
         const dateLocal = formatDateLocal(event.date_heure, timezone)
-        const adminICS  = generateEventICS({ studentName: student_name, eventTitle: event.title, startISO: event.date_heure, endISO, zoomLink: zoomLink ?? undefined })
+        const { ics: adminICS, uid: adminICSUid } = generateEventICS({ studentName: student_name, eventTitle: event.title, startISO: event.date_heure, endISO, zoomLink: zoomLink ?? undefined, uid: reservationIcsUid })
         await sendAdminNotification({
           studentName: student_name, studentEmail: student_email, type: event.title,
           dateLocal, timezone, zoomLink, message, icsContent: adminICS,

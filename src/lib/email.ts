@@ -76,7 +76,7 @@ export async function sendCoursConfirmation(params: {
   achetePack?:    string | null
 }) {
   const dateLocal  = formatDate(params.startISO, params.timezone)
-  const icsContent = generateCoursICS({
+  const { ics: icsContent, uid: icsContentUid } = generateCoursICS({
     studentName: params.studentName,
     startISO:    params.startISO,
     endISO:      params.endISO,
@@ -143,7 +143,7 @@ export async function sendEventConfirmation(params: {
   cancelUrl?:   string | null
 }) {
   const dateLocal  = formatDate(params.startISO, params.timezone)
-  const icsContent = generateEventICS({
+  const { ics: icsContent, uid: icsContentUid } = generateEventICS({
     studentName: params.studentName,
     eventTitle:  params.eventTitle,
     startISO:    params.startISO,

@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const { data: reservation, error } = await supabaseAdmin
-      .from('reservations').select('*').eq('id', reservation_id).single()
+      .from('reservations').select('*, ics_uid').eq('id', reservation_id).single()
 
     if (error || !reservation) return NextResponse.json({ error: 'Réservation introuvable' }, { status: 404 })
     if (reservation.status === 'confirmed') return NextResponse.json({ error: 'Déjà confirmée' }, { status: 400 })
@@ -58,11 +58,12 @@ export async function POST(req: NextRequest) {
 
     // Notifier l'admin
     const dateLocal = formatDateLocal(reservation.slot_start, timezone)
-    const adminICS  = generateCoursICS({
+    const { ics: adminICS, uid: adminICSUid } = generateCoursICS({
       studentName: reservation.student_name,
       startISO:    reservation.slot_start,
       endISO:      reservation.slot_end,
       zoomLink:    zoomLink ?? undefined,
+      uid:         reservation.ics_uid || undefined,
     })
     await sendAdminNotification({
       studentName:  reservation.student_name,
