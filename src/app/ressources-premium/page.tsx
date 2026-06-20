@@ -131,14 +131,7 @@ export default function RessourcesPremiumPage() {
                       
                     </div>
 
-                    <div className="p-5">
-                      <h3 className="font-serif text-lg text-white mb-2 group-hover:text-gold-400 transition-colors line-clamp-2">
-                        {r.titre}
-                      </h3>
-                      {r.description && (
-                        <p className="text-noir-400 text-sm leading-relaxed line-clamp-3 mb-3">{r.description}</p>
-                      )}
-                      <div className="flex items-center gap-3 text-xs text-noir-500 flex-wrap">
+                    
                         {r.duree_minutes && <span>{r.duree_minutes} min</span>}
                         {r.date_coaching && (
                           <span className="text-blue-400">
