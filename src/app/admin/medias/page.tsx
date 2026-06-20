@@ -161,7 +161,21 @@ export default function AdminMedias() {
                           {m.titre && <p className="text-white text-sm font-medium truncate">{m.titre}</p>}
                           {m.auteur && <p className="text-noir-500 text-xs">{m.auteur}</p>}
                         </div>
-                        
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button onClick={() => handleToggle(m)}
+                            className={`p-1.5 rounded transition-colors ${m.is_active ? 'text-green-400 hover:text-noir-400' : 'text-noir-600 hover:text-green-400'}`}
+                            title={m.is_active ? 'Désactiver' : 'Activer'}>
+                            {m.is_active ? <ToggleRight size={16} /> : <ToggleLeft size={16} />}
+                          </button>
+                          <button onClick={() => openEdit(m)}
+                            className="text-noir-600 hover:text-gold-400 transition-colors p-1.5 rounded" title="Modifier">
+                            <Pencil size={14} />
+                          </button>
+                          <button onClick={() => handleDelete(m.id)}
+                            className="text-noir-600 hover:text-red-400 transition-colors p-1.5 rounded" title="Supprimer">
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))}
