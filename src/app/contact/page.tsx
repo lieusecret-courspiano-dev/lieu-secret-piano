@@ -21,7 +21,8 @@ export default function ContactPage() {
   const [phone, setPhone] = useState('')
 
   useEffect(() => {
-    fetch('/api/settings').then(r => r.json()).then(d => {
+    // Cache-busting pour avoir le téléphone à jour
+    fetch('/api/settings', { cache: 'no-store' }).then(r => r.json()).then(d => {
       if (d?.phone) setPhone(d.phone)
     }).catch(() => {})
   }, [])

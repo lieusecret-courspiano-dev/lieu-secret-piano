@@ -17,7 +17,7 @@ const NAV_LINKS = [
   { href: '/', label: 'Accueil' },
   { href: '/cours', label: 'Cours' },
   { href: '/tarifs', label: 'Tarifs' },
-  { href: '/essai', label: "Cours d'essai", highlight: true },
+  { href: '/essai', label: "Essai gratuit", highlight: true },
   { href: '/inscription', label: 'Inscription' },
   { href: '/cadeau', label: 'Bon cadeau' },
   { href: '/blog', label: 'Blog' },
@@ -98,31 +98,7 @@ export default function PublicNav({ settings }: { settings?: Settings }) {
               </div>
             </Link>
 
-            {/* Nav desktop */}
-            <nav className="hidden lg:flex items-center gap-1" aria-label="Navigation principale">
-              {NAV_LINKS.map(link => {
-                const active = pathname === link.href
-                if (link.highlight) return (
-                  <Link key={link.href} href={link.href}
-                    className="ml-2 px-4 py-2 rounded-xl bg-gold-500/10 border border-gold-500/30 text-gold-400 text-sm font-medium hover:bg-gold-500/20 transition-all"
-                    aria-current={active ? 'page' : undefined}>
-                    {link.label}
-                  </Link>
-                )
-                return (
-                  <Link key={link.href} href={link.href}
-                    className={`relative px-4 py-2 text-sm font-medium transition-colors rounded-xl ${active ? 'text-white' : 'text-noir-400 hover:text-white'}`}
-                    aria-current={active ? 'page' : undefined}>
-                    {active && (
-                      <motion.span layoutId="nav-pill"
-                        className="absolute inset-0 bg-noir-800 rounded-xl"
-                        transition={{ type: 'spring', bounce: 0.2, duration: 0.4 }} />
-                    )}
-                    <span className="relative">{link.label}</span>
-                  </Link>
-                )
-              })}
-            </nav>
+            
 
             {/* Actions desktop */}
             <div className="hidden lg:flex items-center gap-2">

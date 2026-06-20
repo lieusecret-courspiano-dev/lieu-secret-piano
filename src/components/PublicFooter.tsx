@@ -7,9 +7,7 @@ function TikTokIcon({ size = 16 }: { size?: number }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.18 8.18 0 0 0 4.78 1.52V6.75a4.85 4.85 0 0 1-1.01-.06z"/></svg>
 }
 
-interface Settings {
-  contact_email?: string; instagram?: string; facebook?: string; youtube?: string; tiktok?: string
-}
+
 
 const FOOTER_LINKS = {
   'Navigation': [
@@ -32,6 +30,10 @@ const FOOTER_LINKS = {
     { href: '/mentions-legales', label: 'Mentions légales' },
     { href: '/confidentialite', label: 'Confidentialité' },
   ],
+}
+
+interface Settings {
+  contact_email?: string; phone?: string; instagram?: string; facebook?: string; youtube?: string; tiktok?: string
 }
 
 export default function PublicFooter({ settings }: { settings?: Settings }) {
@@ -97,6 +99,15 @@ export default function PublicFooter({ settings }: { settings?: Settings }) {
                   <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
                 </svg>
                 {settings.contact_email}
+              </a>
+            )}
+            {settings?.phone && (
+              <a href={`tel:${settings.phone.replace(/\s/g, '')}`}
+                className="mt-2 flex items-center gap-2 text-sm text-noir-400 hover:text-gold-400 transition-colors">
+                <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.4 2 2 0 0 1 3.6 1.22h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.82a16 16 0 0 0 6.29 6.29l.96-.96a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+                </svg>
+                {settings.phone}
               </a>
             )}
           </div>
