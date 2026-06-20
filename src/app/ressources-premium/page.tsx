@@ -128,12 +128,7 @@ export default function RessourcesPremiumPage() {
                           {TYPE_LABELS[r.type] || r.type}
                         </span>
                       </div>
-                      {/* Badge prix */}
-                      <div className="absolute top-3 right-3">
-                        <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${r.est_gratuit ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-gold-500/20 text-gold-400 border border-gold-500/30'}`}>
-                          {r.est_gratuit ? 'Gratuit' : `${r.prix} €`}
-                        </span>
-                      </div>
+                      
                     </div>
 
                     <div className="p-5">
