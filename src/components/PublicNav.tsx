@@ -18,6 +18,7 @@ const NAV_LINKS = [
   { href: '/cours', label: 'Cours' },
   { href: '/tarifs', label: 'Tarifs' },
   { href: '/essai', label: "Essai gratuit", highlight: true },
+  { href: '/ressources-premium', label: 'Premium' },
   { href: '/inscription', label: 'Inscription' },
   { href: '/cadeau', label: 'Bon cadeau' },
   { href: '/blog', label: 'Blog' },
