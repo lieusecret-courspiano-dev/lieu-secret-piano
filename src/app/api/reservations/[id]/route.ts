@@ -3,6 +3,11 @@ import { supabaseAdmin } from '@/lib/supabase'
 import { validateAdminSession } from '@/lib/auth'
 import { sendCancellationEmail } from '@/lib/email'
 import { formatDateLocal } from '@/lib/utils'
+import { generateCancelICS } from '@/lib/ics'
+import { Resend } from 'resend'
+
+const resend = new Resend(process.env.RESEND_API_KEY!)
+const FROM   = process.env.RESEND_FROM_EMAIL || 'Lieu Secret <onboarding@resend.dev>'
 
 // PATCH — modifier le statut d'une réservation (admin)
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
@@ -56,6 +61,22 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         dateLocal,
         cancelledBy:  'admin',
       })
+
+      // Envoyer ICS d'annulation pour supprimer l'événement du calendrier
+      if (reservation.slot_start && reservation.slot_end) {
+        const icsContent = generateCancelICS({
+          studentName: reservation.student_name,
+          startISO:    reservation.slot_start,
+          endISO:      reservation.slot_end,
+        })
+        await resend.emails.send({
+          from: FROM,
+          to:   reservation.student_email,
+          subject: 'Annulation — Cours de piano Lieu Secret',
+          html: `<p>Bonjour ${reservation.student_name},</p><p>Votre cours du ${dateLocal} a été annulé. Votre calendrier sera mis à jour automatiquement.</p><p>Lieu Secret</p>`,
+          attachments: [{ filename: 'annulation.ics', content: Buffer.from(icsContent).toString('base64') }],
+        }).catch(() => {})
+      }
     } catch (emailErr) {
       console.error('Erreur email annulation admin:', emailErr)
     }

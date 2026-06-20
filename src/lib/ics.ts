@@ -93,3 +93,36 @@ export function generateEventICS(params: {
     url:         params.zoomLink,
   })
 }
+
+// ── ICS d'annulation (METHOD:CANCEL) ──────────────────────────────────────
+// Envoyer ce fichier supprime l'événement du calendrier du destinataire
+export function generateCancelICS(params: {
+  studentName: string
+  startISO:    string
+  endISO:      string
+  uid?:        string  // Idéalement le même UID que l'ICS original
+}): string {
+  const now = DateTime.utc().toFormat("yyyyMMdd'T'HHmmss'Z'")
+  const uid = params.uid || generateUID()
+
+  const lines = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Lieu Secret//Piano Reservation//FR',
+    'CALSCALE:GREGORIAN',
+    'METHOD:CANCEL',          // ← Indique une annulation au client de calendrier
+    'BEGIN:VEVENT',
+    `UID:${uid}`,
+    `DTSTAMP:${now}`,
+    `DTSTART:${toICSDate(params.startISO)}`,
+    `DTEND:${toICSDate(params.endISO)}`,
+    `SUMMARY:${escapeICS('ANNULÉ — Cours de piano — Lieu Secret')}`,
+    `DESCRIPTION:${escapeICS(`Bonjour ${params.studentName},\n\nVotre cours de piano du ${DateTime.fromISO(params.startISO, { zone: 'utc' }).setLocale('fr').toFormat("EEEE d MMMM yyyy 'à' HH'h'mm")} a été annulé.\n\nLieu Secret — École de Piano en Ligne\nlieusecret-courspiano@outlook.fr`)}`,
+    'STATUS:CANCELLED',       // ← Statut annulé
+    'SEQUENCE:1',             // ← Séquence supérieure à l'original (0)
+    'END:VEVENT',
+    'END:VCALENDAR',
+  ]
+
+  return lines.join('\r\n')
+}

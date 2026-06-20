@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getEleveFromSession } from '@/lib/eleve-auth'
 import { supabaseAdmin } from '@/lib/supabase'
+import { generateCancelICS } from '@/lib/ics'
+import { Resend } from 'resend'
+import { formatDateLocal } from '@/lib/utils'
+
+const resend = new Resend(process.env.RESEND_API_KEY!)
+const FROM   = process.env.RESEND_FROM_EMAIL || 'Lieu Secret <onboarding@resend.dev>'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,7 +23,7 @@ export async function DELETE(
   // Vérifier que la réservation appartient à cet élève
   const { data: reservation, error: fetchError } = await supabaseAdmin
     .from('reservations')
-    .select('id, student_email, slot_start, status')
+    .select('id, student_name, student_email, slot_start, slot_end, student_timezone, status')
     .eq('id', reservationId)
     .single()
 
@@ -61,6 +67,24 @@ export async function DELETE(
       .eq('start_time', reservation.slot_start)
       .eq('is_available', false)
   }
+
+  // Envoyer ICS d'annulation pour supprimer l'événement du calendrier
+  try {
+    const timezone = reservation.student_timezone || 'Europe/Paris'
+    const dateLocal = reservation.slot_start ? formatDateLocal(reservation.slot_start, timezone) : ''
+    const icsContent = generateCancelICS({
+      studentName: reservation.student_name,
+      startISO:    reservation.slot_start,
+      endISO:      reservation.slot_end || reservation.slot_start,
+    })
+    await resend.emails.send({
+      from: FROM,
+      to:   reservation.student_email,
+      subject: 'Annulation — Cours de piano Lieu Secret',
+      html: `<p>Bonjour ${reservation.student_name},</p><p>Votre cours${dateLocal ? ` du ${dateLocal}` : ''} a bien été annulé. Votre calendrier sera mis à jour automatiquement.</p><p>Lieu Secret</p>`,
+      attachments: [{ filename: 'annulation.ics', content: Buffer.from(icsContent).toString('base64') }],
+    }).catch(() => {})
+  } catch {}
 
   return NextResponse.json({ success: true, message: 'Réservation annulée avec succès.' })
 }
