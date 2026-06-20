@@ -24,7 +24,7 @@ export async function DELETE(
   // Vérifier que la réservation appartient à cet élève
   const { data: reservation, error: fetchError } = await supabaseAdmin
     .from('reservations')
-    .select('id, student_name, student_email, slot_start, slot_end, student_timezone, status, ics_uid')
+    .select('id, student_name, student_email, slot_start, slot_end, student_timezone, status, ics_uid, pack_code')
     .eq('id', reservationId)
     .single()
 
@@ -69,36 +69,50 @@ export async function DELETE(
       .eq('is_available', false)
   }
 
-  // Envoyer emails d'annulation (élève + admin) + ICS d'annulation
+  // Remettre l'heure sur le pack si la réservation utilisait un code PK
+  if (reservation.pack_code) {
+    try {
+      const { data: pack } = await supabaseAdmin
+        .from('course_packs')
+        .select('id, heures_restantes, heures_total, status')
+        .eq('code', reservation.pack_code.toUpperCase())
+        .single()
+      if (pack) {
+        const newHeures = Math.min(pack.heures_total, pack.heures_restantes + 1)
+        await supabaseAdmin
+          .from('course_packs')
+          .update({ heures_restantes: newHeures, status: newHeures > 0 ? 'active' : pack.status })
+          .eq('id', pack.id)
+        await supabaseAdmin.from('pack_history').insert({
+          pack_id: pack.id, type: 'annulation', delta: 1,
+          note: `Remise suite à annulation du cours du ${reservation.slot_start ? new Date(reservation.slot_start).toLocaleDateString('fr-FR') : 'cours'}`,
+        })
+      }
+    } catch (packErr) { console.error('Erreur remise heures pack:', packErr) }
+  }
+
+  // Envoyer emails d'annulation (élève + admin) avec ICS joint aux deux
   try {
     const timezone  = reservation.student_timezone || 'Europe/Paris'
     const dateLocal = reservation.slot_start ? formatDateLocal(reservation.slot_start, timezone) : ''
 
-    // 1. Emails d'annulation bidirectionnels (élève + admin)
+    // Générer l'ICS d'annulation
+    const icsContent = reservation.slot_start ? generateCancelICS({
+      studentName: reservation.student_name,
+      startISO:    reservation.slot_start,
+      endISO:      reservation.slot_end || reservation.slot_start,
+      uid:         reservation.ics_uid || undefined,
+    }) : null
+
+    // Emails bidirectionnels avec ICS joint
     await sendCancellationEmail({
       studentName:  reservation.student_name,
       studentEmail: reservation.student_email,
       type:         'Cours individuel',
       dateLocal,
       cancelledBy:  'student',
+      icsContent,
     }).catch(() => {})
-
-    // 2. ICS d'annulation pour supprimer l'événement du calendrier de l'élève
-    if (reservation.slot_start) {
-      const icsContent = generateCancelICS({
-        studentName: reservation.student_name,
-        startISO:    reservation.slot_start,
-        endISO:      reservation.slot_end || reservation.slot_start,
-        uid:         reservation.ics_uid || undefined,
-      })
-      await resend.emails.send({
-        from: FROM,
-        to:   reservation.student_email,
-        subject: 'Annulation — Cours de piano Lieu Secret',
-        html: `<p>Bonjour ${reservation.student_name},</p><p>Votre cours${dateLocal ? ` du ${dateLocal}` : ''} a bien été annulé. Votre calendrier sera mis à jour automatiquement.</p><p>Lieu Secret</p>`,
-        attachments: [{ filename: 'annulation.ics', content: Buffer.from(icsContent).toString('base64') }],
-      }).catch(() => {})
-    }
   } catch {}
 
   return NextResponse.json({ success: true, message: 'Réservation annulée avec succès.' })

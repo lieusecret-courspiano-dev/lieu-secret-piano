@@ -250,6 +250,7 @@ export async function sendCancellationEmail(params: {
   type:         string
   dateLocal:    string
   cancelledBy:  'student' | 'admin'
+  icsContent?:  string | null  // ICS d'annulation à joindre aux deux emails
 }) {
   const adminEmail = ADMIN_EMAIL
   const byAdmin    = params.cancelledBy === 'admin'
@@ -285,12 +286,14 @@ export async function sendCancellationEmail(params: {
         to:      params.studentEmail,
         subject: 'Réservation annulée — ' + params.type,
         html:    baseTemplate(studentContent),
+        ...(params.icsContent ? { attachments: [{ filename: 'annulation.ics', content: Buffer.from(params.icsContent).toString('base64') }] } : {}),
       }),
       resend.emails.send({
         from:    FROM,
         to:      adminEmail,
         subject: 'Réservation annulée — ' + params.studentName,
         html:    baseTemplate(adminContent),
+        ...(params.icsContent ? { attachments: [{ filename: 'annulation.ics', content: Buffer.from(params.icsContent).toString('base64') }] } : {}),
       }),
     ])
   } catch (err) {

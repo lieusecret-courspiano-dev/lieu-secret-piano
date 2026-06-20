@@ -54,30 +54,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         const { data: ev } = await supabaseAdmin.from('events').select('date_heure').eq('id', reservation.event_id).single()
         if (ev) dateLocal = formatDateLocal(ev.date_heure, timezone)
       }
-      await sendCancellationEmail({
-        studentName:  reservation.student_name,
-        studentEmail: reservation.student_email,
-        type:         reservation.slot_start ? 'Cours individuel' : (reservation.type || 'Cours'),
-        dateLocal,
-        cancelledBy:  'admin',
-      })
-
-      // Envoyer ICS d'annulation pour supprimer l'événement du calendrier
-      if (reservation.slot_start && reservation.slot_end) {
-        const icsContent = generateCancelICS({
-          studentName: reservation.student_name,
-          startISO:    reservation.slot_start,
-          endISO:      reservation.slot_end,
-          uid:         reservation.ics_uid || undefined,
-        })
-        await resend.emails.send({
-          from: FROM,
-          to:   reservation.student_email,
-          subject: 'Annulation — Cours de piano Lieu Secret',
-          html: `<p>Bonjour ${reservation.student_name},</p><p>Votre cours du ${dateLocal} a été annulé. Votre calendrier sera mis à jour automatiquement.</p><p>Lieu Secret</p>`,
-          attachments: [{ filename: 'annulation.ics', content: Buffer.from(icsContent).toString('base64') }],
-        }).catch(() => {})
-      }
+      
     } catch (emailErr) {
       console.error('Erreur email annulation admin:', emailErr)
     }
