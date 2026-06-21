@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import EleveLayout from '@/components/EleveNav'
 import { FileText, Video, Music, Link as LinkIcon, ExternalLink, Download, BookOpen, CheckCircle, ChevronLeft, Play, Lock, ShoppingCart } from 'lucide-react'
 
@@ -382,10 +383,7 @@ export default function MesSupportsPage() {
                 <h2 className="text-xl font-serif text-white">Ressources Premium</h2>
                 <p className="text-noir-400 text-xs mt-0.5">{ressourcesPremium.length} ressource{ressourcesPremium.length > 1 ? 's' : ''} achetée{ressourcesPremium.length > 1 ? 's' : ''}</p>
               </div>
-              <a href="/ressources-premium" className="text-gold-400 hover:text-gold-300 text-xs transition-colors flex items-center gap-1">
-                Voir la boutique
-                <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-              </a>
+              
             </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {ressourcesPremium.map(achat => {
@@ -445,9 +443,9 @@ export default function MesSupportsPage() {
               <h3 className="text-white font-semibold text-sm mb-1">Découvrez nos ressources premium</h3>
               <p className="text-noir-400 text-xs">Vidéos exclusives, coachings visio, formations et documentations.</p>
             </div>
-            <a href="/ressources-premium" className="btn-gold text-xs px-4 py-2 shrink-0">
+            <Link href="/ressources-premium" className="btn-gold text-xs px-4 py-2 shrink-0">
               Voir la boutique
-            </a>
+            </Link>
           </div>
         )}
       </div>

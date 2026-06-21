@@ -58,14 +58,22 @@ function TechBadge({ icon, label }: { icon: React.ReactNode; label: string }) {
 function RessourceCard({ r, onApercu }: { r: Ressource; onApercu: (r: Ressource) => void }) {
   const hasApercu = !!(r.youtube_url || r.apercu_url || (r.fichier_url && r.type === 'documentation'))
 
+  // Miniature YouTube automatique si pas d'image
+  const getYtId = (url: string) => {
+    const m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\s?]+)/)
+    return m ? m[1] : null
+  }
+  const ytId = r.youtube_url ? getYtId(r.youtube_url) : null
+  const thumbnail = r.image_url || (ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : null)
+
   return (
     <div className="group bg-noir-900 border border-noir-800 rounded-2xl overflow-hidden hover:border-gold-500/30 transition-all hover:-translate-y-1 h-full flex flex-col shadow-lg hover:shadow-gold-500/10">
 
       {/* Thumbnail */}
       <div className="aspect-video bg-gradient-to-br from-gold-500/10 to-noir-800 flex items-center justify-center relative overflow-hidden">
-        {r.image_url ? (
+        {thumbnail ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={r.image_url} alt={r.titre} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+          <img src={thumbnail} alt={r.titre} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
         ) : (
           <div className="text-gold-500/25 scale-[2]">{TYPE_ICONS[r.type] || TYPE_ICONS.autre}</div>
         )}

@@ -222,10 +222,7 @@ export default function AdminRessourcesPremiumPage() {
                   </div>
                 </div>
 
-                <div>
-                  <label className="label mb-1.5 block">URL image de couverture</label>
-                  <input value={form.image_url} onChange={e => setForm(f => ({ ...f, image_url: e.target.value }))} className="input w-full" placeholder="https://..." />
-                </div>
+                
 
                 {(form.type === 'video_youtube' || form.type === 'formation') && (
                   <div>
