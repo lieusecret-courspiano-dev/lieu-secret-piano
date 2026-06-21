@@ -27,24 +27,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Cette ressource est gratuite' }, { status: 400 })
   }
 
-  // Créer l'achat en attente
-  const { data: achat, error: achatError } = await supabaseAdmin
-    .from('ressources_premium_achats')
-    .insert({
-      ressource_id,
-      acheteur_email: acheteur_email.toLowerCase().trim(),
-      acheteur_nom,
-      montant: ressource.prix,
-      payment_method: 'stripe',
-      statut: 'en_attente',
-    })
-    .select()
-    .single()
-
-  if (achatError || !achat) {
-    return NextResponse.json({ error: 'Erreur création achat' }, { status: 500 })
-  }
-
+  // NE PAS créer l'achat ici — il sera créé dans le webhook après paiement réussi
+  // On passe les infos dans les metadata Stripe
   try {
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -64,19 +48,15 @@ export async function POST(req: NextRequest) {
       metadata: {
         type:           'ressource_premium',
         ressource_id,
-        achat_id:       achat.id,
         acheteur_nom,
         acheteur_email: acheteur_email.toLowerCase().trim(),
-        token_acces:    achat.token_acces,
       },
-      success_url: `${APP_URL}/ressources-premium/acces/${achat.token_acces}?stripe=success`,
+      success_url: `${APP_URL}/ressources-premium/confirmation?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url:  `${APP_URL}/ressources-premium/${ressource_id}`,
     })
 
     return NextResponse.json({ url: session.url })
   } catch (err: unknown) {
-    // Supprimer l'achat en cas d'erreur Stripe
-    await supabaseAdmin.from('ressources_premium_achats').delete().eq('id', achat.id)
     return NextResponse.json({ error: err instanceof Error ? err.message : 'Erreur Stripe' }, { status: 500 })
   }
 }

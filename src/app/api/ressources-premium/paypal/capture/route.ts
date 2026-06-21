@@ -1,45 +1,65 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { capturePayPalOrder } from '@/lib/paypal'
+import { linkRessourcePremiumToEleve } from '@/lib/ressources-premium-eleve'
 
 export const dynamic = 'force-dynamic'
 
-const APP_URL  = process.env.NEXT_PUBLIC_APP_URL || 'https://www.lieusecret-courspiano.fr'
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://www.lieusecret-courspiano.fr'
 
 export async function GET(req: NextRequest) {
-  const achat_id = req.nextUrl.searchParams.get('achat_id')
-  const token    = req.nextUrl.searchParams.get('token')
-  const orderID  = req.nextUrl.searchParams.get('token') // PayPal passe le token dans l'URL
+  const ressource_id  = req.nextUrl.searchParams.get('ressource_id')
+  const acheteur_nom  = req.nextUrl.searchParams.get('acheteur_nom')
+  const acheteur_email = req.nextUrl.searchParams.get('acheteur_email')
+  const token         = req.nextUrl.searchParams.get('token') // PayPal order token
 
-  if (!achat_id) {
+  if (!ressource_id || !acheteur_nom || !acheteur_email) {
     return NextResponse.redirect(`${APP_URL}/ressources-premium?error=missing_params`)
   }
 
-  // Récupérer l'achat
-  const { data: achat } = await supabaseAdmin
-    .from('ressources_premium_achats')
-    .select('*, ressources_premium(titre)')
-    .eq('id', achat_id)
+  // Récupérer la ressource
+  const { data: ressource } = await supabaseAdmin
+    .from('ressources_premium')
+    .select('id, titre, prix')
+    .eq('id', ressource_id)
     .single()
 
-  if (!achat) return NextResponse.redirect(`${APP_URL}/ressources-premium?error=not_found`)
-  if (achat.statut === 'confirme') {
-    return NextResponse.redirect(`${APP_URL}/ressources-premium/acces/${achat.token_acces}`)
-  }
+  if (!ressource) return NextResponse.redirect(`${APP_URL}/ressources-premium?error=not_found`)
 
   try {
     // Capturer le paiement PayPal
-    if (achat.paypal_order_id) {
-      await capturePayPalOrder(achat.paypal_order_id)
+    if (token) {
+      await capturePayPalOrder(token)
     }
 
-    // Confirmer l'achat
-    await supabaseAdmin
+    // Créer l'achat MAINTENANT (après paiement confirmé)
+    const { data: achat, error: achatError } = await supabaseAdmin
       .from('ressources_premium_achats')
-      .update({ statut: 'confirme', confirmed_at: new Date().toISOString() })
-      .eq('id', achat_id)
+      .insert({
+        ressource_id,
+        acheteur_email: acheteur_email.toLowerCase().trim(),
+        acheteur_nom,
+        montant: ressource.prix,
+        payment_method: 'paypal',
+        statut: 'confirme',
+        confirmed_at: new Date().toISOString(),
+      })
+      .select()
+      .single()
 
-    
+    if (achatError || !achat) {
+      console.error('Erreur création achat PayPal:', achatError)
+      return NextResponse.redirect(`${APP_URL}/ressources-premium?error=payment_failed`)
+    }
+
+    // Lier à l'élève et envoyer email d'accès
+    await linkRessourcePremiumToEleve({
+      achat_id:        achat.id,
+      acheteur_email:  achat.acheteur_email,
+      acheteur_nom:    achat.acheteur_nom,
+      ressource_titre: ressource.titre,
+      token_acces:     achat.token_acces,
+    }).catch(() => {})
 
     return NextResponse.redirect(`${APP_URL}/ressources-premium/acces/${achat.token_acces}?paypal=success`)
   } catch (err) {

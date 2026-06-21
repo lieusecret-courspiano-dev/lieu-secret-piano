@@ -82,26 +82,66 @@ export async function POST(req: NextRequest) {
 
     // ── Ressource Premium ──────────────────────────────────────────────────
     if (metaType === 'ressource_premium') {
-      const achat_id      = metadata.achat_id
-      const token_acces   = metadata.token_acces
-      const acheteur_nom  = metadata.acheteur_nom
+      const ressource_id   = metadata.ressource_id
+      const acheteur_nom   = metadata.acheteur_nom
       const acheteur_email = metadata.acheteur_email
 
       try {
-        // Confirmer l'achat
-        await supabaseAdmin
+        // Vérifier si un achat existe déjà pour cette session (idempotence)
+        const { data: existing } = await supabaseAdmin
           .from('ressources_premium_achats')
-          .update({ statut: 'confirme', confirmed_at: new Date().toISOString(), stripe_session_id: session.id })
-          .eq('id', achat_id)
-
-        // Récupérer le titre de la ressource
-        const { data: achat } = await supabaseAdmin
-          .from('ressources_premium_achats')
-          .select('ressources_premium(titre)')
-          .eq('id', achat_id)
+          .select('id, token_acces, ressources_premium(titre)')
+          .eq('stripe_session_id', session.id)
           .single()
 
-        
+        if (existing) {
+          // Déjà traité — idempotence
+          return NextResponse.json({ received: true })
+        }
+
+        // Récupérer le prix de la ressource
+        const { data: ressource } = await supabaseAdmin
+          .from('ressources_premium')
+          .select('id, titre, prix')
+          .eq('id', ressource_id)
+          .single()
+
+        if (!ressource) {
+          console.error('Ressource premium introuvable:', ressource_id)
+          return NextResponse.json({ received: true })
+        }
+
+        // Créer l'achat MAINTENANT (paiement confirmé par Stripe)
+        const { data: achat, error: achatError } = await supabaseAdmin
+          .from('ressources_premium_achats')
+          .insert({
+            ressource_id,
+            acheteur_email: acheteur_email.toLowerCase().trim(),
+            acheteur_nom,
+            montant: ressource.prix,
+            payment_method: 'stripe',
+            statut: 'confirme',
+            stripe_session_id: session.id,
+            confirmed_at: new Date().toISOString(),
+          })
+          .select()
+          .single()
+
+        if (achatError || !achat) {
+          console.error('Erreur création achat ressource premium:', achatError)
+          return NextResponse.json({ received: true })
+        }
+
+        // Lier à l'élève et envoyer email d'accès
+        const { linkRessourcePremiumToEleve } = await import('@/lib/ressources-premium-eleve')
+        await linkRessourcePremiumToEleve({
+          achat_id:        achat.id,
+          acheteur_email:  achat.acheteur_email,
+          acheteur_nom:    achat.acheteur_nom,
+          ressource_titre: ressource.titre,
+          token_acces:     achat.token_acces,
+        }).catch(() => {})
+
       } catch (err) { console.error('Erreur ressource premium Stripe:', err) }
       return NextResponse.json({ received: true })
     }
