@@ -80,18 +80,36 @@ export default function AdminRessourcesPremiumPage() {
     setShowForm(true); setMsg(null)
   }
 
+  // Valeur du champ URL principal selon le type
+  function getMainUrl() {
+    if (form.type === 'video_youtube' || form.type === 'formation') return form.youtube_url
+    if (form.type === 'coaching_visio') return form.zoom_url
+    return form.fichier_url
+  }
+
+  // Mise à jour du champ URL principal
+  function setMainUrl(url: string) {
+    if (form.type === 'video_youtube' || form.type === 'formation') {
+      setForm(f => ({ ...f, youtube_url: url, image_url: url, apercu_url: url }))
+    } else if (form.type === 'coaching_visio') {
+      setForm(f => ({ ...f, zoom_url: url }))
+    } else {
+      setForm(f => ({ ...f, fichier_url: url, image_url: url, apercu_url: url }))
+    }
+  }
+
   async function handleSave(e: React.FormEvent) {
     e.preventDefault(); setSaving(true); setMsg(null)
     const payload = {
       ...form,
       prix: parseFloat(form.prix as string) || 0,
-      duree_minutes: form.duree_minutes ? parseInt(form.duree_minutes as string) : null,
-      nb_places: form.nb_places ? parseInt(form.nb_places as string) : null,
+      duree_minutes: form.duree_minutes ? parseInt(String(form.duree_minutes)) : null,
+      nb_places: form.nb_places ? parseInt(String(form.nb_places)) : null,
       date_coaching: form.date_coaching || null,
-      position: parseInt(form.position as string) || 0,
-      nb_pages: form.nb_pages ? parseInt(form.nb_pages as string) : null,
-      apercu_duree: form.apercu_duree ? parseInt(form.apercu_duree as string) : 30,
-      apercu_pages: form.apercu_pages ? parseInt(form.apercu_pages as string) : 3,
+      position: parseInt(String(form.position)) || 0,
+      nb_pages: form.nb_pages ? parseInt(String(form.nb_pages)) : null,
+      apercu_duree: form.apercu_duree ? parseInt(String(form.apercu_duree)) : 30,
+      apercu_pages: form.apercu_pages ? parseInt(String(form.apercu_pages)) : 3,
     }
     const method = editItem ? 'PATCH' : 'POST'
     const body   = editItem ? { id: editItem.id, ...payload } : payload
@@ -173,7 +191,8 @@ export default function AdminRessourcesPremiumPage() {
                 {editItem ? 'Modifier la ressource' : 'Nouvelle ressource'}
               </h2>
               <form onSubmit={handleSave} className="space-y-4">
-                {/* Infos de base */}
+
+                {/* Titre + Type + Niveau */}
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="sm:col-span-2">
                     <label className="label mb-1.5 block">Titre *</label>
@@ -193,11 +212,13 @@ export default function AdminRessourcesPremiumPage() {
                   </div>
                 </div>
 
+                {/* Description */}
                 <div>
                   <label className="label mb-1.5 block">Description</label>
                   <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} className="input w-full h-20 resize-none" placeholder="Description..." />
                 </div>
 
+                {/* Prix + Durée */}
                 <div className="grid sm:grid-cols-3 gap-4">
                   <div>
                     <label className="label mb-1.5 block">Accès</label>
@@ -222,13 +243,48 @@ export default function AdminRessourcesPremiumPage() {
                   </div>
                 </div>
 
-                
+                {/* URL principale selon le type */}
+                <div>
+                  <label className="label mb-1.5 block">
+                    {form.type === 'video_youtube' || form.type === 'formation' ? 'URL YouTube *' :
+                     form.type === 'documentation' ? 'URL du PDF (Cloudinary) *' :
+                     form.type === 'audio' ? 'URL du fichier audio *' :
+                     form.type === 'coaching_visio' ? 'Lien Zoom *' : 'URL du contenu *'}
+                  </label>
+                  <input
+                    value={getMainUrl()}
+                    onChange={e => setMainUrl(e.target.value)}
+                    className="input w-full"
+                    placeholder={
+                      form.type === 'video_youtube' ? 'https://youtube.com/watch?v=...' :
+                      form.type === 'documentation' ? 'https://res.cloudinary.com/votre-cloud/raw/upload/fichier.pdf' :
+                      form.type === 'audio' ? 'https://res.cloudinary.com/votre-cloud/video/upload/audio.mp3' :
+                      form.type === 'coaching_visio' ? 'https://zoom.us/j/...' : 'https://...'
+                    }
+                  />
+                  <p className="text-noir-600 text-xs mt-1">
+                    {form.type === 'coaching_visio' ? "Lien envoyé à l'acheteur après confirmation du paiement." :
+                     form.type === 'documentation' ? 'Sert de miniature, aperçu (N premières pages) et accès complet après achat.' :
+                     form.type === 'video_youtube' ? 'La miniature YouTube est générée automatiquement. Sert aussi d\'aperçu avec durée limitée.' :
+                     'Sert de miniature, aperçu et accès après achat.'}
+                  </p>
+                </div>
 
-                
+                {/* Date/places pour coaching visio */}
+                {form.type === 'coaching_visio' && (
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="label mb-1.5 block">Date et heure</label>
+                      <input type="datetime-local" value={form.date_coaching} onChange={e => setForm(f => ({ ...f, date_coaching: e.target.value }))} className="input w-full" />
+                    </div>
+                    <div>
+                      <label className="label mb-1.5 block">Nombre de places</label>
+                      <input type="number" min="1" value={form.nb_places} onChange={e => setForm(f => ({ ...f, nb_places: e.target.value }))} className="input w-full" placeholder="10" />
+                    </div>
+                  </div>
+                )}
 
-                
-
-                
+                {/* Statut + Position */}
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
                     <label className="label mb-2 block">Statut</label>
@@ -242,19 +298,31 @@ export default function AdminRessourcesPremiumPage() {
                     </div>
                   </div>
                   <div>
-                    <label className="label mb-1.5 block">Position</label>
+                    <label className="label mb-1.5 block">Position (ordre)</label>
                     <input type="number" min="0" value={form.position} onChange={e => setForm(f => ({ ...f, position: e.target.value }))} className="input w-full" />
                   </div>
                 </div>
 
-                {/* Infos techniques & Aperçu */}
+                {/* Infos techniques */}
                 <div className="border-t border-noir-800 pt-4">
-                  <p className="text-gold-400 text-xs font-semibold uppercase tracking-wider mb-4">Infos techniques & Aperçu</p>
+                  <p className="text-gold-400 text-xs font-semibold uppercase tracking-wider mb-4">Infos techniques</p>
                   <div className="grid sm:grid-cols-2 gap-4">
                     {form.type === 'documentation' && (
                       <div>
                         <label className="label mb-1.5 block">Nombre de pages</label>
                         <input type="number" min="1" value={form.nb_pages} onChange={e => setForm(f => ({ ...f, nb_pages: e.target.value }))} className="input w-full" placeholder="42" />
+                      </div>
+                    )}
+                    {form.type === 'documentation' && (
+                      <div>
+                        <label className="label mb-1.5 block">Pages aperçu (gratuites)</label>
+                        <input type="number" min="1" max="10" value={form.apercu_pages} onChange={e => setForm(f => ({ ...f, apercu_pages: e.target.value }))} className="input w-full" placeholder="3" />
+                      </div>
+                    )}
+                    {(form.type === 'video_youtube' || form.type === 'formation' || form.type === 'audio') && (
+                      <div>
+                        <label className="label mb-1.5 block">Durée aperçu (secondes)</label>
+                        <input type="number" min="0" value={form.apercu_duree} onChange={e => setForm(f => ({ ...f, apercu_duree: e.target.value }))} className="input w-full" placeholder="30" />
                       </div>
                     )}
                     <div>
@@ -277,18 +345,7 @@ export default function AdminRessourcesPremiumPage() {
                         </select>
                       </div>
                     )}
-                    <div>
-                      <label className="label mb-1.5 block">Durée aperçu (secondes)</label>
-                      <input type="number" min="0" value={form.apercu_duree} onChange={e => setForm(f => ({ ...f, apercu_duree: e.target.value }))} className="input w-full" placeholder="30" />
-                    </div>
-                    {form.type === 'documentation' && (
-                      <div>
-                        <label className="label mb-1.5 block">Pages aperçu</label>
-                        <input type="number" min="1" max="10" value={form.apercu_pages} onChange={e => setForm(f => ({ ...f, apercu_pages: e.target.value }))} className="input w-full" placeholder="3" />
-                      </div>
-                    )}
                   </div>
-                  {/* Pas de champ aperçu séparé — l'URL principale sert d'aperçu */}
                 </div>
 
                 <div className="flex gap-3 pt-2">
@@ -326,9 +383,9 @@ export default function AdminRessourcesPremiumPage() {
                       {r.description && <p className="text-noir-500 text-xs mt-1 line-clamp-2">{r.description}</p>}
                       <div className="flex gap-2 mt-1 flex-wrap">
                         {r.nb_pages && <span className="text-noir-600 text-xs">{r.nb_pages} pages</span>}
-                        {r.qualite_video && <span className="text-noir-600 text-xs">{r.qualite_video}</span>}
-                        {r.format_audio && <span className="text-noir-600 text-xs">{r.format_audio}</span>}
-                        {r.apercu_url && <span className="text-green-600 text-xs">Aperçu configuré</span>}
+                        {r.qualite_video && (r.type === 'video_youtube' || r.type === 'formation') && <span className="text-noir-600 text-xs">{r.qualite_video}</span>}
+                        {r.format_audio && r.type === 'audio' && <span className="text-noir-600 text-xs">{r.format_audio}</span>}
+                        {(r.youtube_url || r.fichier_url || r.zoom_url) && <span className="text-green-600 text-xs">URL configurée</span>}
                       </div>
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
