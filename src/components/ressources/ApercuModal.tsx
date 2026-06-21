@@ -134,11 +134,24 @@ export default function ApercuModal({ ressource, onClose, onBuy }: ApercuModalPr
   // Priorité basée sur le TYPE de la ressource
   const isPdf    = ressource.type === 'documentation'
   const isAudio  = ressource.type === 'audio'
+  // YouTube : utiliser youtube_url en priorité
   const isYoutube = !isPdf && !isAudio && !!(ressource.youtube_url && (ressource.youtube_url.includes('youtube') || ressource.youtube_url.includes('youtu.be')))
-  const isVideo  = !isPdf && !isAudio && !isYoutube && !!(ressource.apercu_url && (ressource.apercu_url.includes('.mp4') || ressource.apercu_url.includes('/video/')))
+  // Vidéo directe Cloudinary
+  const isVideo  = !isPdf && !isAudio && !isYoutube && !!(
+    (ressource.apercu_url || ressource.fichier_url) &&
+    ((ressource.apercu_url || ressource.fichier_url || '')!.includes('.mp4') ||
+     (ressource.apercu_url || ressource.fichier_url || '')!.includes('/video/'))
+  )
 
+  // Fallback : utiliser fichier_url si apercu_url est vide
   const pdfUrl   = ressource.apercu_url || ressource.fichier_url
   const audioUrl = ressource.apercu_url || ressource.fichier_url
+
+  // Miniature : image_url ou miniature YouTube auto
+  const getYtId = (url: string) => { const m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\s?]+)/); return m ? m[1] : null }
+  const ytId = ressource.youtube_url ? getYtId(ressource.youtube_url) : null
+  const thumbnail = (ressource as { image_url?: string | null }).image_url ||
+    (ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : null)
 
   useEffect(() => {
     document.body.style.overflow = 'hidden'
@@ -190,17 +203,7 @@ export default function ApercuModal({ ressource, onClose, onBuy }: ApercuModalPr
                 </video>
               </div>
             )}
-            {!isPdf && !isAudio && !isYoutube && !isVideo && (
-              <div className="text-center py-12">
-                <div className="w-16 h-16 rounded-2xl bg-gold-500/10 border border-gold-500/20 flex items-center justify-center mx-auto mb-4">
-                  <svg width="28" height="28" fill="none" stroke="#f59e0b" strokeWidth="1.5" viewBox="0 0 24 24">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-                  </svg>
-                </div>
-                <p className="text-white font-semibold mb-2">Aperçu non disponible</p>
-                <p className="text-noir-400 text-sm">Achetez pour accéder au contenu complet.</p>
-              </div>
-            )}
+            
           </div>
 
           {/* Footer */}
