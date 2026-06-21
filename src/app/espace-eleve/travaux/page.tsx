@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import EleveLayout from '@/components/EleveNav'
 import { SkeletonCard } from '@/components/eleve/SkeletonCard'
 import { EmptyState } from '@/components/eleve/EmptyState'
+import MediaPlayer from '@/components/eleve/MediaPlayer'
 
 interface Travail {
   id: string
@@ -141,11 +142,9 @@ export default function TravauxPage() {
                           </span>
                         )}
                         {t.fichier_url && (
-                          <a href={t.fichier_url} target="_blank" rel="noopener noreferrer"
-                            className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1 transition-colors">
-                            <svg width="10" height="10" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                            Télécharger
-                          </a>
+                          <div className="w-full mt-2">
+                            <MediaPlayer url={t.fichier_url} titre={t.titre} compact />
+                          </div>
                         )}
                         <span className="text-noir-700 text-xs">
                           Ajouté le {new Date(t.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}

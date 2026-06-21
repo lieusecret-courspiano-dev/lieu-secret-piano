@@ -90,53 +90,42 @@ function AudioPlayer({ url, apercuDuree }: { url: string; apercuDuree?: number |
 function PdfViewer({ url, apercuPages, nbPages }: { url: string; apercuPages?: number | null; nbPages?: number | null }) {
   const pages = apercuPages || 3
   const total = nbPages || '?'
-  const [currentPage, setCurrentPage] = useState(1)
-  const isPdfDirect = url.toLowerCase().includes('.pdf') || url.includes('cloudinary.com')
-
-  if (!isPdfDirect) {
-    return (
-      <div className="space-y-3">
-        <div className="bg-noir-800 rounded-xl p-3 text-center">
-          <p className="text-gold-400 text-xs font-semibold uppercase tracking-wider">Aperçu — {pages} premières pages sur {total}</p>
-        </div>
-        <div className="rounded-xl overflow-hidden bg-noir-900 border border-noir-700" style={{ height: '500px' }}>
-          <iframe src={`https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`} className="w-full h-full" title="Aperçu PDF" />
-        </div>
-      </div>
-    )
-  }
-
-  const pageUrl = `${url}#page=${currentPage}&toolbar=0&navpanes=0&scrollbar=0`
+  const [loaded, setLoaded] = useState(false)
+  const [error, setError] = useState(false)
+  const viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`
 
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between bg-noir-800 rounded-xl px-4 py-2.5">
         <div>
           <span className="text-gold-400 text-xs font-semibold">Aperçu gratuit</span>
-          <span className="text-noir-500 text-xs ml-2">— {pages} pages sur {total}</span>
+          <span className="text-noir-500 text-xs ml-2">— {pages} premières pages sur {total}</span>
         </div>
-        <div className="flex items-center gap-2">
-          <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage <= 1}
-            className="w-7 h-7 rounded-lg bg-noir-700 text-noir-300 hover:bg-noir-600 disabled:opacity-30 flex items-center justify-center transition-colors">
-            <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
-          </button>
-          <span className="text-white text-xs font-medium min-w-[60px] text-center">Page {currentPage}/{pages}</span>
-          <button onClick={() => setCurrentPage(p => Math.min(pages, p + 1))} disabled={currentPage >= pages}
-            className="w-7 h-7 rounded-lg bg-noir-700 text-noir-300 hover:bg-noir-600 disabled:opacity-30 flex items-center justify-center transition-colors">
-            <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
-          </button>
-        </div>
+        <span className="text-noir-600 text-xs">PDF</span>
       </div>
-      <div className="rounded-xl overflow-hidden bg-noir-900 border border-noir-700 relative" style={{ height: '480px' }}>
-        <iframe key={currentPage} src={pageUrl} className="w-full h-full" style={{ border: 'none' }} title={`Page ${currentPage}`} sandbox="allow-scripts allow-same-origin" />
-        <div className="absolute inset-0 pointer-events-none" style={{ userSelect: 'none' }} />
+      <div className="rounded-xl overflow-hidden bg-noir-900 border border-noir-700 relative" style={{ height: '460px' }}>
+        {!loaded && !error && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-center">
+              <div className="w-8 h-8 border-2 border-gold-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+              <p className="text-noir-400 text-xs">Chargement du document...</p>
+            </div>
+          </div>
+        )}
+        {error ? (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-6 text-center">
+            <p className="text-white text-sm font-semibold">Aperçu non disponible</p>
+            <p className="text-noir-400 text-xs">Le document ne peut pas être prévisualisé dans le navigateur.</p>
+            <a href={url} target="_blank" rel="noopener noreferrer" className="btn-gold text-xs px-4 py-2">Ouvrir le PDF</a>
+          </div>
+        ) : (
+          <iframe src={viewerUrl} className="w-full h-full" style={{ border: 'none', opacity: loaded ? 1 : 0, transition: 'opacity 0.3s' }}
+            title="Aperçu PDF" onLoad={() => setLoaded(true)} onError={() => setError(true)} />
+        )}
       </div>
-      {currentPage >= pages && (
-        <div className="bg-gradient-to-r from-gold-500/10 to-noir-900 border border-gold-500/20 rounded-xl p-4 text-center">
-          <p className="text-white text-sm font-semibold mb-1">Fin de l'aperçu</p>
-          <p className="text-noir-400 text-xs">Ce document contient {total} pages. Achetez pour accéder à l'intégralité.</p>
-        </div>
-      )}
+      <div className="bg-gradient-to-r from-gold-500/10 to-noir-900 border border-gold-500/20 rounded-xl p-4 text-center">
+        <p className="text-noir-400 text-xs">Aperçu limité aux {pages} premières pages. Ce document contient {total} pages au total.</p>
+      </div>
     </div>
   )
 }

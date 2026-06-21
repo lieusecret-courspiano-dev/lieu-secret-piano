@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import EleveLayout from '@/components/EleveNav'
 import { FileText, Video, Music, Link as LinkIcon, ExternalLink, Download, BookOpen, CheckCircle, ChevronLeft, Play, Lock, ShoppingCart } from 'lucide-react'
+import MediaPlayer from '@/components/eleve/MediaPlayer'
 
 interface Support {
   id: string
@@ -129,18 +130,12 @@ function SupportViewer({ support, onClose }: { support: Support; onClose: () => 
         )}
 
         {isLien && support.fichier_url && (
-          <div className="flex flex-col items-center justify-center h-full gap-6 p-8">
-            <ExternalLink size={48} className="text-gold-400" />
+          <div className="flex flex-col items-center justify-center h-full gap-4 p-6">
             <p className="text-white font-serif text-xl text-center">{support.titre}</p>
-            {support.description && <p className="text-noir-400 text-center max-w-md">{support.description}</p>}
-            <a
-              href={support.fichier_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-gold flex items-center gap-2"
-            >
-              <ExternalLink size={16} /> Ouvrir le lien
-            </a>
+            {support.description && <p className="text-noir-400 text-center max-w-md text-sm">{support.description}</p>}
+            <div className="w-full max-w-lg">
+              <MediaPlayer url={support.fichier_url} titre={support.titre} />
+            </div>
           </div>
         )}
 
