@@ -270,35 +270,7 @@ export default function EnregistrementsPage() {
                 )}
 
                 {/* Lien externe — lecteur intégré si YouTube, sinon iframe */}
-                {m.type === 'lien' && m.url && (
-                  <div className="mb-3">
-                    {(m.url.includes('youtube.com') || m.url.includes('youtu.be')) ? (
-                      <div className="aspect-video rounded-xl overflow-hidden bg-noir-800">
-                        <iframe
-                          src={m.url.replace('watch?v=', 'embed/').replace('youtu.be/', 'www.youtube.com/embed/').replace('youtube.com/embed/', 'www.youtube.com/embed/')}
-                          className="w-full h-full"
-                          allowFullScreen
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          title="Enregistrement"
-                        />
-                      </div>
-                    ) : (m.url.includes('vimeo.com')) ? (
-                      <div className="aspect-video rounded-xl overflow-hidden bg-noir-800">
-                        <iframe
-                          src={m.url.replace('vimeo.com/', 'player.vimeo.com/video/')}
-                          className="w-full h-full"
-                          allowFullScreen
-                          title="Enregistrement"
-                        />
-                      </div>
-                    ) : (
-                      <a href={m.url} target="_blank" rel="noopener noreferrer"
-                        className="flex items-center gap-2 text-purple-400 hover:text-purple-300 text-sm transition-colors">
-                        <LinkIcon size={14} /> Ouvrir le lien
-                      </a>
-                    )}
-                  </div>
-                )}
+                
 
                 {/* Commentaire du professeur */}
                 {m.commentaire_admin && (

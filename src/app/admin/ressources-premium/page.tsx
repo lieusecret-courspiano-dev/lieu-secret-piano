@@ -224,38 +224,9 @@ export default function AdminRessourcesPremiumPage() {
 
                 
 
-                {(form.type === 'video_youtube' || form.type === 'formation') && (
-                  <div>
-                    <label className="label mb-1.5 block">URL YouTube (visible après achat)</label>
-                    <input value={form.youtube_url} onChange={e => setForm(f => ({ ...f, youtube_url: e.target.value }))} className="input w-full" placeholder="https://youtube.com/watch?v=..." />
-                  </div>
-                )}
+                
 
-                {form.type === 'coaching_visio' && (
-                  <>
-                    <div>
-                      <label className="label mb-1.5 block">Lien Zoom (visible après achat)</label>
-                      <input value={form.zoom_url} onChange={e => setForm(f => ({ ...f, zoom_url: e.target.value }))} className="input w-full" placeholder="https://zoom.us/j/..." />
-                    </div>
-                    <div className="grid sm:grid-cols-2 gap-4">
-                      <div>
-                        <label className="label mb-1.5 block">Date et heure</label>
-                        <input type="datetime-local" value={form.date_coaching} onChange={e => setForm(f => ({ ...f, date_coaching: e.target.value }))} className="input w-full" />
-                      </div>
-                      <div>
-                        <label className="label mb-1.5 block">Nombre de places</label>
-                        <input type="number" min="1" value={form.nb_places} onChange={e => setForm(f => ({ ...f, nb_places: e.target.value }))} className="input w-full" placeholder="10" />
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                {(form.type === 'documentation' || form.type === 'audio') && (
-                  <div>
-                    <label className="label mb-1.5 block">URL du fichier (visible après achat)</label>
-                    <input value={form.fichier_url} onChange={e => setForm(f => ({ ...f, fichier_url: e.target.value }))} className="input w-full" placeholder="https://..." />
-                  </div>
-                )}
+                
 
                 {/* Statut + Position */}
                 <div className="grid sm:grid-cols-2 gap-4">
@@ -317,11 +288,7 @@ export default function AdminRessourcesPremiumPage() {
                       </div>
                     )}
                   </div>
-                  <div className="mt-4">
-                    <label className="label mb-1.5 block">URL aperçu public (extrait audio/vidéo/PDF)</label>
-                    <input value={form.apercu_url} onChange={e => setForm(f => ({ ...f, apercu_url: e.target.value }))} className="input w-full" placeholder="https://res.cloudinary.com/... ou lien direct" />
-                    <p className="text-noir-600 text-xs mt-1">Pour YouTube, l'aperçu utilise automatiquement l'URL YouTube avec durée limitée.</p>
-                  </div>
+                  {/* Pas de champ aperçu séparé — l'URL principale sert d'aperçu */}
                 </div>
 
                 <div className="flex gap-3 pt-2">
