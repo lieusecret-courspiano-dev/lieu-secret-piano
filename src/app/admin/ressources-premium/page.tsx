@@ -228,7 +228,7 @@ export default function AdminRessourcesPremiumPage() {
 
                 
 
-                {/* Statut + Position */}
+                
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
                     <label className="label mb-2 block">Statut</label>

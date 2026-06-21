@@ -269,8 +269,28 @@ export default function EnregistrementsPage() {
                   </div>
                 )}
 
-                {/* Lien externe — lecteur intégré si YouTube, sinon iframe */}
-                
+                {/* Lecteur intégré pour liens YouTube/Vimeo */}
+                {m.type === 'lien' && m.url && (() => {
+                  const ytMatch = m.url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\s?]+)/)
+                  const vimeoMatch = m.url.match(/vimeo\.com\/(\d+)/)
+                  if (ytMatch) return (
+                    <div className="rounded-xl overflow-hidden bg-noir-800 mb-3" style={{ aspectRatio: '16/9', maxHeight: '200px' }}>
+                      <iframe src={`https://www.youtube.com/embed/${ytMatch[1]}`} className="w-full h-full" allowFullScreen
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" title={m.titre} />
+                    </div>
+                  )
+                  if (vimeoMatch) return (
+                    <div className="rounded-xl overflow-hidden bg-noir-800 mb-3" style={{ aspectRatio: '16/9', maxHeight: '200px' }}>
+                      <iframe src={`https://player.vimeo.com/video/${vimeoMatch[1]}`} className="w-full h-full" allowFullScreen title={m.titre} />
+                    </div>
+                  )
+                  return (
+                    <a href={m.url} target="_blank" rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-purple-400 hover:text-purple-300 text-sm mb-3 transition-colors">
+                      <LinkIcon size={14} /> Ouvrir le lien
+                    </a>
+                  )
+                })()}
 
                 {/* Commentaire du professeur */}
                 {m.commentaire_admin && (
