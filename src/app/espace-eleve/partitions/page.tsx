@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import EleveLayout from '@/components/EleveNav'
 import { Search, Download, Play, FileText, Music, Link as LinkIcon, BookOpen } from 'lucide-react'
+import MediaPlayer from '@/components/eleve/MediaPlayer'
 
 interface Media {
   id: string; titre: string; compositeur: string | null; niveau: string; type: string
@@ -80,21 +81,23 @@ function MediaCard({ m }: { m: Media }) {
         </div>
       </div>
 
+      {/* Lecteur intégré vidéo/audio */}
+      {m.url_video && (
+        <div className="mt-3">
+          <MediaPlayer url={m.url_video} titre={m.titre} compact />
+        </div>
+      )}
+      {m.url_audio && !m.url_video && (
+        <div className="mt-3">
+          <MediaPlayer url={m.url_audio} titre={m.titre} />
+        </div>
+      )}
+
       {/* Actions */}
-      <div className="flex gap-2 mt-4 pt-3 border-t border-noir-800">
+      <div className="flex gap-2 mt-3 pt-3 border-t border-noir-800">
         {m.url_pdf && (
           <a href={m.url_pdf} target="_blank" rel="noopener noreferrer" className="btn-gold flex-1 text-sm py-2 flex items-center justify-center gap-2">
             <Download size={14} /> Télécharger PDF
-          </a>
-        )}
-        {m.url_video && (
-          <a href={m.url_video} target="_blank" rel="noopener noreferrer" className={`${m.url_pdf ? 'btn-outline px-4' : 'btn-gold flex-1'} text-sm py-2 flex items-center justify-center gap-2`}>
-            <Play size={14} /> {m.url_pdf ? '' : 'Regarder'}
-          </a>
-        )}
-        {m.url_audio && !m.url_pdf && !m.url_video && (
-          <a href={m.url_audio} target="_blank" rel="noopener noreferrer" className="btn-gold flex-1 text-sm py-2 flex items-center justify-center gap-2">
-            <Music size={14} /> Écouter
           </a>
         )}
         {!m.url_pdf && !m.url_video && !m.url_audio && m.url_image && (

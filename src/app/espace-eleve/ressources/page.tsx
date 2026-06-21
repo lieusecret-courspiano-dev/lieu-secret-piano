@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import EleveLayout from '@/components/EleveNav'
 import { Search, Play, FileText, Music, Link as LinkIcon, BookOpen, ExternalLink } from 'lucide-react'
+import MediaPlayer from '@/components/eleve/MediaPlayer'
 
 interface Ressource {
   id: string; titre: string; description: string | null; type: string
@@ -70,13 +71,11 @@ function RessourceCard({ r }: { r: Ressource }) {
         </div>
       </div>
 
-      {/* Action */}
+      {/* Lecteur intégré ou lien */}
       {r.url && (
-        <a href={r.url} target="_blank" rel="noopener noreferrer"
-          className="mt-4 pt-3 border-t border-noir-800 flex items-center justify-center gap-2 text-gold-400 hover:text-gold-300 text-sm font-medium transition-colors">
-          {tc.icon} {tc.action}
-          <ExternalLink size={12} className="opacity-60" />
-        </a>
+        <div className="mt-4 pt-3 border-t border-noir-800">
+          <MediaPlayer url={r.url} titre={r.titre} compact />
+        </div>
       )}
     </div>
   )

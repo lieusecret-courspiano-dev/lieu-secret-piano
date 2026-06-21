@@ -14,7 +14,24 @@ export async function GET(req: NextRequest) {
     .eq('eleve_id', eleve.id)
     .order('created_at', { ascending: false })
 
-  return NextResponse.json(data || [])
+  // Aplatir la structure pour que la page puisse lire .titre directement
+  const flattened = (data || []).map((item: Record<string, unknown>) => {
+    const travail = item.travaux_a_faire as Record<string, unknown> | null
+    return {
+      id: item.id,
+      travail_eleve_id: item.id, // pour le PATCH
+      termine: item.termine,
+      termine_at: item.termine_at,
+      titre: travail?.titre || '',
+      description: travail?.description || null,
+      consignes: travail?.consignes || null,
+      fichier_url: travail?.ressource_url || null,
+      echeance: travail?.echeance || null,
+      created_at: travail?.created_at || item.created_at,
+    }
+  })
+
+  return NextResponse.json(flattened)
 }
 
 // PATCH — marquer un travail comme terminé ou non
@@ -22,7 +39,9 @@ export async function PATCH(req: NextRequest) {
   const eleve = await getEleveFromSession()
   if (!eleve) return NextResponse.json({ error: 'Non connecté' }, { status: 401 })
 
-  const { travail_eleve_id, termine } = await req.json()
+  const body = await req.json()
+  const travail_eleve_id = body.travail_eleve_id || body.id // compatibilité
+  const { termine } = body
   if (!travail_eleve_id) return NextResponse.json({ error: 'ID manquant' }, { status: 400 })
 
   const { data, error } = await supabaseAdmin
