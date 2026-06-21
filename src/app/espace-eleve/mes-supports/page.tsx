@@ -154,12 +154,24 @@ function SupportViewer({ support, onClose }: { support: Support; onClose: () => 
   )
 }
 
+interface RessourcePremiumAchat {
+  id: string
+  token_acces: string
+  ressources_premium: {
+    id: string; titre: string; description: string; type: string
+    fichier_url: string | null; youtube_url: string | null; zoom_url: string | null
+    duree_minutes: number | null; nb_pages: number | null; image_url: string | null
+  }
+}
+
 export default function MesSupportsPage() {
   const router = useRouter()
   const [supports, setSupports] = useState<Support[]>([])
+  const [ressourcesPremium, setRessourcesPremium] = useState<RessourcePremiumAchat[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('tous')
   const [viewing, setViewing] = useState<Support | null>(null)
+  const [eleveEmail, setEleveEmail] = useState<string | null>(null)
 
   useEffect(() => {
     fetch('/api/eleve/me')
@@ -169,7 +181,9 @@ export default function MesSupportsPage() {
       })
       .then(me => {
         if (!me) return
+        setEleveEmail(me.email)
         loadSupports()
+        loadRessourcesPremium(me.email)
       })
       .catch(() => router.push('/espace-eleve/login'))
   }, [])
@@ -183,6 +197,15 @@ export default function MesSupportsPage() {
       setSupports([])
     }
     setLoading(false)
+  }
+
+  async function loadRessourcesPremium(email: string) {
+    try {
+      const data = await fetch(`/api/eleve/ressources-premium?email=${encodeURIComponent(email)}`).then(r => r.json())
+      setRessourcesPremium(Array.isArray(data) ? data : [])
+    } catch {
+      setRessourcesPremium([])
+    }
   }
 
   async function updateProgression(supportId: string, statut: string) {
@@ -348,6 +371,83 @@ export default function MesSupportsPage() {
                 </div>
               )
             })}
+          </div>
+        )}
+
+        {/* ── Section Ressources Premium achetées ── */}
+        {ressourcesPremium.length > 0 && (
+          <div className="mt-10">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-xl font-serif text-white">Ressources Premium</h2>
+                <p className="text-noir-400 text-xs mt-0.5">{ressourcesPremium.length} ressource{ressourcesPremium.length > 1 ? 's' : ''} achetée{ressourcesPremium.length > 1 ? 's' : ''}</p>
+              </div>
+              <a href="/ressources-premium" className="text-gold-400 hover:text-gold-300 text-xs transition-colors flex items-center gap-1">
+                Voir la boutique
+                <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </a>
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {ressourcesPremium.map(achat => {
+                const r = achat.ressources_premium
+                const typeLabels: Record<string, string> = {
+                  video_youtube: 'Vidéo', coaching_visio: 'Coaching Visio',
+                  formation: 'Formation', documentation: 'PDF', audio: 'Audio', autre: 'Ressource',
+                }
+                return (
+                  <a key={achat.id} href={`/ressources-premium/acces/${achat.token_acces}`}
+                    className="group block bg-noir-900 border border-gold-500/20 rounded-2xl overflow-hidden hover:border-gold-500/40 transition-all hover:-translate-y-0.5">
+                    {/* Thumbnail */}
+                    <div className="aspect-video bg-gradient-to-br from-gold-500/10 to-noir-800 flex items-center justify-center relative overflow-hidden">
+                      {r.image_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={r.image_url} alt={r.titre} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                      ) : (
+                        <svg width="32" height="32" fill="none" stroke="#f59e0b" strokeWidth="1" viewBox="0 0 24 24" className="opacity-30">
+                          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                      )}
+                      <div className="absolute top-2 left-2">
+                        <span className="bg-noir-950/85 text-gold-400 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-gold-500/20">
+                          {typeLabels[r.type] || r.type}
+                        </span>
+                      </div>
+                      <div className="absolute top-2 right-2">
+                        <span className="bg-green-500/90 text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                          <svg width="8" height="8" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                          Acheté
+                        </span>
+                      </div>
+                    </div>
+                    <div className="p-4">
+                      <h3 className="text-white text-sm font-semibold group-hover:text-gold-400 transition-colors line-clamp-2 mb-1">{r.titre}</h3>
+                      {r.description && <p className="text-noir-500 text-xs line-clamp-2 mb-2">{r.description}</p>}
+                      <div className="flex items-center gap-2 text-xs text-noir-500">
+                        {r.duree_minutes && <span>{r.duree_minutes} min</span>}
+                        {r.nb_pages && <span>{r.nb_pages} pages</span>}
+                      </div>
+                      <div className="mt-3 flex items-center gap-1.5 text-gold-400 text-xs font-medium">
+                        <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                        Accéder à la ressource
+                      </div>
+                    </div>
+                  </a>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Lien boutique si aucune ressource premium */}
+        {ressourcesPremium.length === 0 && !loading && (
+          <div className="mt-8 bg-gradient-to-r from-gold-500/5 to-noir-900 border border-gold-500/15 rounded-2xl p-5 flex items-center justify-between gap-4">
+            <div>
+              <h3 className="text-white font-semibold text-sm mb-1">Découvrez nos ressources premium</h3>
+              <p className="text-noir-400 text-xs">Vidéos exclusives, coachings visio, formations et documentations.</p>
+            </div>
+            <a href="/ressources-premium" className="btn-gold text-xs px-4 py-2 shrink-0">
+              Voir la boutique
+            </a>
           </div>
         )}
       </div>
