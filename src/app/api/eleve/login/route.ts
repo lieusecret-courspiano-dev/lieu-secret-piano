@@ -12,6 +12,12 @@ export async function POST(req: NextRequest) {
   if (eleve.password_hash !== hashPassword(password)) return NextResponse.json({ error: 'Mot de passe incorrect' }, { status: 401 })
   const token = await createEleveSession(eleve.id)
   const res = NextResponse.json({ success: true, prenom: eleve.prenom })
-  res.cookies.set('ls_eleve_session', token, { httpOnly: true, secure: true, sameSite: 'lax', maxAge: 7 * 24 * 60 * 60, path: '/' })
+  res.cookies.set('ls_eleve_session', token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 7 * 24 * 60 * 60,
+    path: '/',
+  })
   return res
 }

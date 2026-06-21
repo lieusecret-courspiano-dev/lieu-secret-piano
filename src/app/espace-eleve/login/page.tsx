@@ -1,10 +1,12 @@
 'use client'
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 
-export default function EleveLoginPage() {
+function EleveLoginContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const redirectTo = searchParams.get('redirect') || '/espace-eleve/dashboard'
   const [mode, setMode] = useState<'login' | 'register'>('login')
   const [form, setForm] = useState({ email: '', password: '', prenom: '', nom: '', confirm: '' })
   const [loading, setLoading] = useState(false)
@@ -18,7 +20,7 @@ export default function EleveLoginPage() {
       const res = await fetch('/api/eleve/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: form.email, password: form.password }) })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Erreur connexion')
-      router.push('/espace-eleve/dashboard')
+      router.push(redirectTo)
     } catch (e: unknown) { setError(e instanceof Error ? e.message : 'Erreur') }
     finally { setLoading(false) }
   }
@@ -95,5 +97,17 @@ export default function EleveLoginPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function EleveLoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-noir-950 flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-gold-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
+      <EleveLoginContent />
+    </Suspense>
   )
 }

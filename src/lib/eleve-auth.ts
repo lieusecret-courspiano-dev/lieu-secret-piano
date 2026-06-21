@@ -22,12 +22,44 @@ export async function createEleveSession(eleveId: string): Promise<string> {
 
 export async function getEleveFromSession(): Promise<{ id: string; email: string; prenom: string; nom: string } | null> {
   try {
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     const token = cookieStore.get(SESSION_COOKIE)?.value
     if (!token) return null
-    const { data: session } = await supabaseAdmin.from('eleve_sessions').select('eleve_id, expires_at').eq('token', token).single()
-    if (!session || new Date(session.expires_at) < new Date()) return null
-    const { data: eleve } = await supabaseAdmin.from('eleves').select('id, email, prenom, nom').eq('id', session.eleve_id).eq('is_active', true).single()
+
+    const { data: session } = await supabaseAdmin
+      .from('eleve_sessions')
+      .select('eleve_id, expires_at')
+      .eq('token', token)
+      .single()
+
+    if (!session) return null
+
+    const now = new Date()
+    const expiresAt = new Date(session.expires_at)
+
+    // Session expirée → invalide
+    if (expiresAt < now) {
+      await supabaseAdmin.from('eleve_sessions').delete().eq('token', token)
+      return null
+    }
+
+    // Renouveler la session si elle expire dans moins de 3 jours
+    const threeDaysFromNow = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000)
+    if (expiresAt < threeDaysFromNow) {
+      const newExpiry = new Date(now.getTime() + SESSION_DURATION)
+      await supabaseAdmin
+        .from('eleve_sessions')
+        .update({ expires_at: newExpiry.toISOString() })
+        .eq('token', token)
+    }
+
+    const { data: eleve } = await supabaseAdmin
+      .from('eleves')
+      .select('id, email, prenom, nom')
+      .eq('id', session.eleve_id)
+      .eq('is_active', true)
+      .single()
+
     return eleve || null
   } catch { return null }
 }
