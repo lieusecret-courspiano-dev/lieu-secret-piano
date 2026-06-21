@@ -8,6 +8,9 @@ interface Ressource {
   image_url: string | null; youtube_url: string | null; zoom_url: string | null
   fichier_url: string | null; duree_minutes: number | null; nb_places: number | null
   date_coaching: string | null; niveau: string; position: number; created_at: string
+  nb_pages?: number | null; taille_fichier?: string | null
+  qualite_video?: string | null; format_audio?: string | null
+  apercu_duree?: number | null; apercu_pages?: number | null; apercu_url?: string | null
 }
 interface Achat {
   id: string; ressource_id: string; acheteur_email: string; acheteur_nom: string
@@ -24,10 +27,13 @@ const TYPES = [
   { value: 'autre',          label: 'Autre' },
 ]
 const NIVEAUX = ['tous', 'debutant', 'intermediaire', 'avance']
+
 const EMPTY = {
   titre: '', description: '', type: 'video_youtube', prix: '', est_gratuit: false,
   est_publie: false, image_url: '', youtube_url: '', zoom_url: '', fichier_url: '',
   duree_minutes: '', nb_places: '', date_coaching: '', niveau: 'tous', position: '0',
+  nb_pages: '', taille_fichier: '', qualite_video: 'HD', format_audio: 'MP3',
+  apercu_duree: '30', apercu_pages: '3', apercu_url: '',
 }
 
 export default function AdminRessourcesPremiumPage() {
@@ -54,9 +60,7 @@ export default function AdminRessourcesPremiumPage() {
     setLoading(false)
   }
 
-  function openNew() {
-    setEditItem(null); setForm({ ...EMPTY }); setShowForm(true); setMsg(null)
-  }
+  function openNew() { setEditItem(null); setForm({ ...EMPTY }); setShowForm(true); setMsg(null) }
 
   function openEdit(r: Ressource) {
     setEditItem(r)
@@ -68,6 +72,10 @@ export default function AdminRessourcesPremiumPage() {
       duree_minutes: r.duree_minutes?.toString() || '', nb_places: r.nb_places?.toString() || '',
       date_coaching: r.date_coaching ? r.date_coaching.slice(0, 16) : '',
       niveau: r.niveau || 'tous', position: r.position?.toString() || '0',
+      nb_pages: r.nb_pages?.toString() || '', taille_fichier: r.taille_fichier || '',
+      qualite_video: r.qualite_video || 'HD', format_audio: r.format_audio || 'MP3',
+      apercu_duree: r.apercu_duree?.toString() || '30',
+      apercu_pages: r.apercu_pages?.toString() || '3', apercu_url: r.apercu_url || '',
     })
     setShowForm(true); setMsg(null)
   }
@@ -81,6 +89,9 @@ export default function AdminRessourcesPremiumPage() {
       nb_places: form.nb_places ? parseInt(form.nb_places as string) : null,
       date_coaching: form.date_coaching || null,
       position: parseInt(form.position as string) || 0,
+      nb_pages: form.nb_pages ? parseInt(form.nb_pages as string) : null,
+      apercu_duree: form.apercu_duree ? parseInt(form.apercu_duree as string) : 30,
+      apercu_pages: form.apercu_pages ? parseInt(form.apercu_pages as string) : 3,
     }
     const method = editItem ? 'PATCH' : 'POST'
     const body   = editItem ? { id: editItem.id, ...payload } : payload
@@ -111,7 +122,7 @@ export default function AdminRessourcesPremiumPage() {
     const res = await fetch('/api/admin/ressources-premium/confirm', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ achat_id: id }) })
     if (res.ok) {
       setAchats(prev => prev.map(a => a.id === id ? { ...a, statut: 'confirme' } : a))
-      setMsg({ type: 'ok', text: 'Accès envoyé à l\'acheteur' })
+      setMsg({ type: 'ok', text: "Accès envoyé à l'acheteur" })
     }
   }
 
@@ -120,7 +131,6 @@ export default function AdminRessourcesPremiumPage() {
 
   return (
     <div className="p-4 md:p-6 lg:p-8 pb-24 md:pb-8">
-      {/* Header */}
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-serif text-white">Ressources Premium</h1>
@@ -158,9 +168,12 @@ export default function AdminRessourcesPremiumPage() {
         <>
           {/* Formulaire */}
           {showForm && (
-            <div className="card mb-6 border-gold-500/20">
-              <h2 className="text-white font-serif text-xl mb-5">{editItem ? 'Modifier la ressource' : 'Nouvelle ressource'}</h2>
+            <div className="card mb-6 border-gold-500/20 max-h-[80vh] overflow-y-auto">
+              <h2 className="text-white font-serif text-xl mb-5 sticky top-0 bg-noir-900 pb-3 border-b border-noir-800">
+                {editItem ? 'Modifier la ressource' : 'Nouvelle ressource'}
+              </h2>
               <form onSubmit={handleSave} className="space-y-4">
+                {/* Infos de base */}
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="sm:col-span-2">
                     <label className="label mb-1.5 block">Titre *</label>
@@ -182,7 +195,7 @@ export default function AdminRessourcesPremiumPage() {
 
                 <div>
                   <label className="label mb-1.5 block">Description</label>
-                  <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} className="input w-full h-20 resize-none" placeholder="Description de la ressource..." />
+                  <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} className="input w-full h-20 resize-none" placeholder="Description..." />
                 </div>
 
                 <div className="grid sm:grid-cols-3 gap-4">
@@ -214,10 +227,9 @@ export default function AdminRessourcesPremiumPage() {
                   <input value={form.image_url} onChange={e => setForm(f => ({ ...f, image_url: e.target.value }))} className="input w-full" placeholder="https://..." />
                 </div>
 
-                {/* Champs selon le type */}
                 {(form.type === 'video_youtube' || form.type === 'formation') && (
                   <div>
-                    <label className="label mb-1.5 block">URL YouTube (privée — visible après achat)</label>
+                    <label className="label mb-1.5 block">URL YouTube (visible après achat)</label>
                     <input value={form.youtube_url} onChange={e => setForm(f => ({ ...f, youtube_url: e.target.value }))} className="input w-full" placeholder="https://youtube.com/watch?v=..." />
                   </div>
                 )}
@@ -230,11 +242,11 @@ export default function AdminRessourcesPremiumPage() {
                     </div>
                     <div className="grid sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="label mb-1.5 block">Date et heure du coaching</label>
+                        <label className="label mb-1.5 block">Date et heure</label>
                         <input type="datetime-local" value={form.date_coaching} onChange={e => setForm(f => ({ ...f, date_coaching: e.target.value }))} className="input w-full" />
                       </div>
                       <div>
-                        <label className="label mb-1.5 block">Nombre de places (vide = illimité)</label>
+                        <label className="label mb-1.5 block">Nombre de places</label>
                         <input type="number" min="1" value={form.nb_places} onChange={e => setForm(f => ({ ...f, nb_places: e.target.value }))} className="input w-full" placeholder="10" />
                       </div>
                     </div>
@@ -248,6 +260,7 @@ export default function AdminRessourcesPremiumPage() {
                   </div>
                 )}
 
+                {/* Statut + Position */}
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
                     <label className="label mb-2 block">Statut</label>
@@ -261,8 +274,56 @@ export default function AdminRessourcesPremiumPage() {
                     </div>
                   </div>
                   <div>
-                    <label className="label mb-1.5 block">Position (ordre d'affichage)</label>
+                    <label className="label mb-1.5 block">Position</label>
                     <input type="number" min="0" value={form.position} onChange={e => setForm(f => ({ ...f, position: e.target.value }))} className="input w-full" />
+                  </div>
+                </div>
+
+                {/* Infos techniques & Aperçu */}
+                <div className="border-t border-noir-800 pt-4">
+                  <p className="text-gold-400 text-xs font-semibold uppercase tracking-wider mb-4">Infos techniques & Aperçu</p>
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    {form.type === 'documentation' && (
+                      <div>
+                        <label className="label mb-1.5 block">Nombre de pages</label>
+                        <input type="number" min="1" value={form.nb_pages} onChange={e => setForm(f => ({ ...f, nb_pages: e.target.value }))} className="input w-full" placeholder="42" />
+                      </div>
+                    )}
+                    <div>
+                      <label className="label mb-1.5 block">Taille du fichier</label>
+                      <input value={form.taille_fichier} onChange={e => setForm(f => ({ ...f, taille_fichier: e.target.value }))} className="input w-full" placeholder="Ex: 2.4 Mo" />
+                    </div>
+                    {(form.type === 'video_youtube' || form.type === 'formation') && (
+                      <div>
+                        <label className="label mb-1.5 block">Qualité vidéo</label>
+                        <select value={form.qualite_video} onChange={e => setForm(f => ({ ...f, qualite_video: e.target.value }))} className="input w-full">
+                          {['SD', 'HD', 'Full HD', '4K'].map(q => <option key={q} value={q}>{q}</option>)}
+                        </select>
+                      </div>
+                    )}
+                    {form.type === 'audio' && (
+                      <div>
+                        <label className="label mb-1.5 block">Format audio</label>
+                        <select value={form.format_audio} onChange={e => setForm(f => ({ ...f, format_audio: e.target.value }))} className="input w-full">
+                          {['MP3', 'WAV', 'AAC', 'FLAC'].map(fa => <option key={fa} value={fa}>{fa}</option>)}
+                        </select>
+                      </div>
+                    )}
+                    <div>
+                      <label className="label mb-1.5 block">Durée aperçu (secondes)</label>
+                      <input type="number" min="0" value={form.apercu_duree} onChange={e => setForm(f => ({ ...f, apercu_duree: e.target.value }))} className="input w-full" placeholder="30" />
+                    </div>
+                    {form.type === 'documentation' && (
+                      <div>
+                        <label className="label mb-1.5 block">Pages aperçu</label>
+                        <input type="number" min="1" max="10" value={form.apercu_pages} onChange={e => setForm(f => ({ ...f, apercu_pages: e.target.value }))} className="input w-full" placeholder="3" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="mt-4">
+                    <label className="label mb-1.5 block">URL aperçu public (extrait audio/vidéo/PDF)</label>
+                    <input value={form.apercu_url} onChange={e => setForm(f => ({ ...f, apercu_url: e.target.value }))} className="input w-full" placeholder="https://res.cloudinary.com/... ou lien direct" />
+                    <p className="text-noir-600 text-xs mt-1">Pour YouTube, l'aperçu utilise automatiquement l'URL YouTube avec durée limitée.</p>
                   </div>
                 </div>
 
@@ -299,11 +360,12 @@ export default function AdminRessourcesPremiumPage() {
                       </div>
                       <p className="text-white font-semibold text-sm">{r.titre}</p>
                       {r.description && <p className="text-noir-500 text-xs mt-1 line-clamp-2">{r.description}</p>}
-                      {r.date_coaching && (
-                        <p className="text-blue-400 text-xs mt-1">
-                          {new Date(r.date_coaching).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                        </p>
-                      )}
+                      <div className="flex gap-2 mt-1 flex-wrap">
+                        {r.nb_pages && <span className="text-noir-600 text-xs">{r.nb_pages} pages</span>}
+                        {r.qualite_video && <span className="text-noir-600 text-xs">{r.qualite_video}</span>}
+                        {r.format_audio && <span className="text-noir-600 text-xs">{r.format_audio}</span>}
+                        {r.apercu_url && <span className="text-green-600 text-xs">Aperçu configuré</span>}
+                      </div>
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
                       <button onClick={() => togglePublish(r)}
@@ -320,7 +382,6 @@ export default function AdminRessourcesPremiumPage() {
           )}
         </>
       ) : (
-        /* Onglet Achats */
         achats.length === 0 ? (
           <div className="card text-center py-16"><p className="text-noir-400">Aucun achat enregistré</p></div>
         ) : (
@@ -332,9 +393,7 @@ export default function AdminRessourcesPremiumPage() {
                   <p className="text-noir-400 text-xs mt-0.5">{a.acheteur_nom} · {a.acheteur_email}</p>
                   <div className="flex items-center gap-2 mt-1 flex-wrap">
                     <span className="text-xs text-gold-400">{a.montant} €</span>
-                    <span className="text-xs text-noir-600">·</span>
                     <span className="text-xs text-noir-500 capitalize">{a.payment_method}</span>
-                    <span className="text-xs text-noir-600">·</span>
                     <span className="text-xs text-noir-500">{new Date(a.created_at).toLocaleDateString('fr-FR')}</span>
                   </div>
                 </div>
@@ -348,7 +407,7 @@ export default function AdminRessourcesPremiumPage() {
                   )}
                   {a.statut === 'confirme' && (
                     <a href={`/ressources-premium/acces/${a.token_acces}`} target="_blank" rel="noopener noreferrer"
-                      className="text-noir-600 hover:text-blue-400 p-1.5 rounded transition-colors" title="Voir l'accès">
+                      className="text-noir-600 hover:text-blue-400 p-1.5 rounded transition-colors">
                       <ExternalLink size={14} />
                     </a>
                   )}

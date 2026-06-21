@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
   if (id) {
     const { data, error } = await supabaseAdmin
       .from('ressources_premium')
-      .select('id, titre, description, type, prix, est_gratuit, image_url, duree_minutes, nb_places, date_coaching, niveau, tags, position')
+      .select('id, titre, description, type, prix, est_gratuit, image_url, duree_minutes, nb_places, date_coaching, niveau, tags, position, nb_pages, taille_fichier, qualite_video, format_audio, apercu_duree, apercu_pages, apercu_url, youtube_url, fichier_url, zoom_url')
       .eq('id', id).eq('est_publie', true).single()
     if (error || !data) return NextResponse.json({ error: 'Ressource introuvable' }, { status: 404 })
     return NextResponse.json(data)
@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
 
   const { data } = await supabaseAdmin
     .from('ressources_premium')
-    .select('id, titre, description, type, prix, est_gratuit, image_url, duree_minutes, nb_places, date_coaching, niveau, tags, position')
+    .select('id, titre, description, type, prix, est_gratuit, image_url, duree_minutes, nb_places, date_coaching, niveau, tags, position, nb_pages, taille_fichier, qualite_video, format_audio, apercu_duree, apercu_pages, apercu_url, youtube_url, fichier_url, zoom_url')
     .eq('est_publie', true)
     .order('position', { ascending: true })
     .order('created_at', { ascending: false })
