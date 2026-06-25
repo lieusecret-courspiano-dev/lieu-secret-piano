@@ -150,7 +150,9 @@ export default function JournalPage() {
                 <div key={entry.id} className="card hover:border-gold-500/20 transition-all">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-start gap-3 flex-1 min-w-0">
-                      <div className="text-2xl shrink-0">{humeur?.emoji || '🎵'}</div>
+                      <div className="shrink-0 w-8 h-8 rounded-lg bg-gold-500/10 border border-gold-500/20 flex items-center justify-center">
+                        {humeur?.icon || <svg width="16" height="16" fill="none" stroke="#f59e0b" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>}
+                      </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <p className="text-white font-medium text-sm">

@@ -32,113 +32,96 @@ const ACCORDS = [
 ]
 
 // Clavier piano SVG — 2 octaves (Do à Si)
-// Numérotation des notes : 0=Do, 1=Do#, 2=Ré, 3=Ré#, 4=Mi, 5=Fa, 6=Fa#, 7=Sol,
-//   8=Sol#, 9=La, 10=La#, 11=Si, 12=Do(oct2), 13=Do#, 14=Ré, 15=Ré#, 16=Mi,
-//   17=Fa, 18=Fa#, 19=Sol, 20=Sol#, 21=La, 22=La#, 23=Si(oct2)
+// Numérotation : 0=Do 1=Do# 2=Ré 3=Ré# 4=Mi 5=Fa 6=Fa# 7=Sol
+//               8=Sol# 9=La 10=La# 11=Si 12=Do 13=Do# 14=Ré 15=Ré#
+//               16=Mi 17=Fa 18=Fa# 19=Sol 20=Sol# 21=La 22=La# 23=Si
 function MiniPiano({ highlighted }: { highlighted: number[] }) {
-  // 14 touches blanches : C D E F G A B | C D E F G A B
-  // indices dans notre numérotation
+  // 14 touches blanches sur 2 octaves : C D E F G A B | C D E F G A B
   const WHITE_NOTES = [0,2,4,5,7,9,11, 12,14,16,17,19,21,23]
 
-  // Touches noires : entre quelles touches blanches elles se trouvent
-  // Règle piano : touche noire entre blanc[i] et blanc[i+1], centrée à (i + 0.5) * ww
-  // Octave 1 : C#(entre 0-1), D#(entre 1-2), F#(entre 3-4), G#(entre 4-5), A#(entre 5-6)
-  // Octave 2 : C#(entre 7-8), D#(entre 8-9), F#(entre 10-11), G#(entre 11-12), A#(entre 12-13)
-  // (Mi-Fa et Si-Do n'ont PAS de touche noire entre eux)
+  // Touches noires : centrées sur le BORD entre deux touches blanches consécutives.
+  // Sur un vrai piano il n'y a PAS de touche noire entre Mi-Fa (blanc[2]-blanc[3])
+  // ni entre Si-Do (blanc[6]-blanc[7] et blanc[13]-...).
+  // La touche noire est centrée à (index_blanc_gauche + 1) * ww
+  // ex : C# est entre blanc[0]=Do et blanc[1]=Ré → centre = 1 * ww
+  //      D# est entre blanc[1]=Ré et blanc[2]=Mi → centre = 2 * ww
+  //      F# est entre blanc[3]=Fa et blanc[4]=Sol → centre = 4 * ww  (pas 3, car Mi-Fa sans noire)
+  //      G# est entre blanc[4]=Sol et blanc[5]=La → centre = 5 * ww
+  //      A# est entre blanc[5]=La et blanc[6]=Si  → centre = 6 * ww
+  // Octave 2 : même logique décalée de 7
   const BLACK_NOTES = [
-    { note: 1,  whiteIdx: 0.5  }, // C# : entre blanc[0]=Do et blanc[1]=Ré
-    { note: 3,  whiteIdx: 1.5  }, // D# : entre blanc[1]=Ré et blanc[2]=Mi
-    // pas de touche noire entre Mi(2) et Fa(3)
-    { note: 6,  whiteIdx: 3.5  }, // F# : entre blanc[3]=Fa et blanc[4]=Sol
-    { note: 8,  whiteIdx: 4.5  }, // G# : entre blanc[4]=Sol et blanc[5]=La
-    { note: 10, whiteIdx: 5.5  }, // A# : entre blanc[5]=La et blanc[6]=Si
-    // pas de touche noire entre Si(6) et Do(7)
-    { note: 13, whiteIdx: 7.5  }, // C# : entre blanc[7]=Do et blanc[8]=Ré
-    { note: 15, whiteIdx: 8.5  }, // D# : entre blanc[8]=Ré et blanc[9]=Mi
-    // pas de touche noire entre Mi(9) et Fa(10)
-    { note: 18, whiteIdx: 10.5 }, // F# : entre blanc[10]=Fa et blanc[11]=Sol
-    { note: 20, whiteIdx: 11.5 }, // G# : entre blanc[11]=Sol et blanc[12]=La
-    { note: 22, whiteIdx: 12.5 }, // A# : entre blanc[12]=La et blanc[13]=Si
+    { note: 1,  cx: 1  }, // C#  : bord Do|Ré
+    { note: 3,  cx: 2  }, // D#  : bord Ré|Mi
+    // Mi-Fa : PAS de touche noire
+    { note: 6,  cx: 4  }, // F#  : bord Fa|Sol
+    { note: 8,  cx: 5  }, // G#  : bord Sol|La
+    { note: 10, cx: 6  }, // A#  : bord La|Si
+    // Si-Do : PAS de touche noire
+    { note: 13, cx: 8  }, // C#2 : bord Do|Ré
+    { note: 15, cx: 9  }, // D#2 : bord Ré|Mi
+    // Mi-Fa : PAS de touche noire
+    { note: 18, cx: 11 }, // F#2 : bord Fa|Sol
+    { note: 20, cx: 12 }, // G#2 : bord Sol|La
+    { note: 22, cx: 13 }, // A#2 : bord La|Si
   ]
 
-  const W = 560
-  const H = 150
-  const ww = W / 14       // largeur d'une touche blanche
-  const bw = ww * 0.58    // largeur touche noire
-  const bh = H * 0.60     // hauteur touche noire
+  const W  = 560
+  const H  = 160
+  const ww = W / 14        // largeur d'une touche blanche
+  const bw = ww * 0.55     // largeur touche noire (légèrement plus étroite)
+  const bh = H * 0.62      // hauteur touche noire
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full rounded-xl border border-noir-700" style={{maxHeight: 170, background: '#0d0d1f'}}>
-      {/* Fond */}
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full rounded-xl border border-noir-700" style={{ maxHeight: 180, background: '#0d0d1f' }}>
       <rect width={W} height={H} fill="#0d0d1f" rx="10"/>
 
-      {/* Touches blanches (dessinées en premier, sous les noires) */}
+      {/* ── Touches blanches (dessinées en premier) ── */}
       {WHITE_NOTES.map((note, i) => {
-        const isHighlighted = highlighted.includes(note)
+        const lit = highlighted.includes(note)
         return (
           <g key={`w-${i}`}>
             <rect
               x={i * ww + 1.5}
-              y={3}
+              y={4}
               width={ww - 3}
-              height={H - 6}
+              height={H - 8}
               rx={5}
-              fill={isHighlighted ? '#f59e0b' : '#f0f0f0'}
-              stroke={isHighlighted ? '#d97706' : '#aaaaaa'}
+              fill={lit ? '#f59e0b' : '#f2f2f2'}
+              stroke={lit ? '#d97706' : '#999999'}
               strokeWidth={1}
             />
-            {isHighlighted && (
-              <circle
-                cx={i * ww + ww / 2}
-                cy={H - 16}
-                r={7}
-                fill="#d97706"
-                opacity={0.85}
-              />
+            {lit && (
+              <circle cx={i * ww + ww / 2} cy={H - 18} r={7} fill="#d97706" opacity={0.85}/>
             )}
           </g>
         )
       })}
 
-      {/* Touches noires (dessinées par-dessus les blanches) */}
-      {BLACK_NOTES.map(({ note, whiteIdx }) => {
-        const isHighlighted = highlighted.includes(note)
-        const cx = whiteIdx * ww  // centre horizontal de la touche noire
+      {/* ── Touches noires (dessinées par-dessus) ── */}
+      {BLACK_NOTES.map(({ note, cx: cxIdx }) => {
+        const lit = highlighted.includes(note)
+        const px  = cxIdx * ww   // centre en pixels = index_bord × largeur_touche_blanche
         return (
           <g key={`b-${note}`}>
             <rect
-              x={cx - bw / 2}
-              y={3}
+              x={px - bw / 2}
+              y={4}
               width={bw}
               height={bh}
               rx={4}
-              fill={isHighlighted ? '#f59e0b' : '#111122'}
-              stroke={isHighlighted ? '#d97706' : '#2a2a4a'}
+              fill={lit ? '#f59e0b' : '#0e0e20'}
+              stroke={lit ? '#d97706' : '#2a2a4a'}
               strokeWidth={1}
             />
-            {isHighlighted && (
-              <circle
-                cx={cx}
-                cy={bh - 12}
-                r={5}
-                fill="#d97706"
-                opacity={0.9}
-              />
+            {lit && (
+              <circle cx={px} cy={bh - 10} r={5} fill="#d97706" opacity={0.9}/>
             )}
           </g>
         )
       })}
 
-      {/* Séparateur d'octave (discret) */}
-      <line
-        x1={7 * ww}
-        y1={H - 22}
-        x2={7 * ww}
-        y2={H - 5}
-        stroke="#f59e0b"
-        strokeWidth={1}
-        opacity={0.25}
-      />
+      {/* Séparateur d'octave */}
+      <line x1={7 * ww} y1={H - 24} x2={7 * ww} y2={H - 6} stroke="#f59e0b" strokeWidth={1} opacity={0.3}/>
     </svg>
   )
 }

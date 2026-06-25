@@ -21,11 +21,11 @@ interface Note {
 function getNoteContent(note: Note): string {
   if (note.contenu) return note.contenu
   const parts = []
-  if (note.resume) parts.push(`📝 Résumé\n${note.resume}`)
-  if (note.notions) parts.push(`🎵 Notions travaillées\n${note.notions}`)
-  if (note.exercices) parts.push(`🎯 Exercices\n${note.exercices}`)
+  if (note.resume) parts.push(`Résumé\n${note.resume}`)
+  if (note.notions) parts.push(`Notions travaillées\n${note.notions}`)
+  if (note.exercices) parts.push(`Exercices\n${note.exercices}`)
   if (note.objectifs) parts.push(`⭐ Objectifs\n${note.objectifs}`)
-  if (note.commentaires) parts.push(`💬 Commentaires\n${note.commentaires}`)
+  if (note.commentaires) parts.push(`Commentaires\n${note.commentaires}`)
   return parts.join('\n\n') || 'Aucun contenu'
 }
 

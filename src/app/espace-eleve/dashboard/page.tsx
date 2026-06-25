@@ -368,7 +368,9 @@ export default function DashboardPage() {
             <div className="flex gap-2 flex-wrap">
               {badges.map(b => (
                 <div key={b.badge_key} className="flex flex-col items-center gap-1 bg-noir-800/50 rounded-xl p-3 min-w-[72px]">
-                  <span className="text-2xl">{b.badge_icon || '🏅'}</span>
+                  <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-gold-500/10 border border-gold-500/20">
+                        <svg width="16" height="16" fill="none" stroke="#f59e0b" strokeWidth="1.5" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+                      </span>
                   <p className="text-xs text-noir-400 text-center leading-tight">{b.badge_nom}</p>
                 </div>
               ))}
