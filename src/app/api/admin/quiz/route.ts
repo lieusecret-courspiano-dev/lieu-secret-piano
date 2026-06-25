@@ -54,10 +54,14 @@ export async function PATCH(req: NextRequest) {
   const { id, ...fields } = await req.json()
   if (!id) return NextResponse.json({ error: 'ID manquant' }, { status: 400 })
 
-  const { data, error } = await supabaseAdmin.from('quiz').update({
-    ...fields,
-    updated_at: new Date().toISOString(),
-  }).eq('id', id).select().single()
+  // Filtrer les champs autorisés pour éviter les injections de colonnes
+  const allowed = ['titre', 'description', 'niveau', 'score_min', 'duree_minutes', 'statut']
+  const safeFields: Record<string, unknown> = {}
+  for (const key of allowed) {
+    if (key in fields) safeFields[key] = (fields as Record<string, unknown>)[key]
+  }
+
+  const { data, error } = await supabaseAdmin.from('quiz').update(safeFields).eq('id', id).select().single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json(data)

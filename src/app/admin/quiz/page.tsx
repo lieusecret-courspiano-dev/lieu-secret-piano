@@ -86,11 +86,13 @@ export default function AdminQuizPage() {
     try {
       if (editQuiz) {
         const res = await fetch('/api/admin/quiz', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: editQuiz.id, ...quizForm }) })
-        if (!res.ok) throw new Error('Erreur modification')
+        const d = await res.json()
+        if (!res.ok) throw new Error(d.error || 'Erreur modification')
         showMsg('ok', 'Quiz modifié avec succès')
       } else {
         const res = await fetch('/api/admin/quiz', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(quizForm) })
-        if (!res.ok) throw new Error('Erreur création')
+        const d = await res.json()
+        if (!res.ok) throw new Error(d.error || 'Erreur création')
         showMsg('ok', 'Quiz créé avec succès')
       }
       await loadQuiz()
@@ -98,9 +100,10 @@ export default function AdminQuizPage() {
       setEditQuiz(null)
       setQuizForm({ ...EMPTY_QUIZ })
     } catch (err: any) {
-      showMsg('err', err.message || 'Erreur')
+      showMsg('err', err.message || 'Erreur inconnue')
+    } finally {
+      setSaving(false)
     }
-    setSaving(false)
   }
 
   async function handleDeleteQuiz(id: string) {

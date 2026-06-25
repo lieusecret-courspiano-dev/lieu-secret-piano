@@ -102,8 +102,32 @@ const STEPS = [
 
 /* ─── Page principale ─── */
 export default function AccueilPage() {
-  const [settings, setSettings] = useState<Settings | null>(null)
-  const [settingsLoaded, setSettingsLoaded] = useState(false)
+  // Initialiser avec les valeurs par défaut pour éviter le flash
+  const [settings, setSettings] = useState<Settings>({
+    hero_title: "L'art du piano,", hero_title2: 'à votre rythme',
+    hero_subtitle: 'Cours individuels, ateliers de groupe et masterclass via Zoom. Une pédagogie bienveillante pour tous les niveaux.',
+    hero_btn1: "Cours d'essai gratuit", hero_btn2: 'Réserver un cours',
+    contact_email: '', phone: '', instagram: '', facebook: '', youtube: '', tiktok: '',
+    stats_label1: 'En ligne', stats_label2: '1h', stats_label3: 'Monde entier', stats_label4: 'Tous niveaux',
+    tarif_cours_1h: '22', tarif_pack_label1: '', tarif_pack_prix1: '', tarif_pack_desc1: '',
+    tarif_pack_label2: '', tarif_pack_prix2: '', tarif_pack_desc2: '',
+    tarif_pack_label3: '', tarif_pack_prix3: '', tarif_pack_desc3: '',
+    prof_nom: '', prof_titre: '', prof_photo: '', prof_bio: '', prof_vision: '', prof_pedagogie: '',
+    apropos_titre: 'Un espace musical unique et bienveillant', apropos_texte1: '', apropos_texte2: '',
+    apropos_point1: '', apropos_point2: '', apropos_point3: '', apropos_point4: '',
+    offres_titre: 'Choisissez votre formule', offres_sous_titre: '',
+    offre1_titre: 'Cours individuel', offre1_sous: 'Sur mesure', offre1_desc: '', offre1_btn: 'Réserver un créneau',
+    offre1_f1: '', offre1_f2: '', offre1_f3: '', offre1_f4: '',
+    offre2_titre: 'Atelier de groupe', offre2_sous: 'Collectif', offre2_desc: '', offre2_btn: 'Voir les ateliers',
+    offre2_f1: '', offre2_f2: '', offre2_f3: '', offre2_f4: '',
+    offre3_titre: 'Masterclass', offre3_sous: 'Perfectionnement', offre3_desc: '', offre3_btn: 'Voir les masterclass',
+    offre3_f1: '', offre3_f2: '', offre3_f3: '', offre3_f4: '',
+    cta_titre: 'Prêt(e) à commencer ?', cta_sous_titre: 'Réservez votre premier cours dès maintenant.',
+    steps_label: 'Simple et rapide', steps_titre: 'Comment ça marche ?',
+    banner_actif: 'false', banner_message: '', banner_type: 'info',
+    essai_label: '', essai_titre: '', essai_sous_titre: '', essai_duree: '', essai_duree_desc: '',
+    essai_format: '', essai_format_desc: '', essai_form_titre: '', essai_btn_label: '',
+  } as unknown as Settings)
   const [featuredEvent, setFeaturedEvent] = useState<EventItem | null>(null)
   const [temoignages, setTemoignages] = useState<Temoignage[]>([])
   const [showContact, setShowContact] = useState(false)
@@ -120,8 +144,6 @@ export default function AccueilPage() {
       if (settingsRes.status === 'fulfilled') {
         setSettings(settingsRes.value)
       }
-      setSettingsLoaded(true)
-
       if (eventsRes.status === 'fulfilled' && Array.isArray(eventsRes.value)) {
         setFeaturedEvent(eventsRes.value.find((e: EventItem) => e.is_featured) || null)
       }

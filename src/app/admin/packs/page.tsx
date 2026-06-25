@@ -178,18 +178,21 @@ export default function AdminPacks() {
     e.preventDefault()
     if (!createForm.acheteur_nom || !createForm.acheteur_email) { setCreateError('Nom et email requis'); return }
     setSaving(true); setCreateError('')
-    const res = await fetch('/api/admin/packs', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(createForm),
-    })
-    if (res.ok) {
+    try {
+      const res = await fetch('/api/admin/packs', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(createForm),
+      })
+      const d = await res.json()
+      if (!res.ok) throw new Error(d.error || 'Erreur création')
       setShowCreate(false)
       setCreateForm({ pack_label: 'Pack 5h', heures_total: 5, heures_utilisees: 0, montant: 100, acheteur_nom: '', acheteur_email: '', payment_method: 'virement', date_paiement: new Date().toISOString().split('T')[0] })
       fetchPacks()
-    } else {
-      const d = await res.json(); setCreateError(d.error || 'Erreur')
+    } catch (err: any) {
+      setCreateError(err.message || 'Erreur')
+    } finally {
+      setSaving(false)
     }
-    setSaving(false)
   }
 
   function copyCode(code: string) { navigator.clipboard.writeText(code); setCopied(code); setTimeout(() => setCopied(''), 2000) }
