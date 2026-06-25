@@ -192,30 +192,22 @@ export default function AccueilPage() {
         </div>
 
         <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 text-center pt-24 pb-16">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}
-            className="inline-flex items-center gap-2 bg-gold-500/10 border border-gold-500/30 rounded-full px-4 py-1.5 mb-8">
+          <div className="inline-flex items-center gap-2 bg-gold-500/10 border border-gold-500/30 rounded-full px-4 py-1.5 mb-8">
             <span className="w-1.5 h-1.5 rounded-full bg-gold-500 animate-pulse" />
             <span className="text-gold-400 text-xs font-medium tracking-widest uppercase">École de Piano en Ligne</span>
-          </motion.div>
+          </div>
 
-          {/* Titre — masqué tant que settings non chargés pour éviter le flash */}
-          <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.1 }}
-            className="font-serif text-5xl sm:text-6xl md:text-7xl lg:text-8xl text-white leading-[1.05] mb-6">
+          <h1 className="font-serif text-5xl sm:text-6xl md:text-7xl lg:text-8xl text-white leading-[1.05] mb-6">
             {s?.hero_title || "L'art du piano,"}
             <br />
             <span className="text-gold-400">{s?.hero_title2 || 'à votre rythme'}</span>
-          </motion.h1>
+          </h1>
 
-          <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.2 }}
-            className="text-noir-300 text-lg sm:text-xl max-w-2xl mx-auto mb-10 leading-relaxed">
+          <p className="text-noir-300 text-lg sm:text-xl max-w-2xl mx-auto mb-10 leading-relaxed">
             {s?.hero_subtitle || 'Cours individuels, ateliers de groupe et masterclass via Zoom. Une pédagogie bienveillante pour tous les niveaux.'}
-          </motion.p>
+          </p>
 
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.3 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link href="/essai"
               className="inline-flex items-center gap-2 bg-gold-500 hover:bg-gold-400 text-noir-950 font-semibold px-8 py-4 rounded-2xl transition-all duration-200 text-base shadow-2xl shadow-gold-500/30 hover:-translate-y-0.5 w-full sm:w-auto justify-center">
               <PianoIcon size={18} />
@@ -229,12 +221,10 @@ export default function AccueilPage() {
               </svg>
               {s?.hero_btn1 || 'Réserver un cours'}
             </Link>
-          </motion.div>
+          </div>
 
           {/* Stats */}
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.5 }}
-            className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-3 max-w-3xl mx-auto">
+          <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-3 max-w-3xl mx-auto">
             {[
               { val: '100%', label: s?.stats_label1 || 'En ligne' },
               { val: '1h', label: s?.stats_label2 || 'Cours individuel' },
@@ -246,15 +236,14 @@ export default function AccueilPage() {
                 <div className="text-noir-400 text-xs">{stat.label}</div>
               </div>
             ))}
-          </motion.div>
+          </div>
         </div>
 
-        <motion.div className="absolute bottom-8 left-1/2 -translate-x-1/2"
-          animate={{ y: [0, 8, 0] }} transition={{ duration: 2, repeat: Infinity }}>
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
           <div className="w-6 h-10 border-2 border-noir-700 rounded-full flex items-start justify-center pt-2">
             <div className="w-1 h-2 bg-gold-500 rounded-full" />
           </div>
-        </motion.div>
+        </div>
       </section>
 
       {/* ══ ÉVÉNEMENT EN VEDETTE ══ */}
