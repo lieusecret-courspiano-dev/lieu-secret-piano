@@ -45,6 +45,73 @@ const TYPES_Q = [
 const EMPTY_QUIZ = { titre: '', description: '', niveau: 'fondamentaux', score_min: 70, statut: 'brouillon', duree_minutes: 0 }
 const EMPTY_Q = { type: 'qcm', type_reponse: 'unique', question: '', options: ['', '', '', ''], bonne_reponse: '', explication: '', audio_url: '', image_url: '', video_url: '', points: 1, statut: 'publie' }
 
+
+// Composant d'aperçu vidéo — supporte YouTube, Vimeo et vidéos directes
+function VideoPreview({ url }: { url: string }) {
+  if (!url) return null
+
+  // YouTube
+  const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/)
+  if (ytMatch) {
+    return (
+      <div className="mt-2 rounded-xl overflow-hidden" style={{ aspectRatio: '16/9' }}>
+        <iframe
+          src={`https://www.youtube.com/embed/${ytMatch[1]}`}
+          className="w-full h-full"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          title="Aperçu vidéo"
+        />
+      </div>
+    )
+  }
+
+  // Vimeo
+  const vimeoMatch = url.match(/vimeo\.com\/(\d+)/)
+  if (vimeoMatch) {
+    return (
+      <div className="mt-2 rounded-xl overflow-hidden" style={{ aspectRatio: '16/9' }}>
+        <iframe
+          src={`https://player.vimeo.com/video/${vimeoMatch[1]}`}
+          className="w-full h-full"
+          allowFullScreen
+          title="Aperçu vidéo Vimeo"
+        />
+      </div>
+    )
+  }
+
+  // Vidéo directe (mp4, webm, ogg)
+  if (/\.(mp4|webm|ogg|mov)$/i.test(url) || url.includes('cloudinary') || url.includes('1drv.ms') || url.includes('drive.google')) {
+    return (
+      <video
+        controls
+        className="w-full mt-2 rounded-xl max-h-48 bg-noir-950"
+        src={url}
+        preload="metadata"
+      >
+        Votre navigateur ne supporte pas la lecture vidéo.
+      </video>
+    )
+  }
+
+  // Lien non reconnu — afficher un lien cliquable
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="mt-2 flex items-center gap-2 text-xs text-gold-400 hover:text-gold-300 underline"
+    >
+      <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+        <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+      </svg>
+      Ouvrir la vidéo dans un nouvel onglet
+    </a>
+  )
+}
+
 export default function AdminQuizPage() {
   const [quiz, setQuiz] = useState<Quiz[]>([])
   const [loading, setLoading] = useState(true)
@@ -485,7 +552,8 @@ export default function AdminQuizPage() {
                   <div>
                     <label className="label mb-1 block">URL Vidéo *</label>
                     <input value={qForm.video_url} onChange={e => setQForm(f => ({ ...f, video_url: e.target.value }))}
-                      className="input w-full" placeholder="https://youtube.com/... ou lien direct" />
+                      className="input w-full" placeholder="https://youtube.com/... ou lien direct mp4" />
+                    <VideoPreview url={qForm.video_url} />
                   </div>
                 )}
 
@@ -519,15 +587,7 @@ export default function AdminQuizPage() {
                       </label>
                       <input value={qForm.video_url} onChange={e => setQForm(f => ({ ...f, video_url: e.target.value }))}
                         className="input w-full" placeholder="https://youtube.com/... ou lien direct mp4" />
-                      {qForm.video_url && (() => {
-                        const ytMatch = qForm.video_url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/)
-                        if (ytMatch) return (
-                          <div className="mt-2 rounded-xl overflow-hidden aspect-video">
-                            <iframe src={`https://www.youtube.com/embed/${ytMatch[1]}`} className="w-full h-full" allowFullScreen />
-                          </div>
-                        )
-                        return <video controls className="w-full mt-2 max-h-32 rounded-xl" src={qForm.video_url} />
-                      })()}
+                               <VideoPreview url={qForm.video_url} />
                     </div>
                   </div>
                 )}
