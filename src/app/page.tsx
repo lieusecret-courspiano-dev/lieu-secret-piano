@@ -177,7 +177,7 @@ export default function AccueilPage() {
           </motion.div>
 
           {/* Titre — masqué tant que settings non chargés pour éviter le flash */}
-          <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: settingsLoaded ? 1 : 0, y: settingsLoaded ? 0 : 30 }}
+          <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.1 }}
             className="font-serif text-5xl sm:text-6xl md:text-7xl lg:text-8xl text-white leading-[1.05] mb-6">
             {s?.hero_title || "L'art du piano,"}
@@ -185,13 +185,13 @@ export default function AccueilPage() {
             <span className="text-gold-400">{s?.hero_title2 || 'à votre rythme'}</span>
           </motion.h1>
 
-          <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: settingsLoaded ? 1 : 0, y: settingsLoaded ? 0 : 20 }}
+          <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.2 }}
             className="text-noir-300 text-lg sm:text-xl max-w-2xl mx-auto mb-10 leading-relaxed">
             {s?.hero_subtitle || 'Cours individuels, ateliers de groupe et masterclass via Zoom. Une pédagogie bienveillante pour tous les niveaux.'}
           </motion.p>
 
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: settingsLoaded ? 1 : 0, y: settingsLoaded ? 0 : 20 }}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.3 }}
             className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link href="/essai"
@@ -210,7 +210,7 @@ export default function AccueilPage() {
           </motion.div>
 
           {/* Stats */}
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: settingsLoaded ? 1 : 0 }}
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.5 }}
             className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-3 max-w-3xl mx-auto">
             {[
