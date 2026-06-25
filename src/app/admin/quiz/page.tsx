@@ -489,18 +489,45 @@ export default function AdminQuizPage() {
                   </div>
                 )}
 
-                {/* Ajout optionnel de médias pour QCM/VF */}
+                {/* Médias optionnels pour tous les types sauf les types dédiés */}
                 {!['audio', 'image', 'video'].includes(qForm.type) && (
-                  <div className="grid grid-cols-1 gap-3">
+                  <div className="space-y-3">
+                    <p className="text-xs text-noir-500 font-medium uppercase tracking-wider">Médias optionnels</p>
                     <div>
-                      <label className="label mb-1 block">Image (optionnel)</label>
+                      <label className="label mb-1 block">
+                        <span className="flex items-center gap-1.5"><Image size={12} /> Image</span>
+                      </label>
                       <input value={qForm.image_url} onChange={e => setQForm(f => ({ ...f, image_url: e.target.value }))}
-                        className="input w-full" placeholder="URL image pour illustrer la question" />
+                        className="input w-full" placeholder="https://... (jpg, png, webp)" />
+                      {qForm.image_url && (
+                        <img src={qForm.image_url} alt="Aperçu" className="w-full h-28 object-cover rounded-xl mt-2" />
+                      )}
                     </div>
                     <div>
-                      <label className="label mb-1 block">Audio (optionnel)</label>
+                      <label className="label mb-1 block">
+                        <span className="flex items-center gap-1.5"><Music size={12} /> Audio</span>
+                      </label>
                       <input value={qForm.audio_url} onChange={e => setQForm(f => ({ ...f, audio_url: e.target.value }))}
-                        className="input w-full" placeholder="URL audio pour illustrer la question" />
+                        className="input w-full" placeholder="https://... (mp3, wav, ogg, OneDrive, Cloudinary...)" />
+                      {qForm.audio_url && (
+                        <audio controls className="w-full mt-2 h-8" src={qForm.audio_url} />
+                      )}
+                    </div>
+                    <div>
+                      <label className="label mb-1 block">
+                        <span className="flex items-center gap-1.5"><Video size={12} /> Vidéo</span>
+                      </label>
+                      <input value={qForm.video_url} onChange={e => setQForm(f => ({ ...f, video_url: e.target.value }))}
+                        className="input w-full" placeholder="https://youtube.com/... ou lien direct mp4" />
+                      {qForm.video_url && (() => {
+                        const ytMatch = qForm.video_url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/)
+                        if (ytMatch) return (
+                          <div className="mt-2 rounded-xl overflow-hidden aspect-video">
+                            <iframe src={`https://www.youtube.com/embed/${ytMatch[1]}`} className="w-full h-full" allowFullScreen />
+                          </div>
+                        )
+                        return <video controls className="w-full mt-2 max-h-32 rounded-xl" src={qForm.video_url} />
+                      })()}
                     </div>
                   </div>
                 )}
