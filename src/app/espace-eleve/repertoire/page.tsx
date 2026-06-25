@@ -63,7 +63,7 @@ export default function RepertoirePage() {
         setShowForm(false)
         setForm({ titre: '', compositeur: '', tonalite: '', niveau: '', statut: 'a_apprendre', notes: '' })
       } else {
-        alert(data.error || 'Erreur lors de l'ajout')
+        alert(data.error || "Erreur lors de l'ajout")
       }
     } catch {
       alert('Erreur réseau, veuillez réessayer')

@@ -61,7 +61,7 @@ export default function JournalPage() {
         setShowForm(false)
         setForm({ date_pratique: new Date().toISOString().split('T')[0], duree_minutes: 30, humeur: 'bien', notes: '', morceaux: '' })
       } else {
-        alert(data.error || 'Erreur lors de l'enregistrement')
+        alert(data.error || "Erreur lors de l'enregistrement")
       }
     } catch {
       alert('Erreur réseau, veuillez réessayer')
