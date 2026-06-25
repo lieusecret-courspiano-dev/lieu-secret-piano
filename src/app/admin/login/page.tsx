@@ -96,6 +96,9 @@ export default function AdminLoginPage() {
             ← Retour au site
           </a>
         </p>
+        <p className="text-center mt-2 text-noir-700 text-xs">
+          Mot de passe défini via les variables Vercel (ADMIN_PASSWORD)
+        </p>
       </div>
     </div>
   )

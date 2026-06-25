@@ -1,3 +1,4 @@
+import { getPasswordError } from '@/lib/password-strength'
 import { NextRequest, NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic'
 import { supabaseAdmin } from '@/lib/supabase'
@@ -7,7 +8,7 @@ import { Resend } from 'resend'
 export async function POST(req: NextRequest) {
   const { email, password, prenom, nom } = await req.json()
   if (!email || !password || !prenom || !nom) return NextResponse.json({ error: 'Tous les champs sont requis' }, { status: 400 })
-  if (password.length < 8) return NextResponse.json({ error: 'Mot de passe trop court (8 caractères minimum)' }, { status: 400 })
+  if (getPasswordError(password)) return NextResponse.json({ error: 'Mot de passe trop court (8 caractères minimum)' }, { status: 400 })
   const { data: existing } = await supabaseAdmin.from('eleves').select('id, password_hash').eq('email', email.toLowerCase().trim()).single()
   if (existing) {
     if (existing.password_hash) return NextResponse.json({ error: 'Un compte existe déjà avec cet email. Connectez-vous.' }, { status: 409 })

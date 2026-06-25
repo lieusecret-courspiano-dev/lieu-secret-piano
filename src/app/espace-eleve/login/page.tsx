@@ -28,7 +28,8 @@ function EleveLoginContent() {
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault()
     if (!form.prenom.trim() || !form.nom.trim()) { setError('Prénom et nom requis'); return }
-    if (form.password.length < 8) { setError('Mot de passe : minimum 8 caractères'); return }
+    // La validation complète est faite côté serveur
+    if (!form.password) { setError('Mot de passe requis'); return }
     if (form.password !== form.confirm) { setError('Les mots de passe ne correspondent pas'); return }
     setLoading(true); setError('')
     try {

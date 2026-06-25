@@ -1,3 +1,4 @@
+import { getPasswordError } from '@/lib/password-strength'
 import { checkRateLimit, getClientIP } from '@/lib/rate-limit'
 import { NextRequest, NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic'
@@ -28,7 +29,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true })
   }
   if (token && password) {
-    if (password.length < 8) return NextResponse.json({ error: 'Mot de passe trop court' }, { status: 400 })
+    const pwErr = getPasswordError(password)
+    if (pwErr) return NextResponse.json({ error: pwErr }, { status: 400 })
     const { data: eleve } = await supabaseAdmin.from('eleves').select('id, reset_expires').eq('reset_token', token).single()
     if (!eleve || new Date(eleve.reset_expires) < new Date()) return NextResponse.json({ error: 'Lien invalide ou expiré' }, { status: 400 })
     await supabaseAdmin.from('eleves').update({ password_hash: hashPassword(password), reset_token: null, reset_expires: null }).eq('id', eleve.id)

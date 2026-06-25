@@ -1,4 +1,6 @@
 'use client'
+import PasswordStrengthIndicator from '@/components/PasswordStrengthIndicator'
+import { validatePassword } from '@/lib/password-strength'
 import { useState, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -17,7 +19,9 @@ function SetupContent() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (password !== confirm) { setError('Les mots de passe ne correspondent pas'); return }
-    if (password.length < 8) { setError('Minimum 8 caractères'); return }
+    const { valid: pwValid, errors: pwErrors } = validatePassword(password)
+    if (!pwValid) { setError(pwErrors[0]); return }
+    if (password !== confirm) { setError('Les mots de passe ne correspondent pas'); return }
     setLoading(true); setError('')
     try {
       const res = await fetch('/api/eleve/setup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token, password }) })
@@ -42,6 +46,10 @@ function SetupContent() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div><label className="label mb-1 block">Nouveau mot de passe</label>
                 <div className="relative"><input type={showPw ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} placeholder="Minimum 8 caractères" className="input w-full pr-10" required autoFocus />
+              </div>
+              <PasswordStrengthIndicator password={password} className="mt-2" />
+              <div className="relative">
+                <input type="password" value={confirm} onChange={e => setConfirm(e.target.value)} placeholder="Confirmer le mot de passe" className="input w-full" required />
                   <button type="button" onClick={() => setShowPw(p => !p)} className="absolute right-3 top-1/2 -translate-y-1/2 text-noir-400 hover:text-white"><svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
                 </div>
               </div>

@@ -1,4 +1,6 @@
 'use client'
+import PasswordStrengthIndicator from '@/components/PasswordStrengthIndicator'
+import { validatePassword } from '@/lib/password-strength'
 import { useState, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -22,6 +24,8 @@ function ResetContent() {
 
   async function handleReset(e: React.FormEvent) {
     e.preventDefault()
+    const { valid: pwValid, errors: pwErrors } = validatePassword(password)
+    if (!pwValid) { setError(pwErrors[0]); return }
     if (password !== confirm) { setError('Les mots de passe ne correspondent pas'); return }
     setLoading(true)
     try {
@@ -40,7 +44,11 @@ function ResetContent() {
         <div className="card border-gold-500/20">
           {token ? (
             <form onSubmit={handleReset} className="space-y-4">
-              <div><label className="label mb-1 block">Nouveau mot de passe</label><input type="password" value={password} onChange={e => setPassword(e.target.value)} className="input w-full" required /></div>
+              <div>
+                <label className="label mb-1 block">Nouveau mot de passe</label>
+                <input type="password" value={password} onChange={e => setPassword(e.target.value)} className="input w-full" required />
+                <PasswordStrengthIndicator password={password} className="mt-2" />
+              </div>
               <div><label className="label mb-1 block">Confirmer</label><input type="password" value={confirm} onChange={e => setConfirm(e.target.value)} className="input w-full" required /></div>
               {error && <p className="text-red-400 text-sm">{error}</p>}
               <button type="submit" disabled={loading} className="btn-gold w-full">{loading ? '...' : 'Réinitialiser'}</button>
