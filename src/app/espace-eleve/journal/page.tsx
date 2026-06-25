@@ -16,10 +16,10 @@ interface JournalEntry {
 }
 
 const HUMEURS = [
-  { key: 'excellent', label: 'Excellent', emoji: '🌟' },
-  { key: 'bien',      label: 'Bien',      emoji: '😊' },
-  { key: 'moyen',     label: 'Moyen',     emoji: '😐' },
-  { key: 'difficile', label: 'Difficile', emoji: '😓' },
+  { key: 'excellent', label: 'Excellent', emoji: '', icon: <svg width="18" height="18" fill="none" stroke="#f59e0b" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg> },
+  { key: 'bien',      label: 'Bien',      emoji: '', icon: <svg width="18" height="18" fill="none" stroke="#10b981" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 13s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg> },
+  { key: 'moyen',     label: 'Moyen',     emoji: '', icon: <svg width="18" height="18" fill="none" stroke="#a0a0c0" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="8" y1="15" x2="16" y2="15"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg> },
+  { key: 'difficile', label: 'Difficile', emoji: '', icon: <svg width="18" height="18" fill="none" stroke="#ef4444" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M16 16s-1.5-2-4-2-4 2-4 2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg> },
 ]
 
 const DUREES = [15, 30, 45, 60, 90, 120]
@@ -228,7 +228,7 @@ export default function JournalPage() {
                               ? 'bg-gold-500/10 border-gold-500/30 text-gold-400'
                               : 'border-noir-700 text-noir-400 hover:border-noir-600'
                           }`}>
-                          <span className="text-xl">{h.emoji}</span>
+                          <span className="flex items-center justify-center">{h.icon}</span>
                           {h.label}
                         </button>
                       ))}

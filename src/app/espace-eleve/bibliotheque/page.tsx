@@ -32,80 +32,113 @@ const ACCORDS = [
 ]
 
 // Clavier piano SVG — 2 octaves (Do à Si)
+// Numérotation des notes : 0=Do, 1=Do#, 2=Ré, 3=Ré#, 4=Mi, 5=Fa, 6=Fa#, 7=Sol,
+//   8=Sol#, 9=La, 10=La#, 11=Si, 12=Do(oct2), 13=Do#, 14=Ré, 15=Ré#, 16=Mi,
+//   17=Fa, 18=Fa#, 19=Sol, 20=Sol#, 21=La, 22=La#, 23=Si(oct2)
 function MiniPiano({ highlighted }: { highlighted: number[] }) {
-  // 14 touches blanches sur 2 octaves : C D E F G A B C D E F G A B
-  const WHITE_NOTES = [0,2,4,5,7,9,11,12,14,16,17,19,21,23]
-  // Touches noires : position X en % et note MIDI relative
+  // 14 touches blanches : C D E F G A B | C D E F G A B
+  // indices dans notre numérotation
+  const WHITE_NOTES = [0,2,4,5,7,9,11, 12,14,16,17,19,21,23]
+
+  // Touches noires : entre quelles touches blanches elles se trouvent
+  // Règle piano : touche noire entre blanc[i] et blanc[i+1], centrée à (i + 0.5) * ww
+  // Octave 1 : C#(entre 0-1), D#(entre 1-2), F#(entre 3-4), G#(entre 4-5), A#(entre 5-6)
+  // Octave 2 : C#(entre 7-8), D#(entre 8-9), F#(entre 10-11), G#(entre 11-12), A#(entre 12-13)
+  // (Mi-Fa et Si-Do n'ont PAS de touche noire entre eux)
   const BLACK_NOTES = [
-    { note: 1,  x: 6.2  }, // C#
-    { note: 3,  x: 13.0 }, // D#
-    { note: 6,  x: 27.0 }, // F#
-    { note: 8,  x: 33.8 }, // G#
-    { note: 10, x: 40.6 }, // A#
-    { note: 13, x: 55.6 }, // C#
-    { note: 15, x: 62.4 }, // D#
-    { note: 18, x: 76.4 }, // F#
-    { note: 20, x: 83.2 }, // G#
-    { note: 22, x: 90.0 }, // A#
+    { note: 1,  whiteIdx: 0.5  }, // C# : entre blanc[0]=Do et blanc[1]=Ré
+    { note: 3,  whiteIdx: 1.5  }, // D# : entre blanc[1]=Ré et blanc[2]=Mi
+    // pas de touche noire entre Mi(2) et Fa(3)
+    { note: 6,  whiteIdx: 3.5  }, // F# : entre blanc[3]=Fa et blanc[4]=Sol
+    { note: 8,  whiteIdx: 4.5  }, // G# : entre blanc[4]=Sol et blanc[5]=La
+    { note: 10, whiteIdx: 5.5  }, // A# : entre blanc[5]=La et blanc[6]=Si
+    // pas de touche noire entre Si(6) et Do(7)
+    { note: 13, whiteIdx: 7.5  }, // C# : entre blanc[7]=Do et blanc[8]=Ré
+    { note: 15, whiteIdx: 8.5  }, // D# : entre blanc[8]=Ré et blanc[9]=Mi
+    // pas de touche noire entre Mi(9) et Fa(10)
+    { note: 18, whiteIdx: 10.5 }, // F# : entre blanc[10]=Fa et blanc[11]=Sol
+    { note: 20, whiteIdx: 11.5 }, // G# : entre blanc[11]=Sol et blanc[12]=La
+    { note: 22, whiteIdx: 12.5 }, // A# : entre blanc[12]=La et blanc[13]=Si
   ]
-  const W = 560 // largeur SVG
-  const H = 140 // hauteur SVG
-  const ww = W / 14 // largeur touche blanche
-  const bw = ww * 0.6 // largeur touche noire
-  const bh = H * 0.62 // hauteur touche noire
+
+  const W = 560
+  const H = 150
+  const ww = W / 14       // largeur d'une touche blanche
+  const bw = ww * 0.58    // largeur touche noire
+  const bh = H * 0.60     // hauteur touche noire
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full rounded-xl border border-noir-700 bg-noir-950" style={{maxHeight: 160}}>
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full rounded-xl border border-noir-700" style={{maxHeight: 170, background: '#0d0d1f'}}>
       {/* Fond */}
-      <rect width={W} height={H} fill="#0a0a1a" rx="10"/>
-      
-      {/* Touches blanches */}
+      <rect width={W} height={H} fill="#0d0d1f" rx="10"/>
+
+      {/* Touches blanches (dessinées en premier, sous les noires) */}
       {WHITE_NOTES.map((note, i) => {
         const isHighlighted = highlighted.includes(note)
         return (
-          <g key={i}>
+          <g key={`w-${i}`}>
             <rect
-              x={i * ww + 1}
-              y={2}
-              width={ww - 2}
-              height={H - 4}
-              rx={4}
-              fill={isHighlighted ? '#f59e0b' : '#f8f8f8'}
-              stroke={isHighlighted ? '#d97706' : '#c0c0c0'}
+              x={i * ww + 1.5}
+              y={3}
+              width={ww - 3}
+              height={H - 6}
+              rx={5}
+              fill={isHighlighted ? '#f59e0b' : '#f0f0f0'}
+              stroke={isHighlighted ? '#d97706' : '#aaaaaa'}
               strokeWidth={1}
             />
             {isHighlighted && (
-              <circle cx={i * ww + ww / 2} cy={H - 18} r={6} fill="#d97706" opacity={0.8}/>
+              <circle
+                cx={i * ww + ww / 2}
+                cy={H - 16}
+                r={7}
+                fill="#d97706"
+                opacity={0.85}
+              />
             )}
           </g>
         )
       })}
 
-      {/* Touches noires */}
-      {BLACK_NOTES.map(({ note, x }) => {
+      {/* Touches noires (dessinées par-dessus les blanches) */}
+      {BLACK_NOTES.map(({ note, whiteIdx }) => {
         const isHighlighted = highlighted.includes(note)
-        const px = (x / 100) * W
+        const cx = whiteIdx * ww  // centre horizontal de la touche noire
         return (
-          <g key={note}>
+          <g key={`b-${note}`}>
             <rect
-              x={px - bw / 2}
-              y={2}
+              x={cx - bw / 2}
+              y={3}
               width={bw}
               height={bh}
-              rx={3}
-              fill={isHighlighted ? '#f59e0b' : '#1a1a2e'}
-              stroke={isHighlighted ? '#d97706' : '#3a3a5c'}
+              rx={4}
+              fill={isHighlighted ? '#f59e0b' : '#111122'}
+              stroke={isHighlighted ? '#d97706' : '#2a2a4a'}
               strokeWidth={1}
             />
             {isHighlighted && (
-              <circle cx={px} cy={bh - 10} r={4} fill="#d97706" opacity={0.9}/>
+              <circle
+                cx={cx}
+                cy={bh - 12}
+                r={5}
+                fill="#d97706"
+                opacity={0.9}
+              />
             )}
           </g>
         )
       })}
 
-      {/* Séparateur octaves */}
-      <line x1={W/2} y1={H - 20} x2={W/2} y2={H - 4} stroke="#f59e0b" strokeWidth={1} opacity={0.3}/>
+      {/* Séparateur d'octave (discret) */}
+      <line
+        x1={7 * ww}
+        y1={H - 22}
+        x2={7 * ww}
+        y2={H - 5}
+        stroke="#f59e0b"
+        strokeWidth={1}
+        opacity={0.25}
+      />
     </svg>
   )
 }

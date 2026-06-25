@@ -76,6 +76,8 @@ interface Question {
   bonne_reponse: string | null
   explication: string | null
   audio_url: string | null
+  image_url: string | null
+  video_url: string | null
   points: number
   position: number
 }
@@ -227,6 +229,33 @@ export default function EleveQuizPage() {
                 <audio controls className="flex-1 h-8" src={q.audio_url} />
               </div>
             )}
+
+            {q.image_url && (
+              <div className="mb-4 rounded-xl overflow-hidden border border-noir-700">
+                <img src={q.image_url} alt="Illustration de la question" className="w-full max-h-48 object-contain bg-noir-900" />
+              </div>
+            )}
+
+            {q.video_url && (() => {
+              const ytMatch = q.video_url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/)
+              if (ytMatch) {
+                return (
+                  <div className="mb-4 rounded-xl overflow-hidden border border-noir-700 aspect-video">
+                    <iframe
+                      src={`https://www.youtube.com/embed/${ytMatch[1]}`}
+                      className="w-full h-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  </div>
+                )
+              }
+              return (
+                <div className="mb-4 rounded-xl overflow-hidden border border-noir-700">
+                  <video controls className="w-full max-h-48" src={q.video_url} />
+                </div>
+              )
+            })()}
 
             <p className="text-white text-base font-medium mb-4">{q.question}</p>
 

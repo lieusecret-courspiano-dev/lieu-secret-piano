@@ -17,16 +17,16 @@ interface Certificat {
 }
 
 const NIVEAU_COLORS: Record<string, { color: string; bg: string; emoji: string }> = {
-  fondamentaux: { color: 'text-blue-400', bg: 'bg-blue-500/10 border-blue-500/20', emoji: '🎹' },
-  comprehension: { color: 'text-gold-400', bg: 'bg-gold-500/10 border-gold-500/20', emoji: '🎵' },
-  expression: { color: 'text-green-400', bg: 'bg-green-500/10 border-green-500/20', emoji: '🌟' },
-  diplome: { color: 'text-purple-400', bg: 'bg-purple-500/10 border-purple-500/20', emoji: '🏅' },
+  fondamentaux: { color: 'text-blue-400', bg: 'bg-blue-500/10 border-blue-500/20', emoji: '' },
+  comprehension: { color: 'text-gold-400', bg: 'bg-gold-500/10 border-gold-500/20', emoji: '' },
+  expression: { color: 'text-green-400', bg: 'bg-green-500/10 border-green-500/20', emoji: '' },
+  diplome: { color: 'text-purple-400', bg: 'bg-purple-500/10 border-purple-500/20', emoji: '' },
 }
 
 function getNiveauConfig(niveau: string | null) {
-  if (!niveau) return { color: 'text-noir-400', bg: 'bg-noir-800 border-noir-700', emoji: '📜' }
+  if (!niveau) return { color: 'text-noir-400', bg: 'bg-noir-800 border-noir-700', emoji: '' }
   const key = Object.keys(NIVEAU_COLORS).find(k => niveau.toLowerCase().includes(k))
-  return key ? NIVEAU_COLORS[key] : { color: 'text-noir-400', bg: 'bg-noir-800 border-noir-700', emoji: '📜' }
+  return key ? NIVEAU_COLORS[key] : { color: 'text-noir-400', bg: 'bg-noir-800 border-noir-700', emoji: '' }
 }
 
 export default function CertificatsPage() {
