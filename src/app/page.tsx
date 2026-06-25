@@ -103,6 +103,7 @@ const STEPS = [
 /* ─── Page principale ─── */
 export default function AccueilPage() {
   // Initialiser avec les valeurs par défaut pour éviter le flash
+  const [heroReady, setHeroReady] = useState(false)
   const [settings, setSettings] = useState<Settings>({
     hero_title: "L'art du piano,", hero_title2: 'à votre rythme',
     hero_subtitle: 'Cours individuels, ateliers de groupe et masterclass via Zoom. Une pédagogie bienveillante pour tous les niveaux.',
@@ -144,6 +145,7 @@ export default function AccueilPage() {
       if (settingsRes.status === 'fulfilled') {
         setSettings(settingsRes.value)
       }
+      setHeroReady(true)
       if (eventsRes.status === 'fulfilled' && Array.isArray(eventsRes.value)) {
         setFeaturedEvent(eventsRes.value.find((e: EventItem) => e.is_featured) || null)
       }
@@ -191,7 +193,7 @@ export default function AccueilPage() {
           ))}
         </div>
 
-        <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 text-center pt-24 pb-16">
+        <div className={`relative z-10 max-w-5xl mx-auto px-4 sm:px-6 text-center pt-24 pb-16 transition-opacity duration-300 ${heroReady ? 'opacity-100' : 'opacity-0'}`}>
           <div className="inline-flex items-center gap-2 bg-gold-500/10 border border-gold-500/30 rounded-full px-4 py-1.5 mb-8">
             <span className="w-1.5 h-1.5 rounded-full bg-gold-500 animate-pulse" />
             <span className="text-gold-400 text-xs font-medium tracking-widest uppercase">École de Piano en Ligne</span>
