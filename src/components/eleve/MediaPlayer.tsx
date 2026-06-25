@@ -26,7 +26,16 @@ function detectType(url: string): 'youtube' | 'vimeo' | 'video' | 'audio' | 'pdf
   const lower = url.toLowerCase()
   if (lower.includes('.mp4') || lower.includes('.webm') || lower.includes('/video/')) return 'video'
   if (lower.includes('.mp3') || lower.includes('.wav') || lower.includes('.aac') || lower.includes('.flac')) return 'audio'
+  // OneDrive audio links
+  if (lower.includes('1drv.ms') || lower.includes('onedrive.live.com')) return 'audio'
   if (lower.includes('.pdf') || lower.includes('/raw/upload/')) return 'pdf'
+  // Supabase Storage — détecter par le type de fichier dans l'URL
+  if (lower.includes('supabase.co/storage') || lower.includes('supabase.in/storage')) {
+    if (lower.includes('pdf') || lower.includes('document')) return 'pdf'
+    if (lower.includes('mp3') || lower.includes('wav') || lower.includes('audio')) return 'audio'
+    if (lower.includes('mp4') || lower.includes('video')) return 'video'
+    return 'link' // Lien de téléchargement pour les autres fichiers Supabase
+  }
   if (lower.includes('.jpg') || lower.includes('.jpeg') || lower.includes('.png') || lower.includes('.webp')) return 'image'
   return 'link'
 }

@@ -77,17 +77,18 @@ function SupportViewer({ support, onClose }: { support: Support; onClose: () => 
 
         {isPdf && support.fichier_url && (
           <div className="w-full flex flex-col" style={{ height: 'calc(100vh - 120px)' }}>
+            {/* Affichage direct du PDF — fonctionne avec Supabase Storage */}
             <iframe
-              src={`https://docs.google.com/viewer?url=${encodeURIComponent(support.fichier_url)}&embedded=true`}
+              src={support.fichier_url}
               className="w-full flex-1 border-0"
               style={{ minHeight: '400px' }}
               title={support.titre}
             />
             <div className="bg-noir-900 border-t border-noir-800 px-4 py-2 flex items-center justify-between shrink-0">
-              <p className="text-noir-500 text-xs">Si le document ne s&apos;affiche pas, utilisez le bouton Télécharger</p>
+              <p className="text-noir-500 text-xs">Si le document ne s&apos;affiche pas, utilisez le bouton ci-dessous</p>
               <a href={support.fichier_url} target="_blank" rel="noopener noreferrer"
                 className="text-xs text-gold-400 hover:text-gold-300 flex items-center gap-1">
-                <ExternalLink size={12} /> Ouvrir dans un nouvel onglet
+                <ExternalLink size={12} /> Ouvrir / Télécharger
               </a>
             </div>
           </div>
