@@ -40,6 +40,8 @@ export async function POST(req: NextRequest) {
     gift_code,
     pack_code,
     achete_pack,
+    eleve_id,
+    amount_override,
   } = body
 
   if (!student_name || !student_email) {
@@ -127,11 +129,12 @@ export async function POST(req: NextRequest) {
       type:              type || 'cours',
       status:            (payment_method === 'virement') ? 'pending_virement' : 'confirmed',
       payment_method:    payment_method || 'gratuit',
-      amount,
+      amount:            amount_override ?? amount,
       stripe_session_id: stripe_session_id || null,
       gift_code:         gift_code || null,
       pack_code:         pack_code || null,
       ics_uid:           reservationIcsUid,
+      ...(eleve_id ? { eleve_id } : {}),
     })
     .select()
     .single()

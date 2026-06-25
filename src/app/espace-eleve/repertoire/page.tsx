@@ -51,14 +51,25 @@ export default function RepertoirePage() {
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault()
     setSaving(true)
-    const res = await fetch('/api/eleve/repertoire', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...form, compositeur: form.compositeur || null, tonalite: form.tonalite || null, niveau: form.niveau || null, notes: form.notes || null }),
-    })
-    const data = await res.json()
-    if (res.ok) { setMorceaux(prev => [data, ...prev]); setShowForm(false); setForm({ titre: '', compositeur: '', tonalite: '', niveau: '', statut: 'a_apprendre', notes: '' }) }
-    setSaving(false)
+    try {
+      const res = await fetch('/api/eleve/repertoire', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...form, compositeur: form.compositeur || null, tonalite: form.tonalite || null, niveau: form.niveau || null, notes: form.notes || null }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setMorceaux(prev => [data, ...prev])
+        setShowForm(false)
+        setForm({ titre: '', compositeur: '', tonalite: '', niveau: '', statut: 'a_apprendre', notes: '' })
+      } else {
+        alert(data.error || 'Erreur lors de l'ajout')
+      }
+    } catch {
+      alert('Erreur réseau, veuillez réessayer')
+    } finally {
+      setSaving(false)
+    }
   }
 
   async function updateStatut(id: string, statut: string) {

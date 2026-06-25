@@ -49,18 +49,25 @@ export default function JournalPage() {
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault()
     setSaving(true)
-    const res = await fetch('/api/eleve/journal', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
-    })
-    const data = await res.json()
-    if (res.ok) {
-      setEntries(prev => [data, ...prev])
-      setShowForm(false)
-      setForm({ date_pratique: new Date().toISOString().split('T')[0], duree_minutes: 30, humeur: 'bien', notes: '', morceaux: '' })
+    try {
+      const res = await fetch('/api/eleve/journal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setEntries(prev => [data, ...prev])
+        setShowForm(false)
+        setForm({ date_pratique: new Date().toISOString().split('T')[0], duree_minutes: 30, humeur: 'bien', notes: '', morceaux: '' })
+      } else {
+        alert(data.error || 'Erreur lors de l'enregistrement')
+      }
+    } catch {
+      alert('Erreur réseau, veuillez réessayer')
+    } finally {
+      setSaving(false)
     }
-    setSaving(false)
   }
 
   async function deleteEntry(id: string) {
