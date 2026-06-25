@@ -14,15 +14,16 @@ export async function POST(req: NextRequest) {
   const eleve = await getEleveFromSession()
   if (!eleve) return NextResponse.json({ error: 'Non connecté' }, { status: 401 })
   const body = await req.json()
-  if (!body.duree_min || body.duree_min < 1) return NextResponse.json({ error: 'Durée invalide' }, { status: 400 })
+  const dureeMin = body.duree_min || body.duree_minutes
+  if (!dureeMin || dureeMin < 1) return NextResponse.json({ error: 'Durée invalide' }, { status: 400 })
 
-  const { data, error } = await supabaseAdmin.from('eleve_journal').insert({ ...body, eleve_id: eleve.id }).select().single()
+  const { data, error } = await supabaseAdmin.from('eleve_journal').insert({ ...body, duree_minutes: dureeMin, eleve_id: eleve.id }).select().single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   // Mettre à jour le total d'heures et le streak
   try {
     const { data: eleve_data } = await supabaseAdmin.from('eleves').select('total_heures_pratique, streak_semaines, streak_derniere_semaine').eq('id', eleve.id).single()
-    const totalMin = (eleve_data?.total_heures_pratique || 0) * 60 + body.duree_min
+    const totalMin = (eleve_data?.total_heures_pratique || 0) * 60 + dureeMin
     const now = new Date()
     const weekNum = `${now.getFullYear()}-${String(Math.ceil((now.getDate() - now.getDay() + 1) / 7)).padStart(2, '0')}`
     const lastWeek = eleve_data?.streak_derniere_semaine

@@ -16,13 +16,16 @@ interface Morceau {
   created_at: string
 }
 
-const STATUT_CONFIG = {
-  en_cours:    { label: 'En cours',     emoji: '', color: 'text-blue-400',   bg: 'bg-blue-500/10 border-blue-500/20',
-    icon: <svg width="16" height="16" fill="none" stroke="#3b82f6" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> },
-  maitrise:    { label: 'Maîtrisé',     emoji: '', color: 'text-gold-400',   bg: 'bg-gold-500/10 border-gold-500/20',
-    icon: <svg width="16" height="16" fill="none" stroke="#f59e0b" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> },
-  a_apprendre: { label: 'À apprendre',  emoji: '', color: 'text-noir-400',   bg: 'bg-noir-800/50 border-noir-700',
-    icon: <svg width="16" height="16" fill="none" stroke="#a0a0c0" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> },
+const STATUT_CONFIG: Record<string, { label: string; emoji: string; color: string; bg: string; iconKey: string }> = {
+  en_cours:    { label: 'En cours',    emoji: '', color: 'text-blue-400',  bg: 'bg-blue-500/10 border-blue-500/20', iconKey: 'clock' },
+  maitrise:    { label: 'Maîtrisé',    emoji: '', color: 'text-gold-400',  bg: 'bg-gold-500/10 border-gold-500/20', iconKey: 'star'  },
+  a_apprendre: { label: 'À apprendre', emoji: '', color: 'text-noir-400',  bg: 'bg-noir-800/50 border-noir-700',    iconKey: 'info'  },
+}
+
+function StatutIcon({ iconKey }: { iconKey: string }) {
+  if (iconKey === 'clock') return <svg width="16" height="16" fill="none" stroke="#3b82f6" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+  if (iconKey === 'star')  return <svg width="16" height="16" fill="none" stroke="#f59e0b" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+  return <svg width="16" height="16" fill="none" stroke="#a0a0c0" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
 }
 
 const NIVEAUX = ['Débutant', 'Intermédiaire', 'Avancé']
@@ -95,7 +98,7 @@ export default function RepertoirePage() {
         <div className="grid grid-cols-3 gap-3 mb-6">
           {Object.entries(STATUT_CONFIG).map(([key, cfg]) => (
             <div key={key} className={`card text-center py-3 border ${cfg.bg}`}>
-              <div className="flex justify-center mb-1">{cfg.icon}</div>
+              <div className="flex justify-center mb-1"><StatutIcon iconKey={cfg.iconKey} /></div>
               <p className="text-white font-bold">{morceaux.filter(m => m.statut === key).length}</p>
               <p className="text-xs text-noir-400">{cfg.label}</p>
             </div>
@@ -130,7 +133,7 @@ export default function RepertoirePage() {
                 <div key={m.id} className={`card border ${cfg.bg} transition-all`}>
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-start gap-3 flex-1 min-w-0">
-                      <span className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center bg-noir-800/50">{cfg.icon}</span>
+                      <span className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center bg-noir-800/50"><StatutIcon iconKey={cfg.iconKey} /></span>
                       <div className="flex-1 min-w-0">
                         <p className="text-white font-semibold text-sm truncate">{m.titre}</p>
                         {m.compositeur && <p className="text-noir-400 text-xs">{m.compositeur}</p>}
@@ -183,7 +186,7 @@ export default function RepertoirePage() {
                       {Object.entries(STATUT_CONFIG).map(([k, v]) => (
                         <button key={k} type="button" onClick={() => setForm(f => ({ ...f, statut: k }))}
                           className={`py-2 rounded-xl border text-xs font-medium transition-all ${form.statut === k ? 'bg-gold-500/10 border-gold-500/30 text-gold-400' : 'border-noir-700 text-noir-400'}`}>
-                          <span className="flex items-center justify-center gap-1">{v.icon} {v.label}</span>
+                          <span className="flex items-center justify-center gap-1"><StatutIcon iconKey={v.iconKey} /> {v.label}</span>
                         </button>
                       ))}
                     </div>
