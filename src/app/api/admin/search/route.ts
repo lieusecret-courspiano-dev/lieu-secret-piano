@@ -6,7 +6,9 @@ export async function GET(req: NextRequest) {
   const isAdmin = await validateAdminSession()
   if (!isAdmin) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
 
-  const q = req.nextUrl.searchParams.get('q')?.trim()
+  const rawQ = req.nextUrl.searchParams.get('q')?.trim() || ''
+  // Sanitiser: limiter longueur et supprimer caractères dangereux pour ILIKE
+  const q = rawQ.slice(0, 100).replace(/[%_\\]/g, c => `\\${c}`)
   if (!q || q.length < 2) return NextResponse.json([])
 
   const results: { type: string; label: string; sub?: string; href: string; icon?: string }[] = []

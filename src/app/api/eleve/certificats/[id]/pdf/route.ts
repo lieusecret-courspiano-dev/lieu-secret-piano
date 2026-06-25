@@ -236,40 +236,39 @@ export async function GET(
 </body>
 </html>`
 
-  // Générer le PDF avec wkhtmltopdf
-  const { exec } = await import('child_process')
-  const { promisify } = await import('util')
-  const { writeFile, readFile, unlink } = await import('fs/promises')
-  const { tmpdir } = await import('os')
-  const { join } = await import('path')
-  const execAsync = promisify(exec)
-
-  const tmpHtml = join(tmpdir(), `cert-${cert.id}.html`)
-  const tmpPdf  = join(tmpdir(), `cert-${cert.id}.pdf`)
+  // Générer le PDF via le module centralisé
+  const { generatePdfFromHtml, safePdfFilename } = await import('@/lib/pdf-generator')
 
   try {
-    await writeFile(tmpHtml, html, 'utf8')
-    await execAsync(
-      `wkhtmltopdf --page-width 297mm --page-height 210mm --orientation Landscape --margin-top 0 --margin-bottom 0 --margin-left 0 --margin-right 0 --disable-smart-shrinking --zoom 1 "${tmpHtml}" "${tmpPdf}"`,
-      { timeout: 30000 }
-    )
-    const pdfBuffer = await readFile(tmpPdf)
-    await unlink(tmpHtml).catch(() => {})
-    await unlink(tmpPdf).catch(() => {})
+    const { buffer, contentType, isHtml } = await generatePdfFromHtml(html, {
+      pageWidth: '297mm',
+      pageHeight: '210mm',
+      orientation: 'Landscape',
+    })
 
-    const nomFichier = `Certificat-${(cert.nom_certificat || 'Lieu-Secret').replace(/\s+/g, '-')}-${eleve.prenom}-${eleve.nom}.pdf`
-    return new NextResponse(pdfBuffer, {
+    const nomFichier = safePdfFilename([
+      'Certificat',
+      cert.nom_certificat || 'Lieu-Secret',
+      eleve.prenom,
+      eleve.nom,
+    ])
+
+    if (isHtml) {
+      return new NextResponse(buffer.toString('utf8'), {
+        headers: { 'Content-Type': contentType }
+      })
+    }
+
+    return new NextResponse(new Uint8Array(buffer), {
       headers: {
-        'Content-Type': 'application/pdf',
+        'Content-Type': contentType,
         'Content-Disposition': `attachment; filename="${nomFichier}"`,
         'Cache-Control': 'no-store',
+        'X-Content-Type-Options': 'nosniff',
       }
     })
   } catch (err: any) {
     console.error('[cert PDF]', err)
-    // Fallback : retourner le HTML si wkhtmltopdf échoue
-    await unlink(tmpHtml).catch(() => {})
-    await unlink(tmpPdf).catch(() => {})
     return new NextResponse(html, {
       headers: { 'Content-Type': 'text/html; charset=utf-8' }
     })

@@ -1,3 +1,4 @@
+import { checkRateLimit, getClientIP } from '@/lib/rate-limit'
 import { NextRequest, NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic'
 import { supabaseAdmin } from '@/lib/supabase'
@@ -5,6 +6,13 @@ import { hashPassword, generateToken } from '@/lib/eleve-auth'
 import { Resend } from 'resend'
 
 export async function POST(req: NextRequest) {
+  // Rate limiting: 3 tentatives par IP par 30 minutes
+  const ip = getClientIP(req)
+  const rl = checkRateLimit(`reset:${ip}`, 3, 30 * 60 * 1000)
+  if (!rl.allowed) {
+    return NextResponse.json({ error: 'Trop de tentatives. Réessayez plus tard.' }, { status: 429 })
+  }
+
   const { email, token, password } = await req.json()
   if (email && !token) {
     const { data: eleve } = await supabaseAdmin.from('eleves').select('id, prenom').eq('email', email.toLowerCase()).single()
