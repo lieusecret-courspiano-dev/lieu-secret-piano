@@ -27,10 +27,16 @@ export default function AdminPartitions() {
     const hasUrl = form.url_pdf || form.url_video || form.url_audio || form.url_image
     if (!hasUrl) { setError('Au moins une URL est requise (PDF, vidéo, audio ou image)'); return }
     setSaving(true); setError('')
-    const res = await fetch('/api/partitions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
-    const data = await res.json()
-    if (!res.ok) { setError(data.error || 'Erreur'); setSaving(false); return }
-    setShowCreate(false); setForm(EMPTY_FORM); await reload(); setSaving(false)
+    try {
+      const res = await fetch('/api/partitions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
+      const data = await res.json()
+      if (!res.ok) { setError(data.error || 'Erreur'); return }
+      setShowCreate(false); setForm(EMPTY_FORM); await reload()
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Erreur réseau')
+    } finally {
+      setSaving(false)
+    }
   }
 
   async function handleDelete(id: string) {

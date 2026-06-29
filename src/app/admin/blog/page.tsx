@@ -51,12 +51,20 @@ export default function AdminBlogPage() {
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault(); setSaving(true)
-    if (editItem) {
-      await fetch('/api/admin/blog', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: editItem.id, ...form }) })
-    } else {
-      await fetch('/api/admin/blog', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
+    try {
+      let res
+      if (editItem) {
+        res = await fetch('/api/admin/blog', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: editItem.id, ...form }) })
+      } else {
+        res = await fetch('/api/admin/blog', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
+      }
+      if (res && !res.ok) { const d = await res.json(); throw new Error(d.error || 'Erreur') }
+      await loadArticles(); setShowForm(false); setTab('liste')
+    } catch (e: unknown) {
+      alert(e instanceof Error ? e.message : 'Erreur lors de la sauvegarde')
+    } finally {
+      setSaving(false)
     }
-    await loadArticles(); setShowForm(false); setTab('liste'); setSaving(false)
   }
 
   async function handleDelete(id: string) {

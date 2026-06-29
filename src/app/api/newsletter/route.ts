@@ -84,7 +84,7 @@ Pour vous désabonner, cliquez ici :
 </td></tr>
 </table></td></tr></table>
 </body></html>`,
-    }).catch(() => {}) // Ne pas bloquer si l'email échoue
+    }).catch((e) => console.error('[newsletter]', e)) // Ne pas bloquer si l'email échoue
 
     // Notification admin
     await resend.emails.send({
@@ -108,7 +108,7 @@ Pour vous désabonner, cliquez ici :
 </td></tr>
 </table></td></tr></table>
 </body></html>`,
-    }).catch(() => {})
+    }).catch((e) => console.error('[newsletter]', e))
 
     return NextResponse.json({ success: true, message: 'Inscription confirmée ! Vérifiez votre boîte mail.' })
 

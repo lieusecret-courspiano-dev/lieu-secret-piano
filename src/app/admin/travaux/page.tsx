@@ -72,6 +72,7 @@ export default function AdminTravauxPage() {
     e.preventDefault()
     if (!form.titre.trim()) return
     setSaving(true)
+    try {
 
     const payload = {
       titre: form.titre,
@@ -98,8 +99,12 @@ export default function AdminTravauxPage() {
 
     await loadData()
     setShowForm(false)
+  } catch (e: unknown) {
+    alert(e instanceof Error ? e.message : 'Erreur lors de la sauvegarde')
+  } finally {
     setSaving(false)
   }
+}
 
   async function handleDelete(id: string) {
     if (!confirm('Supprimer ce travail ?')) return

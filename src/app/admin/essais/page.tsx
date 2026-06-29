@@ -20,8 +20,15 @@ export default function AdminEssais() {
 
   async function updateStatus(id: string, status: string) {
     setSaving(true)
-    await fetch('/api/admin/essais', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, status, notes }) })
-    await reload(); setSaving(false); setSelected(null)
+    try {
+      const res = await fetch('/api/admin/essais', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, status, notes }) })
+      if (!res.ok) { const d = await res.json(); throw new Error(d.error || 'Erreur') }
+      await reload()
+    } catch (e: unknown) {
+      alert(e instanceof Error ? e.message : 'Erreur')
+    } finally {
+      setSaving(false)
+    }; setSelected(null)
   }
   async function handleDelete(id: string) {
     if (!confirm('Supprimer cette demande ?')) return

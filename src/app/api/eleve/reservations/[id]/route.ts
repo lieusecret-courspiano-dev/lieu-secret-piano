@@ -112,7 +112,7 @@ export async function DELETE(
       dateLocal,
       cancelledBy:  'student',
       icsContent,
-    }).catch(() => {})
+    }).catch((e) => console.error('[eleve-reservations]', e))
   } catch {}
 
   return NextResponse.json({ success: true, message: 'Réservation annulée avec succès.' })

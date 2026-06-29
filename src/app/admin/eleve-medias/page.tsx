@@ -125,16 +125,23 @@ export default function AdminEleveMedias() {
     e.preventDefault()
     if (!selected || !commentaire.trim()) return
     setSaving(true)
-    const res = await fetch('/api/admin/eleve-medias', {
-      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: selected.id, commentaire_admin: commentaire }),
-    })
-    if (res.ok) {
-      const updated = await res.json()
-      setMedias(prev => prev.map(m => m.id === selected.id ? { ...m, commentaire_admin: updated.commentaire_admin, commentaire_at: updated.commentaire_at } : m))
-      setSelected(prev => prev ? { ...prev, commentaire_admin: updated.commentaire_admin, commentaire_at: updated.commentaire_at } : null)
+    try {
+      const res = await fetch('/api/admin/eleve-medias', {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: selected.id, commentaire_admin: commentaire }),
+      })
+      if (res.ok) {
+        const updated = await res.json()
+        setMedias(prev => prev.map(m => m.id === selected.id ? { ...m, commentaire_admin: updated.commentaire_admin, commentaire_at: updated.commentaire_at } : m))
+        setSelected(prev => prev ? { ...prev, commentaire_admin: updated.commentaire_admin, commentaire_at: updated.commentaire_at } : null)
+      } else {
+        const d = await res.json(); alert(d.error || 'Erreur lors de la sauvegarde')
+      }
+    } catch (e: unknown) {
+      alert(e instanceof Error ? e.message : 'Erreur réseau')
+    } finally {
+      setSaving(false)
     }
-    setSaving(false)
   }
 
   // nbNonLus géré par l'état nbEnregNonLus

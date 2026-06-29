@@ -74,6 +74,7 @@ export default function AdminRessourcesPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setSaving(true)
+    try {
     const payload = { ...form, eleve_id: form.eleve_id || null }
 
     if (editTarget) {
@@ -100,7 +101,11 @@ export default function AdminRessourcesPage() {
         setShowCreate(false)
       }
     }
-    setSaving(false)
+    } catch (e: unknown) {
+      alert(e instanceof Error ? e.message : 'Erreur lors de la sauvegarde')
+    } finally {
+      setSaving(false)
+    }
   }
 
   async function handleDelete(id: string) {

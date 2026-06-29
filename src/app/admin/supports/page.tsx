@@ -58,13 +58,16 @@ export default function AdminSupportsPage() {
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault(); setSaving(true)
+    try {
     const payload = { ...form, prix: parseFloat(form.prix as any) || 0, nb_pages: form.nb_pages ? parseInt(form.nb_pages as any) : null }
     if (editItem) {
       await fetch('/api/admin/supports', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: editItem.id, ...payload }) })
     } else {
       await fetch('/api/admin/supports', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
     }
-    await loadData(); setShowForm(false); setEditItem(null); setForm({ ...EMPTY }); setSaving(false)
+    await loadData(); setShowForm(false); setEditItem(null); setForm({ ...EMPTY }); } finally {
+      setSaving(false)
+    }
   }
 
   async function handleDelete(id: string) {

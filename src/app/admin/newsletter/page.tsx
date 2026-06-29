@@ -32,12 +32,17 @@ export default function AdminNewsletterPage() {
 
   async function handleDelete(id: string) {
     if (!confirm('Supprimer cet abonné définitivement ?')) return
-    await fetch('/api/newsletter', {
+    const res = await fetch('/api/newsletter', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id }),
     })
-    setSubscribers(prev => prev.filter(s => s.id !== id))
+    if (res.ok) {
+      setSubscribers(prev => prev.filter(s => s.id !== id))
+    } else {
+      const d = await res.json()
+      alert(d.error || 'Erreur lors de la suppression')
+    }
   }
 
   function exportCSV() {

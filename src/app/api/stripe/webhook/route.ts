@@ -140,7 +140,7 @@ export async function POST(req: NextRequest) {
           acheteur_nom:    achat.acheteur_nom,
           ressource_titre: ressource.titre,
           token_acces:     achat.token_acces,
-        }).catch(() => {})
+        }).catch((e) => console.error('[stripe-webhook]', e))
 
       } catch (err) { console.error('Erreur ressource premium Stripe:', err) }
       return NextResponse.json({ received: true })

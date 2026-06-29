@@ -100,6 +100,7 @@ export default function AdminRessourcesPremiumPage() {
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault(); setSaving(true); setMsg(null)
+    try {
     const payload = {
       ...form,
       prix: parseFloat(form.prix as string) || 0,
@@ -122,7 +123,9 @@ export default function AdminRessourcesPremiumPage() {
     } else {
       const d = await res.json(); setMsg({ type: 'err', text: d.error || 'Erreur' })
     }
-    setSaving(false)
+    } finally {
+      setSaving(false)
+    }
   }
 
   async function handleDelete(id: string) {

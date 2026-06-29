@@ -59,7 +59,7 @@ export async function GET(req: NextRequest) {
       acheteur_nom:    achat.acheteur_nom,
       ressource_titre: ressource.titre,
       token_acces:     achat.token_acces,
-    }).catch(() => {})
+    }).catch((e) => console.error('[paypal-capture]', e))
 
     return NextResponse.redirect(`${APP_URL}/ressources-premium/acces/${achat.token_acces}?paypal=success`)
   } catch (err) {

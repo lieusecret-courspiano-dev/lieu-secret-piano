@@ -94,7 +94,7 @@ async function sendAccessEmail(achat: { acheteur_nom: string; acheteur_email: st
           </div>
         </div>
       </div>`,
-  }).catch(() => {})
+  }).catch((e) => console.error('[ressources-premium]', e))
 }
 
 async function sendVirementInstructions(achat: { acheteur_nom: string; acheteur_email: string; id: string }, ressource: { titre: string; prix: number }) {
@@ -113,5 +113,5 @@ async function sendVirementInstructions(achat: { acheteur_nom: string; acheteur_
       subject: `Nouvelle commande virement — ${ressource.titre} — ${achat.acheteur_nom}`,
       html: `<p>Nouvelle commande par virement :<br>Ressource : ${ressource.titre}<br>Client : ${achat.acheteur_nom} (${achat.acheteur_email})<br>Montant : ${ressource.prix} €<br>Référence : RP-${achat.id.slice(0,8).toUpperCase()}</p>`,
     }),
-  ]).catch(() => {})
+  ]).catch((e) => console.error('[ressources-premium]', e))
 }

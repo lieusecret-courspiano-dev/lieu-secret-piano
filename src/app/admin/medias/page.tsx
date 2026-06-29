@@ -46,6 +46,7 @@ export default function AdminMedias() {
     e.preventDefault()
     if (!form.url && !editItem) { setError('URL requise'); return }
     setSaving(true); setError('')
+    try {
 
     if (editItem) {
       // Modification
@@ -74,7 +75,11 @@ export default function AdminMedias() {
         const d = await res.json(); setError(d.error)
       }
     }
-    setSaving(false)
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Erreur réseau')
+    } finally {
+      setSaving(false)
+    }
   }
 
   function openEdit(m: Media) {
