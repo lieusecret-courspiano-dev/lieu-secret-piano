@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a2e"/>
+      <stop offset="100%" style="stop-color:#252540"/>
+    </linearGradient>
+  </defs>
+  <!-- Fond -->
+  <rect width="128" height="128" rx="16" fill="url(#bg)"/>
+  <!-- Bordure dorée -->
+  <rect x="10" y="10" width="108" height="108" rx="14" fill="none" stroke="#f59e0b" stroke-width="2"/>
+  <!-- Touches de piano stylisées -->
+  <rect x="34" y="32" width="12" height="42" rx="3" fill="#f8f8f8"/>
+  <rect x="50" y="32" width="12" height="42" rx="3" fill="#f8f8f8"/>
+  <rect x="66" y="32" width="12" height="42" rx="3" fill="#f8f8f8"/>
+  <rect x="82" y="32" width="12" height="42" rx="3" fill="#f8f8f8"/>
+  <!-- Touche noire centrale (dorée) -->
+  <rect x="61" y="32" width="7" height="25" rx="2" fill="#f59e0b"/>
+  <!-- Texte LS -->
+  <text x="64" y="99" font-family="Georgia, serif" font-size="25" font-weight="bold" fill="#f59e0b" text-anchor="middle" letter-spacing="2">LS</text>
+</svg>
