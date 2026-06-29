@@ -1,4 +1,5 @@
 'use client'
+import SubNav from '@/components/eleve/SubNav'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import EleveLayout from '@/components/EleveNav'
@@ -118,6 +119,7 @@ export default function RessourcesPage() {
         {/* Grand titre */}
         <div className="mb-8">
           <h1 className="font-serif text-3xl md:text-4xl text-white mb-2 animate-fade-in-up">Mes Ressources</h1>
+        <SubNav items={[{href:'/espace-eleve/ressources',label:'Ressources'},{href:'/espace-eleve/partitions',label:'Médiathèque'},{href:'/espace-eleve/mes-supports',label:'Mes supports'}]} />
           <p className="text-noir-400">Documents, vidéos et supports déposés par votre professeur pour vous</p>
         </div>
 

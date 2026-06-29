@@ -1,4 +1,5 @@
 'use client'
+import SubNav from '@/components/eleve/SubNav'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import EleveLayout from '@/components/EleveNav'
@@ -54,6 +55,7 @@ export default function ProgressionPage() {
         <div className="mb-8">
           <div className="flex items-center justify-between flex-wrap gap-3 mb-1">
           <h1 className="text-2xl font-serif text-white">Progression & Badges</h1>
+        <SubNav items={[{href:'/espace-eleve/progression',label:'Progression'},{href:'/espace-eleve/objectifs',label:'Objectifs'},{href:'/espace-eleve/badges',label:'Badges'},{href:'/espace-eleve/historique',label:'Parcours'}]} />
           <div className="flex gap-2">
             <a href="/espace-eleve/objectifs" className="btn-outline text-xs px-3 py-1.5 flex items-center gap-1.5">
               <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg>

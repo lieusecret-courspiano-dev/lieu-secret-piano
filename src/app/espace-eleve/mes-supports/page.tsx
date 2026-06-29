@@ -1,4 +1,5 @@
 'use client'
+import SubNav from '@/components/eleve/SubNav'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -261,6 +262,7 @@ export default function MesSupportsPage() {
       <div className="p-4 md:p-6 lg:p-8 pb-24 md:pb-8">
         <div className="mb-6">
           <h1 className="text-2xl font-serif text-white">Mes supports de cours</h1>
+        <SubNav items={[{href:'/espace-eleve/ressources',label:'Ressources'},{href:'/espace-eleve/partitions',label:'Médiathèque'},{href:'/espace-eleve/mes-supports',label:'Mes supports'}]} />
           <p className="text-noir-400 text-sm mt-1">
             {loading
               ? 'Chargement...'

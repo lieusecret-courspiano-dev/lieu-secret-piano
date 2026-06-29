@@ -1,4 +1,5 @@
 'use client'
+import SubNav from '@/components/eleve/SubNav'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import EleveLayout from '@/components/EleveNav'
@@ -97,6 +98,7 @@ export default function BadgesPage() {
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-2xl font-serif text-white mb-1">Mes badges</h1>
+        <SubNav items={[{href:'/espace-eleve/progression',label:'Progression'},{href:'/espace-eleve/objectifs',label:'Objectifs'},{href:'/espace-eleve/badges',label:'Badges'},{href:'/espace-eleve/historique',label:'Parcours'}]} />
           <p className="text-noir-400 text-sm">{nbObtenus} / {ALL_BADGES.length} badges obtenus</p>
         </div>
 

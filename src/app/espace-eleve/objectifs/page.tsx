@@ -1,4 +1,5 @@
 'use client'
+import SubNav from '@/components/eleve/SubNav'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import EleveLayout from '@/components/EleveNav'
@@ -104,6 +105,7 @@ export default function ObjectifsPage() {
         <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
           <div>
             <h1 className="text-2xl font-serif text-white">Mes objectifs</h1>
+        <SubNav items={[{href:'/espace-eleve/progression',label:'Progression'},{href:'/espace-eleve/objectifs',label:'Objectifs'},{href:'/espace-eleve/badges',label:'Badges'},{href:'/espace-eleve/historique',label:'Parcours'}]} />
             <p className="text-noir-400 text-sm mt-0.5">{enCours} en cours · {atteints} atteints</p>
           </div>
           <button onClick={() => setShowForm(true)}
