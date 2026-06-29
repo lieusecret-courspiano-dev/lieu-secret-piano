@@ -7,6 +7,20 @@ import { DateTime } from 'luxon'
 import { formatTime } from '@/lib/utils'
 import { TIMEZONES } from '@/types'
 import { ChevronLeft, ChevronRight, Calendar, Clock, Check, CreditCard, Gift, Package } from 'lucide-react'
+import { SkeletonCard } from '@/components/eleve/SkeletonCard'
+import { EmptyState } from '@/components/eleve/EmptyState'
+
+// ── Types pour les réservations ──
+interface Reservation {
+  id: string; slot_start: string; slot_end: string
+  type: string; status: string; payment_method: string; amount: number; created_at: string
+}
+const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
+  confirmed:        { label: 'Confirmé',    color: 'text-green-400',  bg: 'bg-green-500/10 border-green-500/20' },
+  pending:          { label: 'En attente',  color: 'text-yellow-400', bg: 'bg-yellow-500/10 border-yellow-500/20' },
+  pending_virement: { label: 'Virement',    color: 'text-blue-400',   bg: 'bg-blue-500/10 border-blue-500/20' },
+  cancelled:        { label: 'Annulé',      color: 'text-red-400',    bg: 'bg-red-500/10 border-red-500/20' },
+}
 
 const DAYS_FR   = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim']
 const MONTHS_FR = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre']
@@ -19,9 +33,13 @@ type PaymentMethod = 'pack' | 'cb' | 'bon_cadeau'
 
 function ReserverEleveContent() {
   const router = useRouter()
+  const [activeTab, setActiveTab] = useState<'reserver' | 'reservations'>('reserver')
   const [me, setMe]           = useState<EleveMe | null>(null)
   const [packs, setPacks]     = useState<Pack[]>([])
   const [loading, setLoading] = useState(true)
+  const [reservations, setReservations] = useState<Reservation[]>([])
+  const [resLoading, setResLoading] = useState(false)
+  const [resFilter, setResFilter] = useState<'a_venir' | 'passes'>('a_venir')
   const [timezone, setTimezone] = useState('Europe/Paris')
   const [slots, setSlots]     = useState<GeneratedSlot[]>([])
   const [currentMonth, setCurrentMonth] = useState(() => DateTime.now().startOf('month'))
