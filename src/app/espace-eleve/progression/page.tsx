@@ -52,7 +52,23 @@ export default function ProgressionPage() {
 
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-2xl font-serif text-white mb-1">Ma progression</h1>
+          <div className="flex items-center justify-between flex-wrap gap-3 mb-1">
+          <h1 className="text-2xl font-serif text-white">Progression & Badges</h1>
+          <div className="flex gap-2">
+            <a href="/espace-eleve/objectifs" className="btn-outline text-xs px-3 py-1.5 flex items-center gap-1.5">
+              <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg>
+              Objectifs
+            </a>
+            <a href="/espace-eleve/badges" className="btn-outline text-xs px-3 py-1.5 flex items-center gap-1.5">
+              <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+              Badges
+            </a>
+            <a href="/espace-eleve/historique" className="btn-outline text-xs px-3 py-1.5 flex items-center gap-1.5">
+              <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="12 8 12 12 14 14"/><path d="M3.05 11a9 9 0 1 0 .5-4.5"/></svg>
+              Parcours
+            </a>
+          </div>
+        </div>
           <p className="text-noir-400 text-sm">{prog.validees} / {prog.total} compétences validées</p>
         </div>
 

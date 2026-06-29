@@ -38,7 +38,6 @@ const NAV_GROUPS = [
     label: 'Accueil',
     items: [
       { href: '/espace-eleve/dashboard',    label: 'Tableau de bord',   icon: Icons.dashboard,    badge: null },
-      { href: '/espace-eleve/notifications',label: 'Notifications',     icon: Icons.notifications, badge: 'notifs' },
     ],
   },
   {
@@ -54,45 +53,37 @@ const NAV_GROUPS = [
   {
     label: 'Ma formation',
     items: [
-      { href: '/espace-eleve/progression',  label: 'Ma progression',    icon: Icons.progression,  badge: null },
-      { href: '/espace-eleve/objectifs',    label: 'Mes objectifs',     icon: Icons.objectifs,    badge: null },
-      { href: '/espace-eleve/badges',       label: 'Mes badges',        icon: Icons.badges,       badge: null },
+      { href: '/espace-eleve/progression',  label: 'Progression & Badges', icon: Icons.progression, badge: null },
       { href: '/espace-eleve/certificats',  label: 'Mes certificats',   icon: Icons.certificats,  badge: null },
-      { href: '/espace-eleve/historique',   label: 'Mon parcours',      icon: Icons.historique,   badge: null },
+      { href: '/espace-eleve/quiz',         label: 'Quiz',              icon: Icons.progression,  badge: null },
     ],
   },
   {
     label: 'Ressources',
     items: [
-      { href: '/espace-eleve/ressources',    label: 'Mes ressources',    icon: Icons.ressources,   badge: 'ressources' },
-      { href: '/espace-eleve/partitions',    label: 'Médiathèque',       icon: Icons.mediatheque,  badge: 'medias' },
-      { href: '/espace-eleve/mes-supports',  label: 'Mes supports',      icon: Icons.bibliotheque, badge: null },
-      { href: '/espace-eleve/quiz',          label: 'Quiz',              icon: Icons.progression,  badge: null },
-      { href: '/espace-eleve/bibliotheque',  label: 'Gammes & Accords',  icon: Icons.bibliotheque, badge: null },
+      { href: '/espace-eleve/mes-ressources', label: 'Mes ressources',  icon: Icons.ressources,   badge: 'ressources' },
+      { href: '/espace-eleve/bibliotheque',   label: 'Gammes & Accords',icon: Icons.bibliotheque, badge: null },
     ],
   },
   {
     label: 'Mon pack',
     items: [
       { href: '/espace-eleve/pack',         label: 'Mon pack',          icon: Icons.monPack,      badge: null },
-      { href: '/espace-eleve/acheter-pack', label: 'Acheter un pack',   icon: Icons.acheterPack,  badge: null },
     ],
   },
   {
     label: 'Outils',
     items: [
-      { href: '/espace-eleve/enregistrements', label: 'Enregistrements',   icon: Icons.enregistrements, badge: 'enregistrements' },
-      { href: '/espace-eleve/journal',         label: 'Journal de pratique',icon: Icons.journal,        badge: null },
-      { href: '/espace-eleve/repertoire',      label: 'Mon répertoire',    icon: Icons.repertoire,      badge: null },
-      { href: '/espace-eleve/metronome',       label: 'Métronome',         icon: Icons.metronome,       badge: null },
-      { href: '/espace-eleve/partager',        label: 'Partager mes progrès',icon: Icons.partager,      badge: null },
+      { href: '/espace-eleve/enregistrements', label: 'Enregistrements',    icon: Icons.enregistrements, badge: 'enregistrements' },
+      { href: '/espace-eleve/journal',         label: 'Journal de pratique', icon: Icons.journal,         badge: null },
+      { href: '/espace-eleve/repertoire',      label: 'Mon répertoire',     icon: Icons.repertoire,      badge: null },
+      { href: '/espace-eleve/metronome',       label: 'Métronome',          icon: Icons.metronome,       badge: null },
     ],
   },
   {
     label: 'Espace personnel',
     items: [
       { href: '/espace-eleve/parrainage',   label: 'Parrainage',        icon: Icons.parrainage,   badge: null },
-      { href: '/espace-eleve/temoignage',   label: 'Laisser un avis',   icon: Icons.temoignage,   badge: null },
     ],
   },
 ]
@@ -105,7 +96,7 @@ const BOTTOM_NAV = [
   { href: '/espace-eleve/dashboard',    label: 'Accueil',    icon: Icons.dashboard,    badge: null },
   { href: '/espace-eleve/reserver',     label: 'Réserver',   icon: Icons.reserver,     badge: null },
   { href: '/espace-eleve/travaux',      label: 'Travaux',    icon: Icons.travaux,      badge: 'travaux' },
-  { href: '/espace-eleve/progression',  label: 'Progression',icon: Icons.progression,  badge: null },
+  { href: '/espace-eleve/messages',     label: 'Messages',   icon: Icons.messages,     badge: 'messages' },
   { href: '/espace-eleve/pack',         label: 'Mon pack',   icon: Icons.monPack,      badge: null },
 ]
 
