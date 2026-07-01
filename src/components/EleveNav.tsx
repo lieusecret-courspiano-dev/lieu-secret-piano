@@ -129,6 +129,7 @@ export default function EleveLayout({
   const [globalSearch, setGlobalSearch] = useState('')
   const [searchResults, setSearchResults] = useState<{href: string; label: string; group: string}[]>([])
   const [showSearch, setShowSearch] = useState(false)
+  const [phoneNumber, setPhoneNumber] = useState('')
 
   // Recherche globale dans les menus
   function handleGlobalSearch(q: string) {
@@ -144,6 +145,16 @@ export default function EleveLayout({
     })
     setSearchResults(results)
   }
+
+  // Charger le numéro de téléphone depuis les settings
+  useEffect(() => {
+    fetch('/api/settings')
+      .then(r => r.ok ? r.json() : {})
+      .then((s: Record<string, string>) => {
+        if (s.phone) setPhoneNumber(s.phone.replace(/\s/g, ''))
+      })
+      .catch(() => {})
+  }, [])
 
   // Compteurs persistants — chargés une fois et conservés entre navigations
   const [nbNotifs,    setNbNotifs]    = useState(nbNotifsProp)
@@ -439,7 +450,7 @@ export default function EleveLayout({
       {/* ── Bouton contact rapide mobile ── */}
       <div className="fixed bottom-20 right-4 z-50 md:hidden">
         <a
-          href="sms:"
+          href={phoneNumber ? `sms:${phoneNumber}` : 'sms:'}
           id="contact-rapide-btn"
           className="w-12 h-12 bg-gold-500 rounded-full flex items-center justify-center shadow-lg shadow-gold-500/30 hover:bg-gold-400 transition-all active:scale-95"
           aria-label="Contacter le professeur"
