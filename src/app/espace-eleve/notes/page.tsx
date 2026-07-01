@@ -24,7 +24,7 @@ function getNoteContent(note: Note): string {
   if (note.resume) parts.push(`Résumé\n${note.resume}`)
   if (note.notions) parts.push(`Notions travaillées\n${note.notions}`)
   if (note.exercices) parts.push(`Exercices\n${note.exercices}`)
-  if (note.objectifs) parts.push(`⭐ Objectifs\n${note.objectifs}`)
+  if (note.objectifs) parts.push(`Objectifs\n${note.objectifs}`)
   if (note.commentaires) parts.push(`Commentaires\n${note.commentaires}`)
   return parts.join('\n\n') || 'Aucun contenu'
 }
@@ -35,6 +35,7 @@ export default function NotesPage() {
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState<Note | null>(null)
   const [search, setSearch] = useState('')
+  const [filterMonth, setFilterMonth] = useState('')
 
   useEffect(() => {
     fetch('/api/eleve/notes')
@@ -44,11 +45,19 @@ export default function NotesPage() {
       .finally(() => setLoading(false))
   }, [router])
 
-  const filtered = notes.filter(n =>
-    !search ||
-    (n.titre || '').toLowerCase().includes(search.toLowerCase()) ||
-    getNoteContent(n).toLowerCase().includes(search.toLowerCase())
-  )
+  // Extraire les mois disponibles
+  const months = Array.from(new Set(notes
+    .filter(n => n.date_cours)
+    .map(n => n.date_cours!.slice(0, 7))
+  )).sort().reverse()
+
+  const filtered = notes.filter(n => {
+    const matchSearch = !search ||
+      (n.titre || '').toLowerCase().includes(search.toLowerCase()) ||
+      getNoteContent(n).toLowerCase().includes(search.toLowerCase())
+    const matchMonth = !filterMonth || (n.date_cours || '').startsWith(filterMonth)
+    return matchSearch && matchMonth
+  })
 
   if (loading) return (
     <EleveLayout>
@@ -79,7 +88,18 @@ export default function NotesPage() {
             {/* Liste */}
             <div className="space-y-2">
               <input value={search} onChange={e => setSearch(e.target.value)}
-                className="input w-full mb-3" placeholder="Rechercher..." />
+                className="input w-full mb-2" placeholder="Rechercher dans les notes..." />
+              {months.length > 1 && (
+                <select value={filterMonth} onChange={e => setFilterMonth(e.target.value)}
+                  className="input w-full mb-3 text-xs">
+                  <option value="">Tous les mois</option>
+                  {months.map(m => {
+                    const [y, mo] = m.split('-')
+                    const label = new Date(parseInt(y), parseInt(mo) - 1).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
+                    return <option key={m} value={m}>{label}</option>
+                  })}
+                </select>
+              )}
               {filtered.map(note => (
                 <button key={note.id} onClick={() => setSelected(note)}
                   className={`w-full text-left p-3 rounded-xl border transition-all ${

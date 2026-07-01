@@ -56,7 +56,29 @@ export default function DashboardPage() {
   const [showAvatarPicker, setShowAvatarPicker] = useState(false)
   const [currentAvatar, setCurrentAvatar] = useState('piano')
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (forceRefresh = false) => {
+    // Cache 5 minutes dans sessionStorage
+    const CACHE_KEY = 'dashboard_cache'
+    const CACHE_TTL = 5 * 60 * 1000
+    if (!forceRefresh) {
+      try {
+        const cached = sessionStorage.getItem(CACHE_KEY)
+        if (cached) {
+          const { data, timestamp } = JSON.parse(cached)
+          if (Date.now() - timestamp < CACHE_TTL) {
+            const { meData, progData, badgesData, travauxData, packData, coursData, quizData, journalData } = data
+            setMe(meData); setCurrentAvatar(meData.avatar || 'piano'); setProg(progData)
+            setBadges(Array.isArray(badgesData) ? badgesData.slice(0, 5) : [])
+            setTravaux(Array.isArray(travauxData) ? travauxData.filter((t: Travail) => !t.termine).slice(0, 3) : [])
+            setJournal(Array.isArray(journalData) ? journalData : [])
+            if (packData?.packs) { const active = packData.packs.find((p: any) => p.status === 'active'); if (active) setPack({ pack_label: active.pack_label, heures_restantes: active.heures_restantes, heures_total: active.heures_total, code: active.code }) } else if (packData?.pack_label) { setPack(packData) }
+            if (Array.isArray(coursData)) { const now = new Date(); const upcoming = coursData.filter((c: Cours) => new Date(c.slot_start) > now && c.status === 'confirmed'); setProchainCours(upcoming[0] || null); setNbCours(coursData.filter((c: Cours) => new Date(c.slot_start) < now).length) }
+            if (Array.isArray(quizData)) setQuizResults(quizData.filter((q: any) => q.nb_tentatives > 0))
+            setLoading(false); return
+          }
+        }
+      } catch {}
+    }
     try {
       const [meRes, progRes, badgesRes, travauxRes, packRes, coursRes, quizRes, journalRes] = await Promise.all([
         fetch('/api/eleve/me'),
@@ -90,6 +112,8 @@ export default function DashboardPage() {
         setNbCours(coursData.filter((c: Cours) => new Date(c.slot_start) < now).length)
       }
       if (Array.isArray(quizData)) setQuizResults(quizData.filter((q: any) => q.nb_tentatives > 0))
+      // Sauvegarder dans le cache
+      try { sessionStorage.setItem('dashboard_cache', JSON.stringify({ data: { meData, progData, badgesData, travauxData, packData, coursData, quizData, journalData }, timestamp: Date.now() })) } catch {}
     } catch (e) { console.error('Dashboard:', e) } finally { setLoading(false) }
   }, [router])
 

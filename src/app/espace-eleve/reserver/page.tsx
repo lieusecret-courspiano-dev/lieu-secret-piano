@@ -1,4 +1,5 @@
 'use client'
+import React from 'react'
 
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
@@ -116,7 +117,13 @@ function ReservationsTab({ onReserver }: { onReserver: () => void }) {
                       {r.amount > 0 && <span className="text-xs text-noir-500">{r.amount} €</span>}
                     </div>
                     {!isPast && r.status !== 'cancelled' && (
-                      <div className="mt-3 pt-3 border-t border-noir-800">
+                      <div className="mt-3 pt-3 border-t border-noir-800 space-y-2">
+                        {heuresAvant <= 2 && heuresAvant > 0 && (
+                          <div className="flex items-center gap-2 text-xs text-blue-400 bg-blue-500/10 border border-blue-500/20 rounded-lg px-3 py-2">
+                            <div className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse shrink-0" />
+                            Votre cours commence bientôt
+                          </div>
+                        )}
                         {peutAnnuler ? (
                           <button onClick={() => handleAnnuler(r.id, r.slot_start)} className="text-xs text-noir-500 hover:text-red-400 transition-colors flex items-center gap-1.5">
                             <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -141,6 +148,18 @@ function ReservationsTab({ onReserver }: { onReserver: () => void }) {
 function ReserverEleveContent() {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<'reserver' | 'reservations'>('reserver')
+  const touchStartX = React.useRef<number>(0)
+  const touchEndX   = React.useRef<number>(0)
+
+  function handleTouchStart(e: React.TouchEvent) { touchStartX.current = e.touches[0].clientX }
+  function handleTouchEnd(e: React.TouchEvent) {
+    touchEndX.current = e.changedTouches[0].clientX
+    const diff = touchStartX.current - touchEndX.current
+    if (Math.abs(diff) > 60) { // seuil 60px
+      if (diff > 0 && activeTab === 'reserver') setActiveTab('reservations')
+      if (diff < 0 && activeTab === 'reservations') setActiveTab('reserver')
+    }
+  }
   const [me, setMe]           = useState<EleveMe | null>(null)
   const [packs, setPacks]     = useState<Pack[]>([])
   const [loading, setLoading] = useState(true)
@@ -339,7 +358,7 @@ function ReserverEleveContent() {
 
   return (
     <EleveLayout prenom={me?.prenom} nbNotifs={me?.nb_notifs_non_lues || 0}>
-      <div className="p-4 md:p-6 lg:p-8 pb-24 md:pb-8">
+      <div className="p-4 md:p-6 lg:p-8 pb-24 md:pb-8" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
         {/* Onglets */}
         <div className="flex gap-1 bg-noir-900 border border-noir-800 rounded-xl p-1 mb-6 w-fit">
           <button onClick={() => setActiveTab('reserver')}
