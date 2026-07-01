@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { ThemeToggle } from './ThemeProvider'
 import { useState, useEffect, useCallback, useRef } from 'react'
+import PageTransition from '@/components/eleve/PageTransition'
 
 // ── Icônes SVG colorées par section ──────────────────────────────────────────
 const Icons = {
@@ -125,6 +126,24 @@ export default function EleveLayout({
   const pathname = usePathname()
   const router = useRouter()
   const [menuOpen, setMenuOpen] = useState(false)
+  const [globalSearch, setGlobalSearch] = useState('')
+  const [searchResults, setSearchResults] = useState<{href: string; label: string; group: string}[]>([])
+  const [showSearch, setShowSearch] = useState(false)
+
+  // Recherche globale dans les menus
+  function handleGlobalSearch(q: string) {
+    setGlobalSearch(q)
+    if (!q.trim()) { setSearchResults([]); return }
+    const results: {href: string; label: string; group: string}[] = []
+    NAV_GROUPS.forEach(group => {
+      group.items.forEach(item => {
+        if (item.label.toLowerCase().includes(q.toLowerCase())) {
+          results.push({ href: item.href, label: item.label, group: group.label })
+        }
+      })
+    })
+    setSearchResults(results)
+  }
 
   // Compteurs persistants — chargés une fois et conservés entre navigations
   const [nbNotifs,    setNbNotifs]    = useState(nbNotifsProp)
@@ -266,6 +285,33 @@ export default function EleveLayout({
       <div className="flex" style={{ minHeight: 'calc(100vh - 56px)' }}>
         {/* ── Sidebar desktop ── */}
         <aside className="hidden md:flex flex-col w-56 lg:w-60 shrink-0 border-r border-noir-800/60 sticky top-14 h-[calc(100vh-56px)] overflow-y-auto bg-noir-950">
+          {/* Recherche globale sidebar */}
+          <div className="px-3 pt-3 pb-1 relative">
+            <div className="relative">
+              <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-noir-500 pointer-events-none" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input
+                value={globalSearch}
+                onChange={e => handleGlobalSearch(e.target.value)}
+                onFocus={() => setShowSearch(true)}
+                onBlur={() => setTimeout(() => setShowSearch(false), 200)}
+                placeholder="Rechercher..."
+                className="w-full bg-noir-800 border border-noir-700 rounded-xl pl-8 pr-3 py-2 text-xs text-white placeholder-noir-600 outline-none focus:border-gold-500/50 transition-colors"
+              />
+            </div>
+            {showSearch && searchResults.length > 0 && (
+              <div className="absolute left-3 right-3 mt-1 bg-noir-800 border border-noir-700 rounded-xl shadow-2xl z-50 overflow-hidden">
+                {searchResults.map(r => (
+                  <Link key={r.href} href={r.href} scroll={false}
+                    onClick={() => { setGlobalSearch(''); setSearchResults([]) }}
+                    className="flex items-center justify-between px-3 py-2 hover:bg-noir-700 transition-colors">
+                    <span className="text-white text-xs">{r.label}</span>
+                    <span className="text-noir-500 text-[10px]">{r.group}</span>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+
           <nav className="flex-1 px-2 py-3 space-y-4">
             {NAV_GROUPS.map(group => (
               <div key={group.label}>
@@ -325,7 +371,7 @@ export default function EleveLayout({
         <main className="flex-1 min-w-0 overflow-x-hidden pb-20 md:pb-0 overflow-y-auto" id="eleve-main-content">
           <ConnectionStatus />
           <CoursBanner />
-          {children}
+          <PageTransition>{children}</PageTransition>
         </main>
         
       </div>

@@ -33,7 +33,8 @@ export default function CoursBanner() {
           setHeuresAvant(h)
         }
       }
-      if (settings?.zoom_cours) setZoomLink(settings.zoom_cours)
+      const s = settings as Record<string, string>
+      if (s?.zoom_cours) setZoomLink(s.zoom_cours)
     }).catch(() => {})
   }, [])
 
