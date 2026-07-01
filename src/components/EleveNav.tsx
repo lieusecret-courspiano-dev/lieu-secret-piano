@@ -1,7 +1,6 @@
 'use client'
 import CoursBanner from '@/components/eleve/CoursBanner'
 import ConnectionStatus from '@/components/eleve/ConnectionStatus'
-import { useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { ThemeToggle } from './ThemeProvider'
