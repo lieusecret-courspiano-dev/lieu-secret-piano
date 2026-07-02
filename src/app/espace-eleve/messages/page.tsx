@@ -50,6 +50,18 @@ export default function MessagesPage() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
+  async function handleReaction(messageId: string, reaction: string) {
+    setShowReactions(null)
+    setMessages(prev => prev.map(m => m.id === messageId ? { ...m, reaction } : m))
+    try {
+      await fetch('/api/eleve/messages', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: messageId, reaction }),
+      })
+    } catch {}
+  }
+
   async function handleSend(e: React.FormEvent) {
     e.preventDefault()
     if (!contenu.trim() || sending) return
