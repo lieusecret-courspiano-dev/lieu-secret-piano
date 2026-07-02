@@ -29,6 +29,7 @@ const Icons = {
   playlist:     <svg width="18" height="18" fill="none" stroke="#f59e0b" strokeWidth="1.5" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>,
   defis:        <svg width="18" height="18" fill="none" stroke="#fb923c" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>,
   fiches:       <svg width="18" height="18" fill="none" stroke="#34d399" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>,
+  decouverte:   <svg width="18" height="18" fill="none" stroke="#a78bfa" strokeWidth="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>,
   objectifs:    <svg width="18" height="18" fill="none" stroke="#f59e0b" strokeWidth="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2" fill="#f59e0b"/></svg>,
   journal:      <svg width="18" height="18" fill="none" stroke="#fb923c" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>,
   badges:       <svg width="18" height="18" fill="none" stroke="#a78bfa" strokeWidth="1.5" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>,
@@ -67,7 +68,7 @@ const NAV_GROUPS = [
     label: 'Ressources',
     items: [
       { href: '/espace-eleve/mes-ressources', label: 'Mes ressources',  icon: Icons.ressources,   badge: 'ressources' },
-      { href: '/espace-eleve/bibliotheque',   label: 'Gammes & Accords',icon: Icons.bibliotheque, badge: null },
+
     ],
   },
   {
@@ -82,16 +83,12 @@ const NAV_GROUPS = [
       { href: '/espace-eleve/enregistrements', label: 'Enregistrements',    icon: Icons.enregistrements, badge: 'enregistrements' },
       { href: '/espace-eleve/journal',         label: 'Journal de pratique', icon: Icons.journal,         badge: null },
       { href: '/espace-eleve/repertoire',      label: 'Mon répertoire',     icon: Icons.repertoire,      badge: null },
-      { href: '/espace-eleve/metronome',       label: 'Métronome',          icon: Icons.metronome,       badge: null },
-      { href: '/espace-eleve/playlist',        label: 'Playlist pratique',  icon: Icons.playlist,        badge: null },
-      { href: '/espace-eleve/defis',           label: 'Défis de la semaine',icon: Icons.defis,           badge: null },
-      { href: '/espace-eleve/fiches',          label: 'Fiches de révision', icon: Icons.fiches,          badge: null },
     ],
   },
   {
-    label: 'Espace personnel',
+    label: 'Découverte',
     items: [
-      { href: '/espace-eleve/parrainage',   label: 'Parrainage',        icon: Icons.parrainage,   badge: null },
+      { href: '/espace-eleve/decouverte',      label: 'Découverte',         icon: Icons.decouverte,      badge: null },
     ],
   },
 ]
