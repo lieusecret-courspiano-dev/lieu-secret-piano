@@ -240,19 +240,30 @@ export default function EleveQuizPage() {
               const ytMatch = q.video_url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/)
               if (ytMatch) {
                 return (
-                  <div className="mb-4 rounded-xl overflow-hidden border border-noir-700 aspect-video">
+                  <div className="mb-4 rounded-xl overflow-hidden border border-blue-500/20 bg-noir-900" style={{ aspectRatio: '16/9' }}>
                     <iframe
-                      src={`https://www.youtube.com/embed/${ytMatch[1]}`}
+                      src={`https://www.youtube.com/embed/${ytMatch[1]}?rel=0&modestbranding=1`}
                       className="w-full h-full"
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                       allowFullScreen
+                      title="Vidéo de la question"
                     />
+                  </div>
+                )
+              }
+              const vimeoMatch = q.video_url.match(/vimeo\.com\/(\d+)/)
+              if (vimeoMatch) {
+                return (
+                  <div className="mb-4 rounded-xl overflow-hidden border border-blue-500/20" style={{ aspectRatio: '16/9' }}>
+                    <iframe src={`https://player.vimeo.com/video/${vimeoMatch[1]}`} className="w-full h-full" allowFullScreen title="Vidéo Vimeo" />
                   </div>
                 )
               }
               return (
                 <div className="mb-4 rounded-xl overflow-hidden border border-noir-700">
-                  <video controls className="w-full max-h-48" src={q.video_url} />
+                  <video controls className="w-full max-h-56 bg-noir-950" src={q.video_url} preload="metadata">
+                    Votre navigateur ne supporte pas la lecture vidéo.
+                  </video>
                 </div>
               )
             })()}

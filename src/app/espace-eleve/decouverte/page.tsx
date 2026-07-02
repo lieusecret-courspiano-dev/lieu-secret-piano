@@ -1,5 +1,5 @@
 'use client'
-import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import EleveLayout from '@/components/EleveNav'
 
 const ITEMS = [
@@ -48,7 +48,6 @@ const ITEMS = [
 ]
 
 export default function DecouvertePage() {
-  const router = useRouter()
   return (
     <EleveLayout>
       <div className="p-4 md:p-6 lg:p-8 pb-24 md:pb-8 max-w-3xl mx-auto">
@@ -58,20 +57,21 @@ export default function DecouvertePage() {
         </div>
         <div className="grid sm:grid-cols-2 gap-3">
           {ITEMS.map(item => (
-            <button key={item.href} onClick={() => router.push(item.href)}
-              className="card text-left hover:-translate-y-0.5 transition-all group"
+            <Link key={item.href} href={item.href} scroll={false}
+              className="card text-left hover:-translate-y-0.5 transition-all group block"
               style={{ borderColor: `${item.color}20` }}>
-              <div className="flex items-center gap-3 mb-2">
+              <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
                   style={{ background: `${item.color}15` }}>
                   {item.icon}
                 </div>
-                <div>
+                <div className="flex-1 min-w-0">
                   <p className="text-white font-semibold text-sm group-hover:text-gold-400 transition-colors">{item.label}</p>
-                  <p className="text-noir-500 text-xs">{item.desc}</p>
+                  <p className="text-noir-500 text-xs mt-0.5">{item.desc}</p>
                 </div>
+                <svg width="14" height="14" fill="none" stroke="#404070" strokeWidth="2" viewBox="0 0 24 24" className="shrink-0 group-hover:stroke-gold-400 transition-colors"><polyline points="9 18 15 12 9 6"/></svg>
               </div>
-            </button>
+            </Link>
           ))}
         </div>
       </div>
