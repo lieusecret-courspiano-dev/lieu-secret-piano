@@ -30,8 +30,8 @@ export default function DefisPage() {
       fetch('/api/eleve/journal').then(r => r.ok ? r.json() : []),
       fetch('/api/eleve/quiz').then(r => r.ok ? r.json() : []),
       fetch('/api/eleve/repertoire').then(r => r.ok ? r.json() : []),
-      fetch('/api/eleve/me').then(r => r.ok ? r.json() : {}),
-    ]).then(([journal, quiz, repertoire, me]) => {
+      fetch('/api/eleve/me').then(r => r.ok ? r.json() : null),
+    ]).then(([journal, quiz, repertoire, me]: [any[], any[], any[], any]) => {
       if (!me?.id) { router.push('/espace-eleve/login'); return }
 
       // Calculer les progrès de la semaine
