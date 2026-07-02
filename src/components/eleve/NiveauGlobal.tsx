@@ -78,9 +78,9 @@ export function NiveauGlobal({ progPct, nbCours, badges, quizReussis, heuresPrat
       {/* Composantes du score */}
       <div className="grid grid-cols-3 gap-2 mt-3">
         {[
-          { label: 'Compétences', value: `${progPct}%`, icon: '📈' },
-          { label: 'Cours', value: nbCours, icon: '🎹' },
-          { label: 'Badges', value: badges, icon: '🏅' },
+          { label: 'Compétences', value: `${progPct}%` },
+          { label: 'Cours', value: nbCours },
+          { label: 'Badges', value: badges },
         ].map(s => (
           <div key={s.label} className="bg-noir-800/50 rounded-xl p-2 text-center">
             <p className="text-white font-bold text-sm">{s.value}</p>
