@@ -448,18 +448,21 @@ export default function EleveLayout({
       )}
 
       {/* ── Bouton contact rapide mobile ── */}
-      <div className="fixed bottom-20 right-4 z-50 md:hidden">
-        <a
-          href={phoneNumber ? `sms:${phoneNumber}` : 'sms:'}
-          id="contact-rapide-btn"
-          className="w-12 h-12 bg-gold-500 rounded-full flex items-center justify-center shadow-lg shadow-gold-500/30 hover:bg-gold-400 transition-all active:scale-95"
-          aria-label="Contacter le professeur"
-        >
-          <svg width="20" height="20" fill="none" stroke="#1a1a2e" strokeWidth="2" viewBox="0 0 24 24">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 0 2 2z"/>
-          </svg>
-        </a>
-      </div>
+      {/* Masqué sur les pages avec formulaire/messagerie pour ne pas gêner la saisie */}
+      {!['/espace-eleve/messages', '/espace-eleve/reserver', '/espace-eleve/journal', '/espace-eleve/repertoire', '/espace-eleve/objectifs', '/espace-eleve/temoignage'].includes(pathname) && phoneNumber && (
+        <div className="fixed bottom-24 right-4 z-50 md:hidden">
+          <a
+            href={`sms:${phoneNumber}`}
+            id="contact-rapide-btn"
+            className="w-11 h-11 bg-gold-500 rounded-full flex items-center justify-center shadow-lg shadow-gold-500/30 hover:bg-gold-400 transition-all active:scale-95"
+            aria-label="Contacter le professeur par SMS"
+          >
+            <svg width="18" height="18" fill="none" stroke="#1a1a2e" strokeWidth="2" viewBox="0 0 24 24">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 0 2 2z"/>
+            </svg>
+          </a>
+        </div>
+      )}
 
       {/* ── Barre de navigation inférieure mobile ── */}
       <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-noir-900/95 backdrop-blur-sm border-t border-noir-800">
