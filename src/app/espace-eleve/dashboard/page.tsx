@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import EleveLayout from '@/components/EleveNav'
 import { ProgressBar } from '@/components/eleve/ProgressBar'
+import { NiveauGlobal } from '@/components/eleve/NiveauGlobal'
 import { SkeletonDashboard } from '@/components/eleve/SkeletonCard'
 import { DateTime } from 'luxon'
 
@@ -338,6 +339,15 @@ export default function DashboardPage() {
             </div>
           </div>
         )}
+
+        {/* ── Niveau global ── */}
+        <NiveauGlobal
+          progPct={progPct}
+          nbCours={nbCours}
+          badges={badges.length}
+          quizReussis={quizReussis}
+          heuresPratique={me.total_heures_pratique || 0}
+        />
 
         {/* ── Accès rapides ── */}
         <div>

@@ -1,14 +1,17 @@
 {
-  "name": "Lieu Secret — École de Piano en Ligne",
+  "name": "Lieu Secret — École de Piano",
   "short_name": "Lieu Secret",
-  "description": "Votre espace élève Lieu Secret Piano — cours, progression, outils musicaux",
+  "description": "Votre espace élève Lieu Secret Piano",
   "start_url": "/espace-eleve/dashboard",
   "display": "standalone",
   "background_color": "#1a1a2e",
   "theme_color": "#f59e0b",
   "orientation": "portrait-primary",
   "lang": "fr",
-  "categories": ["education", "music"],
+  "categories": [
+    "education",
+    "music"
+  ],
   "icons": [
     {
       "src": "/icons/icon-72x72.png",
@@ -61,25 +64,52 @@
   ],
   "shortcuts": [
     {
-      "name": "Réserver un cours",
-      "short_name": "Réserver",
-      "description": "Réserver votre prochain cours de piano",
+      "name": "Mon prochain cours",
+      "short_name": "Cours",
+      "description": "Voir mon prochain cours de piano",
       "url": "/espace-eleve/reserver",
-      "icons": [{ "src": "/icons/icon-96x96.png", "sizes": "96x96" }]
+      "icons": [
+        {
+          "src": "/icons/icon-96x96.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Mes défis",
+      "short_name": "Défis",
+      "description": "Voir mes défis de la semaine",
+      "url": "/espace-eleve/defis",
+      "icons": [
+        {
+          "src": "/icons/icon-96x96.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Journal de pratique",
+      "short_name": "Journal",
+      "description": "Enregistrer ma session de pratique",
+      "url": "/espace-eleve/journal",
+      "icons": [
+        {
+          "src": "/icons/icon-96x96.png",
+          "sizes": "96x96"
+        }
+      ]
     },
     {
       "name": "Métronome",
       "short_name": "Métronome",
       "description": "Ouvrir le métronome",
       "url": "/espace-eleve/metronome",
-      "icons": [{ "src": "/icons/icon-96x96.png", "sizes": "96x96" }]
-    },
-    {
-      "name": "Mon journal",
-      "short_name": "Journal",
-      "description": "Journal de pratique",
-      "url": "/espace-eleve/journal",
-      "icons": [{ "src": "/icons/icon-96x96.png", "sizes": "96x96" }]
+      "icons": [
+        {
+          "src": "/icons/icon-96x96.png",
+          "sizes": "96x96"
+        }
+      ]
     }
   ],
   "screenshots": [
@@ -90,5 +120,7 @@
       "form_factor": "narrow",
       "label": "Tableau de bord élève"
     }
-  ]
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false
 }

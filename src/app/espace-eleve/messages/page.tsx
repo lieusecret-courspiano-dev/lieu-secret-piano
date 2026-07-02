@@ -9,8 +9,15 @@ interface Message {
   expediteur: 'eleve' | 'admin'
   contenu: string
   lu: boolean
+  reaction?: string | null
   created_at: string
 }
+
+const REACTIONS = [
+  { key: 'like', icon: <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>, label: 'Super' },
+  { key: 'heart', icon: <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>, label: 'Merci' },
+  { key: 'check', icon: <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>, label: 'OK' },
+]
 
 function timeAgo(date: string): string {
   const diff = Date.now() - new Date(date).getTime()
@@ -28,6 +35,7 @@ export default function MessagesPage() {
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
   const [contenu, setContenu] = useState('')
+  const [showReactions, setShowReactions] = useState<string | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -100,12 +108,44 @@ export default function MessagesPage() {
               return (
                 <div key={msg.id} className={`flex ${isEleve ? 'justify-end' : 'justify-start'}`}>
                   <div className={`max-w-[80%] md:max-w-[60%] ${isEleve ? 'items-end' : 'items-start'} flex flex-col gap-1`}>
-                    <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
-                      isEleve
-                        ? 'bg-gold-500 text-noir-950 rounded-br-sm'
-                        : 'bg-noir-800 text-white rounded-bl-sm border border-noir-700'
-                    }`}>
-                      {msg.contenu}
+                    <div className="relative group">
+                      <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
+                        isEleve
+                          ? 'bg-gold-500 text-noir-950 rounded-br-sm'
+                          : 'bg-noir-800 text-white rounded-bl-sm border border-noir-700'
+                      }`}>
+                        {msg.contenu}
+                      </div>
+                      {/* Réactions sur les messages du prof */}
+                      {!isEleve && (
+                        <>
+                          <button
+                            onClick={() => setShowReactions(showReactions === msg.id ? null : msg.id)}
+                            className="absolute -right-7 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity text-noir-500 hover:text-gold-400 p-1"
+                          >
+                            <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+                          </button>
+                          {showReactions === msg.id && (
+                            <div className="absolute left-0 -bottom-10 flex gap-1 bg-noir-800 border border-noir-700 rounded-xl p-1.5 shadow-xl z-10">
+                              {REACTIONS.map(r => (
+                                <button key={r.key} onClick={() => handleReaction(msg.id, r.key)}
+                                  className={`p-1.5 rounded-lg transition-colors ${msg.reaction === r.key ? 'bg-gold-500/20 text-gold-400' : 'hover:bg-noir-700 text-noir-300 hover:text-white'}`}
+                                  title={r.label}>
+                                  {r.icon}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                          {msg.reaction && (
+                            <div className="mt-0.5">
+                              <span className="text-xs bg-noir-800 border border-noir-700 rounded-full px-2 py-0.5 inline-flex items-center gap-1 text-noir-400">
+                                {REACTIONS.find(r => r.key === msg.reaction)?.icon}
+                                <span className="text-[10px]">{REACTIONS.find(r => r.key === msg.reaction)?.label}</span>
+                              </span>
+                            </div>
+                          )}
+                        </>
+                      )}
                     </div>
                     <span className="text-noir-600 text-xs px-1">{timeAgo(msg.created_at)}</span>
                   </div>

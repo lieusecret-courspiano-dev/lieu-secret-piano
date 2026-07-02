@@ -79,3 +79,16 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json(data)
 }
+export async function PATCH(req: NextRequest) {
+  const eleve = await getEleveFromSession()
+  if (!eleve) return NextResponse.json({ error: 'Non connecté' }, { status: 401 })
+  const { id, reaction } = await req.json()
+  if (!id) return NextResponse.json({ error: 'ID manquant' }, { status: 400 })
+  const { error } = await supabaseAdmin
+    .from('eleve_messages')
+    .update({ reaction })
+    .eq('id', id)
+    .eq('eleve_id', eleve.id)
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ success: true })
+}
