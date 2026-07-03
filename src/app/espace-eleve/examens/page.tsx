@@ -72,15 +72,24 @@ export default function ExamensPage() {
   }, [startedAt, activeExamen, result, reponses, submitExamen])
 
   async function startExamen(examen: Examen) {
-    // Charger les questions du quiz
     if (!examen.id) return
-    const exData = await fetch('/api/eleve/examens').then(r => r.json())
-    const ex = (Array.isArray(exData) ? exData : []).find((e: any) => e.id === examen.id)
-    if (!ex?.quiz_id) { alert('Aucun quiz associé à cet examen'); return }
 
-    const qData = await fetch(`/api/admin/quiz?id=${ex.quiz_id}`).then(r => r.json())
-    const qs = qData?.questions || []
-    if (qs.length === 0) { alert('Aucune question dans cet examen'); return }
+    let qs: any[] = []
+    try {
+      const eqRes = await fetch(`/api/eleve/examens/questions?examen_id=${examen.id}`)
+      if (eqRes.ok) { const eqData = await eqRes.json(); qs = Array.isArray(eqData) ? eqData : [] }
+    } catch {}
+
+    if (qs.length === 0) {
+      const exData = await fetch('/api/eleve/examens').then(r => r.json())
+      const ex = (Array.isArray(exData) ? exData : []).find((e: any) => e.id === examen.id)
+      if (ex?.quiz_id) {
+        const qData = await fetch(`/api/admin/quiz?id=${ex.quiz_id}`).then(r => r.json())
+        qs = qData?.questions || []
+      }
+    }
+
+    if (qs.length === 0) { alert('Aucune question dans cet examen. Veuillez contacter votre professeur.'); return }
 
     // Démarrer la session
     const res = await fetch('/api/eleve/examens/session', {

@@ -103,14 +103,25 @@ export async function POST(req: NextRequest) {
     let reussi = false
     let niveau_medaille: string | null = null
 
-    if (examen?.quiz_id && reponses) {
-      const { data: questions } = await supabaseAdmin
-        .from('quiz_questions')
+    if (reponses) {
+      const { data: examenQuestions } = await supabaseAdmin
+        .from('examen_questions')
         .select('id, bonne_reponse, points')
-        .eq('quiz_id', examen.quiz_id)
-        .eq('statut', 'publie')
+        .eq('examen_id', session.examen_id)
+        .order('position')
 
-      if (questions && questions.length > 0) {
+      let questions: any[] = examenQuestions || []
+
+      if (questions.length === 0 && examen?.quiz_id) {
+        const { data: quizQuestions } = await supabaseAdmin
+          .from('quiz_questions')
+          .select('id, bonne_reponse, points')
+          .eq('quiz_id', examen.quiz_id)
+          .eq('statut', 'publie')
+        questions = quizQuestions || []
+      }
+
+      if (questions.length > 0) {
         let totalPoints = 0
         let pointsObtenus = 0
         questions.forEach((q: any) => {

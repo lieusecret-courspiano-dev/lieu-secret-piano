@@ -2,6 +2,8 @@
 import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import { DateTime } from 'luxon'
+import { EleveSearchSelect } from '@/components/admin/ui/EleveSearchSelect'
+import { QuestionEditor, type ExamenQuestion } from '@/components/admin/ui/QuestionEditor'
 
 interface Examen {
   id: string; titre: string; description: string | null; categorie: string
@@ -33,6 +35,7 @@ export default function AdminExamensPage() {
   const [editExamen, setEditExamen] = useState<Examen | null>(null)
   const [form, setForm] = useState({ ...EMPTY_FORM })
   const [selectedEleves, setSelectedEleves] = useState<string[]>([])
+  const [questions, setQuestions] = useState<ExamenQuestion[]>([])
   const [saving, setSaving] = useState(false)
   const [msg, setMsg] = useState<{type: 'ok'|'err'; text: string} | null>(null)
   const [viewResultats, setViewResultats] = useState<string | null>(null)
@@ -58,10 +61,9 @@ export default function AdminExamensPage() {
   async function handleSave(e: React.FormEvent) {
     e.preventDefault(); setSaving(true)
     try {
-      // Convertir la date locale en UTC pour éviter le décalage horaire
-      const dateLocal = new Date(form.date_examen)
-      const dateUTC = dateLocal.toISOString()
-      const body = { ...form, date_examen: dateUTC, eleve_ids: selectedEleves, quiz_id: form.quiz_id || null }
+      // datetime-local renvoie "YYYY-MM-DDTHH:mm" sans fuseau → on l'envoie tel quel
+      const dateISO = form.date_examen.length === 16 ? form.date_examen + ':00' : form.date_examen
+      const body = { ...form, date_examen: dateISO, eleve_ids: selectedEleves, quiz_id: form.quiz_id || null, questions_examen: questions }
       const url = editExamen ? '/api/admin/examens' : '/api/admin/examens'
       const method = editExamen ? 'PATCH' : 'POST'
       const payload = editExamen ? { id: editExamen.id, ...body } : body
@@ -69,7 +71,7 @@ export default function AdminExamensPage() {
       const d = await res.json()
       if (!res.ok) throw new Error(d.error || 'Erreur')
       showMsg('ok', editExamen ? 'Examen modifié' : 'Examen créé')
-      setShowForm(false); setEditExamen(null); setForm({ ...EMPTY_FORM }); setSelectedEleves([])
+      setShowForm(false); setEditExamen(null); setForm({ ...EMPTY_FORM }); setSelectedEleves([]); setQuestions([])
       const ex = await fetch('/api/admin/examens').then(r => r.json())
       setExamens(Array.isArray(ex) ? ex : [])
     } catch (err: any) { showMsg('err', err.message) } finally { setSaving(false) }
@@ -261,9 +263,19 @@ export default function AdminExamensPage() {
                   </div>
                   <div>
                     <label className="label mb-1 block">Durée (minutes)</label>
-                    <select value={form.duree_minutes} onChange={e => setForm(f => ({ ...f, duree_minutes: parseInt(e.target.value) }))} className="input w-full">
-                      {DUREES.map(d => <option key={d} value={d}>{d} min</option>)}
-                    </select>
+                    <div className="flex gap-2">
+                      <select value={DUREES.includes(form.duree_minutes) ? form.duree_minutes : 0}
+                        onChange={e => { const v = parseInt(e.target.value); if (v > 0) setForm(f => ({ ...f, duree_minutes: v })) }}
+                        className="input flex-1">
+                        {DUREES.map(d => <option key={d} value={d}>{d} min</option>)}
+                        <option value={0}>Personnalisé</option>
+                      </select>
+                      {!DUREES.includes(form.duree_minutes) && (
+                        <input type="number" min="5" max="300" value={form.duree_minutes}
+                          onChange={e => setForm(f => ({ ...f, duree_minutes: parseInt(e.target.value) || 60 }))}
+                          className="input w-20 text-center" placeholder="min" />
+                      )}
+                    </div>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -279,18 +291,13 @@ export default function AdminExamensPage() {
                     </select>
                   </div>
                 </div>
-                <div>
-                  <label className="label mb-2 block">Élèves autorisés ({selectedEleves.length} sélectionné{selectedEleves.length > 1 ? 's' : ''})</label>
-                  <div className="space-y-1 max-h-48 overflow-y-auto border border-noir-700 rounded-xl p-2">
-                    {eleves.map(el => (
-                      <label key={el.id} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-noir-800 cursor-pointer">
-                        <input type="checkbox" checked={selectedEleves.includes(el.id)} onChange={e => setSelectedEleves(prev => e.target.checked ? [...prev, el.id] : prev.filter(id => id !== el.id))} className="rounded" />
-                        <span className="text-white text-sm">{el.prenom} {el.nom}</span>
-                        <span className="text-noir-500 text-xs ml-auto">{el.email}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
+                <EleveSearchSelect
+                  eleves={eleves}
+                  selected={selectedEleves}
+                  onChange={setSelectedEleves}
+                  label="Élèves autorisés (recevront un email de convocation)"
+                />
+                <QuestionEditor questions={questions} onChange={setQuestions} />
               </form>
             </div>
             <div className="px-6 py-4 border-t border-noir-800 shrink-0 flex gap-3">
