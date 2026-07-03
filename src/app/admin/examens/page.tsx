@@ -58,7 +58,10 @@ export default function AdminExamensPage() {
   async function handleSave(e: React.FormEvent) {
     e.preventDefault(); setSaving(true)
     try {
-      const body = { ...form, eleve_ids: selectedEleves, quiz_id: form.quiz_id || null }
+      // Convertir la date locale en UTC pour éviter le décalage horaire
+      const dateLocal = new Date(form.date_examen)
+      const dateUTC = dateLocal.toISOString()
+      const body = { ...form, date_examen: dateUTC, eleve_ids: selectedEleves, quiz_id: form.quiz_id || null }
       const url = editExamen ? '/api/admin/examens' : '/api/admin/examens'
       const method = editExamen ? 'PATCH' : 'POST'
       const payload = editExamen ? { id: editExamen.id, ...body } : body
@@ -131,7 +134,7 @@ export default function AdminExamensPage() {
       ) : (
         <div className="space-y-3">
           {examens.map(ex => {
-            const dateEx = DateTime.fromISO(ex.date_examen).setLocale('fr')
+            const dateEx = DateTime.fromISO(ex.date_examen, { zone: 'utc' }).setZone('local').setLocale('fr')
             const isPast = new Date(ex.date_examen) < new Date()
             const nbEleves = ex.examen_eleves?.[0]?.count || 0
             const nbSessions = ex.examen_sessions?.[0]?.count || 0

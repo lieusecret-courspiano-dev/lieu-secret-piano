@@ -246,7 +246,7 @@ export default function ExamensPage() {
             {examens.map(ex => {
               const now = new Date()
               const dateEx = new Date(ex.date_examen)
-              const isAvailable = now >= dateEx
+              const isAvailable = now >= dateEx  // dateEx est en UTC, now aussi → comparaison correcte
               const tentativesRestantes = ex.nb_tentatives - ex.tentatives_utilisees
               const derniereSession = ex.derniere_session
               const med = derniereSession?.niveau_medaille ? MEDAILLE[derniereSession.niveau_medaille as keyof typeof MEDAILLE] : null
@@ -258,7 +258,7 @@ export default function ExamensPage() {
                       <h3 className="text-white font-semibold mb-1">{ex.titre}</h3>
                       <p className="text-gold-400 text-xs font-medium mb-2">{ex.categorie}</p>
                       <div className="flex items-center gap-3 text-xs text-noir-400 flex-wrap">
-                        <span>{DateTime.fromISO(ex.date_examen).setLocale('fr').toFormat("d MMM yyyy 'à' HH'h'mm")}</span>
+                        <span>{DateTime.fromISO(ex.date_examen, { zone: 'utc' }).setZone('local').setLocale('fr').toFormat("d MMM yyyy 'à' HH'h'mm")}</span>
                         <span>{ex.duree_minutes} min</span>
                         <span>Score min : {ex.score_min}%</span>
                       </div>
@@ -282,7 +282,7 @@ export default function ExamensPage() {
                           <div className="bg-noir-800 border border-noir-700 rounded-xl px-4 py-3 text-center">
                             <p className="text-noir-400 text-xs mb-1">Disponible dans</p>
                             <p className="text-white font-mono text-sm font-bold">
-                              {DateTime.fromISO(ex.date_examen).diff(DateTime.now(), ['days', 'hours']).toObject().days || 0}j {Math.floor((DateTime.fromISO(ex.date_examen).diff(DateTime.now(), 'hours').hours) % 24)}h
+                              {DateTime.fromISO(ex.date_examen, { zone: 'utc' }).diff(DateTime.now(), ['days', 'hours']).toObject().days || 0}j {Math.floor((DateTime.fromISO(ex.date_examen, { zone: 'utc' }).diff(DateTime.now(), 'hours').hours) % 24)}h
                             </p>
                           </div>
                         </div>
