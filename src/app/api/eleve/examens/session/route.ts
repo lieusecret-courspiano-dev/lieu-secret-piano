@@ -103,25 +103,29 @@ export async function POST(req: NextRequest) {
     let reussi = false
     let niveau_medaille: string | null = null
 
-    if (examen?.quiz_id && reponses) {
-      const { data: questions } = await supabaseAdmin
-        .from('quiz_questions')
-        .select('id, bonne_reponse, points')
-        .eq('quiz_id', examen.quiz_id)
-        .eq('statut', 'publie')
+    // Récupérer les questions de l'examen (propres à l'examen ou du quiz associé)
+    const { data: examQuestions } = await supabaseAdmin
+      .from('examen_questions')
+      .select('id, bonne_reponse, points')
+      .eq('examen_id', session.examen_id)
 
-      if (questions && questions.length > 0) {
-        let totalPoints = 0
-        let pointsObtenus = 0
-        questions.forEach((q: any) => {
-          totalPoints += q.points || 1
-          const rep = reponses[q.id]
-          if (rep && rep.toString().toLowerCase().trim() === q.bonne_reponse?.toString().toLowerCase().trim()) {
-            pointsObtenus += q.points || 1
-          }
-        })
-        score = totalPoints > 0 ? Math.round((pointsObtenus / totalPoints) * 100) : 0
-      }
+    const questionsToScore = examQuestions && examQuestions.length > 0
+      ? examQuestions
+      : examen?.quiz_id
+        ? (await supabaseAdmin.from('quiz_questions').select('id, bonne_reponse, points').eq('quiz_id', examen.quiz_id).eq('statut', 'publie')).data || []
+        : []
+
+    if (questionsToScore.length > 0 && reponses) {
+      let totalPoints = 0
+      let pointsObtenus = 0
+      questionsToScore.forEach((q: any) => {
+        totalPoints += q.points || 1
+        const rep = reponses[q.id]
+        if (rep && rep.toString().toLowerCase().trim() === q.bonne_reponse?.toString().toLowerCase().trim()) {
+          pointsObtenus += q.points || 1
+        }
+      })
+      score = totalPoints > 0 ? Math.round((pointsObtenus / totalPoints) * 100) : 0
     }
 
     reussi = score >= (examen?.score_min ?? 75)
