@@ -366,7 +366,7 @@ export default function AdminExamensPage() {
                   onChange={setSelectedEleves}
                   label="Élèves autorisés (recevront un email de convocation)"
                 />
-                <QuestionEditor questions={questions} onChange={setQuestions} />
+                <QuestionEditor questions={questions} onChange={setQuestions} hideAddButton />
               </form>
             </div>
             <div className="px-6 py-4 border-t border-noir-800 shrink-0 flex gap-3">

@@ -53,8 +53,15 @@ export default function BanqueQuestionsPage() {
     try {
       const res = await fetch('/api/admin/banque-questions')
       const data = await res.json()
-      setQuestions(Array.isArray(data) ? data : [])
-    } catch {}
+      if (data?.error) {
+        showMsg('err', `Erreur: ${data.error}. Exécutez supabase-banque-questions.sql dans Supabase.`)
+        setQuestions([])
+      } else {
+        setQuestions(Array.isArray(data) ? data : [])
+      }
+    } catch {
+      showMsg('err', 'Impossible de charger la banque. Vérifiez que la table banque_questions existe dans Supabase.')
+    }
     setLoading(false)
   }
 
@@ -93,7 +100,7 @@ export default function BanqueQuestionsPage() {
       cancelEdit()
       fetchQuestions()
     } catch (e: any) {
-      showMsg('err', e.message)
+      showMsg('err', e.message || 'Erreur lors de la sauvegarde. Vérifiez que la table banque_questions existe dans Supabase.')
     }
     setSaving(false)
   }

@@ -37,7 +37,7 @@ interface Props {
   onChange: (questions: ExamenQuestion[]) => void
 }
 
-export function QuestionEditor({ questions, onChange }: Props) {
+export function QuestionEditor({ questions, onChange, hideAddButton = false }: Props) {
   const [editIdx, setEditIdx] = useState<number | null>(null)
   const [form, setForm] = useState<ExamenQuestion>({ ...EMPTY_Q })
 
@@ -69,10 +69,12 @@ export function QuestionEditor({ questions, onChange }: Props) {
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
-        <label className="label">Questions de l'examen ({questions.length})</label>
-        <button type="button" onClick={addQuestion} className="btn-gold text-xs px-3 py-1.5 flex items-center gap-1">
-          <Plus size={12} /> Ajouter une question
-        </button>
+        <label className="label">Questions ({questions.length})</label>
+        {!hideAddButton && (
+          <button type="button" onClick={addQuestion} className="btn-gold text-xs px-3 py-1.5 flex items-center gap-1">
+            <Plus size={12} /> Ajouter une question
+          </button>
+        )}
       </div>
 
       {/* Liste des questions */}
