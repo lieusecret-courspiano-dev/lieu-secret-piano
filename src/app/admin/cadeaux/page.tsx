@@ -88,6 +88,11 @@ export default function AdminCadeaux() {
     <div className="p-4 md:p-6 lg:p-8 pb-24 md:pb-8">
       <div className="flex items-center justify-between mb-6">
         <div><h1 className="text-2xl font-serif text-white">Bons cadeaux</h1><p className="text-noir-400 text-sm mt-1">Gérez les bons cadeaux vendus sur le site</p></div>
+        {/* ── Onglets ── */}
+        <div className="flex gap-1 bg-noir-900 border border-noir-800 rounded-xl p-1 mb-6 w-fit tab-switcher-admin">
+          <a href="/admin/packs" className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${pathname === '/admin/packs' ? 'bg-gold-500 text-noir-950' : 'text-noir-400 hover:text-white'}`}>Packs de cours</a>
+        <a href="/admin/cadeaux" className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${pathname === '/admin/cadeaux' ? 'bg-gold-500 text-noir-950' : 'text-noir-400 hover:text-white'}`}>Bons cadeaux</a>
+        </div>
         <div className="flex items-center gap-2">
           <button onClick={() => exportExcel(filtered)} className="btn-outline text-sm flex items-center gap-1 px-3 py-2"><Download size={14} /> Excel</button>
           <button onClick={() => exportPDF(filtered)} className="btn-outline text-sm flex items-center gap-1 px-3 py-2"><Download size={14} /> PDF</button>

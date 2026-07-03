@@ -112,6 +112,11 @@ export default function AdminReservations() {
         <h1 className="text-2xl font-serif text-white">Réservations</h1>
         <p className="text-noir-400 text-sm mt-1">{reservations.length} réservation{reservations.length > 1 ? 's' : ''} au total</p>
       </div>
+        {/* ── Onglets ── */}
+        <div className="flex gap-1 bg-noir-900 border border-noir-800 rounded-xl p-1 mb-6 w-fit tab-switcher-admin">
+          <a href="/admin/reservations" className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${pathname === '/admin/reservations' ? 'bg-gold-500 text-noir-950' : 'text-noir-400 hover:text-white'}`}>Réservations</a>
+        <a href="/admin/essais" className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${pathname === '/admin/essais' ? 'bg-gold-500 text-noir-950' : 'text-noir-400 hover:text-white'}`}>Cours d'essai</a>
+        </div>
 
       {/* Filtres */}
       <div className="flex flex-col sm:flex-row gap-3 mb-6">

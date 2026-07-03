@@ -68,6 +68,11 @@ export default function AdminNewsletterPage() {
           <h1 className="text-2xl font-serif text-white">Newsletter</h1>
           <p className="text-noir-400 text-sm mt-1">Gérez vos abonnés à la newsletter</p>
         </div>
+        {/* ── Onglets ── */}
+        <div className="flex gap-1 bg-noir-900 border border-noir-800 rounded-xl p-1 mb-6 w-fit tab-switcher-admin">
+          <a href="/admin/newsletter" className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${pathname === '/admin/newsletter' ? 'bg-gold-500 text-noir-950' : 'text-noir-400 hover:text-white'}`}>Newsletter</a>
+        <a href="/admin/emails" className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${pathname === '/admin/emails' ? 'bg-gold-500 text-noir-950' : 'text-noir-400 hover:text-white'}`}>Emails envoyés</a>
+        </div>
         <button onClick={exportCSV} className="btn-outline flex items-center gap-2 text-sm">
           <Download size={15} /> Exporter CSV
         </button>

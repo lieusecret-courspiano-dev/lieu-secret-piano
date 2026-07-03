@@ -41,6 +41,11 @@ export default function AdminEssais() {
   return (
     <div className="p-4 md:p-6 lg:p-8 pb-24 md:pb-8">
       <div className="mb-6"><h1 className="text-2xl font-serif text-white">Cours d&apos;essai gratuits</h1><p className="text-noir-400 text-sm mt-1">{essais.filter(e => e.status === 'pending').length} en attente</p></div>
+        {/* ── Onglets ── */}
+        <div className="flex gap-1 bg-noir-900 border border-noir-800 rounded-xl p-1 mb-6 w-fit tab-switcher-admin">
+          <a href="/admin/reservations" className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${pathname === '/admin/reservations' ? 'bg-gold-500 text-noir-950' : 'text-noir-400 hover:text-white'}`}>Réservations</a>
+        <a href="/admin/essais" className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${pathname === '/admin/essais' ? 'bg-gold-500 text-noir-950' : 'text-noir-400 hover:text-white'}`}>Cours d'essai</a>
+        </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mb-6">
         {Object.entries(STATUS_LABELS).map(([k, v]) => (
           <div key={k} className="card text-center py-3"><div className="text-xl font-bold text-gold-400 mb-1">{essais.filter(e => e.status === k).length}</div><div className="text-xs text-noir-500">{v}</div></div>

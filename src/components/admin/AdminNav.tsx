@@ -14,61 +14,44 @@ const NAV_GROUPS = [
   {
     label: 'Tableau de bord',
     items: [
-      { href: '/admin',           label: 'Activité',        icon: LayoutDashboard },
-      { href: '/admin/dashboard', label: 'Finances',        icon: TrendingUp      },
+      { href: '/admin',           label: 'Activité & Finances', icon: LayoutDashboard },
     ],
   },
   {
-    label: 'Cours & Réservations',
+    label: 'Cours',
     items: [
-      { href: '/admin/disponibilites',   label: 'Disponibilités',  icon: Calendar     },
-      { href: '/admin/reservations',     label: 'Réservations',    icon: Users        },
-      { href: '/admin/evenements',       label: 'Événements',      icon: Star         },
-      { href: '/admin/essais',           label: 'Cours d\'essai',  icon: Star         },
+      { href: '/admin/disponibilites', label: 'Disponibilités',       icon: Calendar     },
+      { href: '/admin/reservations',   label: 'Réservations & Essais', icon: Users        },
+      { href: '/admin/evenements',     label: 'Événements',            icon: Star         },
+      { href: '/admin/packs',          label: 'Packs & Bons cadeaux',  icon: Gift         },
     ],
   },
   {
     label: 'Élèves',
     items: [
-      { href: '/admin/eleves',           label: 'Espace Élèves',   icon: Users        },
-      { href: '/admin/travaux',          label: 'Travaux à faire', icon: CheckSquare  },
-      { href: '/admin/eleve-messages',   label: 'Messages élèves', icon: MessageSquare },
-      { href: '/admin/eleve-medias',     label: 'Enregistrements', icon: Mic, badge: true },
-      { href: '/admin/inscriptions',     label: 'Inscriptions',    icon: ClipboardList},
-      { href: '/admin/inscription-form', label: 'Formulaire',      icon: ClipboardList},
+      { href: '/admin/eleves',         label: 'Espace Élèves',    icon: Users         },
+      { href: '/admin/travaux',         label: 'Travaux à faire',  icon: CheckSquare   },
+      { href: '/admin/eleve-messages',  label: 'Messages',         icon: MessageSquare },
+      { href: '/admin/eleve-medias',    label: 'Enregistrements',  icon: Mic, badge: true },
+      { href: '/admin/inscriptions',    label: 'Inscriptions',     icon: ClipboardList },
     ],
   },
   {
     label: 'Contenu',
     items: [
-      { href: '/admin/blog',             label: 'Blog',                 icon: BookOpen     },
-      { href: '/admin/ressources-premium', label: 'Ressources Premium',  icon: Library      },
-      { href: '/admin/ressources-admin', label: 'Ressources élèves',    icon: BookOpen     },
-      { href: '/admin/partitions',       label: 'Médiathèque',          icon: Music        },
-      { href: '/admin/medias',           label: 'Médias & Avis',        icon: Image        },
-      { href: '/admin/quiz',             label: 'Quiz pédagogiques',    icon: HelpCircle   },
-      { href: '/admin/supports',         label: 'Bibliothèque pédag.',  icon: Library      },
-    ],
-  },
-  {
-    label: 'Packs & Paiements',
-    items: [
-      { href: '/admin/packs',            label: 'Packs de cours',  icon: BookOpen     },
-      { href: '/admin/cadeaux',          label: 'Bons cadeaux',    icon: Gift         },
-    ],
-  },
-  {
-    label: 'Communication',
-    items: [
-      { href: '/admin/newsletter',       label: 'Newsletter',      icon: Mail         },
-      { href: '/admin/emails',           label: 'Emails envoyés',  icon: Mail         },
-      { href: '/admin/messages',         label: 'Messages',        icon: MessageSquare},
+      { href: '/admin/ressources-premium', label: 'Ressources Premium', icon: Library   },
+      { href: '/admin/ressources-admin',   label: 'Ressources élèves',  icon: BookOpen  },
+      { href: '/admin/quiz',               label: 'Quiz',               icon: HelpCircle},
+      { href: '/admin/blog',               label: 'Blog',               icon: BookOpen  },
+      { href: '/admin/medias',             label: 'Médias & Avis',      icon: Image     },
     ],
   },
   {
     label: 'Configuration',
     items: [
-      { href: '/admin/parametres',       label: 'Paramètres',      icon: Settings     },
+      { href: '/admin/newsletter',  label: 'Newsletter',   icon: Mail     },
+      { href: '/admin/messages',    label: 'Contact',      icon: MessageSquare },
+      { href: '/admin/parametres',  label: 'Paramètres',   icon: Settings },
     ],
   },
 ]

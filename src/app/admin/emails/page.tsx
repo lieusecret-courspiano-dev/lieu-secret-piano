@@ -19,6 +19,11 @@ export default function AdminEmails() {
   return (
     <div className="p-4 md:p-6 lg:p-8 pb-24 md:pb-8">
       <div className="mb-6"><h1 className="text-2xl font-serif text-white">Emails envoyés</h1><p className="text-noir-400 text-sm mt-1">Historique des rappels et demandes d&apos;avis automatiques</p></div>
+        {/* ── Onglets ── */}
+        <div className="flex gap-1 bg-noir-900 border border-noir-800 rounded-xl p-1 mb-6 w-fit tab-switcher-admin">
+          <a href="/admin/newsletter" className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${pathname === '/admin/newsletter' ? 'bg-gold-500 text-noir-950' : 'text-noir-400 hover:text-white'}`}>Newsletter</a>
+        <a href="/admin/emails" className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${pathname === '/admin/emails' ? 'bg-gold-500 text-noir-950' : 'text-noir-400 hover:text-white'}`}>Emails envoyés</a>
+        </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         {[{ label: 'Rappels 48h', value: stats.reminder_48h, color: 'text-blue-400' }, { label: 'Rappels 1h', value: stats.reminder_1h, color: 'text-orange-400' }, { label: "Demandes d'avis", value: stats.review_request, color: 'text-gold-400' }, { label: 'Avis reçus', value: stats.review_submitted, color: 'text-green-400' }].map((s, i) => <div key={i} className="card text-center"><div className={`text-2xl font-bold ${s.color} mb-1`}>{s.value}</div><div className="text-xs text-noir-500 uppercase tracking-wider">{s.label}</div></div>)}
       </div>

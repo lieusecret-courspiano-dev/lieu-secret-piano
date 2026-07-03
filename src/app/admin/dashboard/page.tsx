@@ -120,6 +120,11 @@ export default function DashboardPage() {
           <h1 className="text-2xl font-serif text-white">Dashboard financier</h1>
           <p className="text-noir-400 text-sm mt-1">Statistiques sans double comptabilisation</p>
         </div>
+        {/* ── Onglets ── */}
+        <div className="flex gap-1 bg-noir-900 border border-noir-800 rounded-xl p-1 mb-6 w-fit tab-switcher-admin">
+          <a href="/admin" className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${pathname === '/admin' ? 'bg-gold-500 text-noir-950' : 'text-noir-400 hover:text-white'}`}>Activité</a>
+        <a href="/admin/dashboard" className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${pathname === '/admin/dashboard' ? 'bg-gold-500 text-noir-950' : 'text-noir-400 hover:text-white'}`}>Finances</a>
+        </div>
         <div className="flex gap-2">
           <button onClick={exportCSV} className="btn-outline text-sm flex items-center gap-1 px-3 py-2"><Download size={14} /> CSV</button>
           <button onClick={exportExcel} className="btn-outline text-sm flex items-center gap-1 px-3 py-2"><Download size={14} /> Excel</button>

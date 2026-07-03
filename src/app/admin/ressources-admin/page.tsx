@@ -128,6 +128,13 @@ export default function AdminRessourcesPage() {
           <h1 className="text-2xl font-serif text-white">Ressources pédagogiques</h1>
           <p className="text-noir-400 text-sm mt-1">Partagez des liens, PDF et documents avec vos élèves</p>
         </div>
+        {/* ── Onglets ── */}
+        <div className="flex gap-1 bg-noir-900 border border-noir-800 rounded-xl p-1 mb-6 w-fit tab-switcher-admin">
+          <a href="/admin/ressources-premium" className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${pathname === '/admin/ressources-premium' ? 'bg-gold-500 text-noir-950' : 'text-noir-400 hover:text-white'}`}>Premium</a>
+        <a href="/admin/ressources-admin" className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${pathname === '/admin/ressources-admin' ? 'bg-gold-500 text-noir-950' : 'text-noir-400 hover:text-white'}`}>Élèves</a>
+        <a href="/admin/partitions" className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${pathname === '/admin/partitions' ? 'bg-gold-500 text-noir-950' : 'text-noir-400 hover:text-white'}`}>Médiathèque</a>
+        <a href="/admin/supports" className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${pathname === '/admin/supports' ? 'bg-gold-500 text-noir-950' : 'text-noir-400 hover:text-white'}`}>Bibliothèque</a>
+        </div>
         <button onClick={openCreate} className="btn-gold flex items-center gap-2">
           <Plus size={16} /> Ajouter
         </button>
