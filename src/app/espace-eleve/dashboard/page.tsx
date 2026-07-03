@@ -96,7 +96,7 @@ export default function DashboardPage() {
       if (meRes.status === 401) { router.push('/espace-eleve/login'); return }
       const [meData, progData, badgesData, travauxData, packData, coursData, quizData, journalData, examensData] = await Promise.all([
         meRes.json(), progRes.json(), badgesRes.json(), travauxRes.json(),
-        packRes.json(), coursRes.json(), quizRes.json(), journalRes.json(),
+        packRes.json(), coursRes.json(), quizRes.json(), journalRes.json(), examensRes.json(),
       ])
       setMe(meData)
       setCurrentAvatar(meData.avatar || 'piano')
