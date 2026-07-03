@@ -110,7 +110,7 @@ export default function AdminExamensPage() {
     <div className="p-4 md:p-6 lg:p-8 pb-24 md:pb-8 max-w-5xl">
       {/* Onglets */}
       <div className="flex gap-1 bg-noir-900 border border-noir-800 rounded-xl p-1 mb-6 w-fit tab-switcher-admin">
-        <a href="/admin/quiz" className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${pathname === '/admin/quiz' ? 'bg-gold-500 text-noir-950' : 'text-noir-400 hover:text-white'}`}>Quiz d'entraînement</a>
+
         <a href="/admin/examens" className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${pathname === '/admin/examens' ? 'bg-gold-500 text-noir-950' : 'text-noir-400 hover:text-white'}`}>Examens finaux</a>
       </div>
 
@@ -179,7 +179,7 @@ export default function AdminExamensPage() {
       {/* Modal résultats */}
       {viewResultats && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className="bg-noir-900 border border-noir-700 rounded-2xl w-full max-w-2xl shadow-2xl max-h-[90vh] flex flex-col">
+          <div className="bg-noir-900 border border-noir-700 rounded-2xl w-full max-w-4xl shadow-2xl max-h-[95vh] flex flex-col">
             <div className="flex items-center justify-between px-6 py-4 border-b border-noir-800 shrink-0">
               <h2 className="text-white font-serif text-xl">Résultats de l'examen</h2>
               <button onClick={() => setViewResultats(null)} className="text-noir-400 hover:text-white p-1">
@@ -248,14 +248,7 @@ export default function AdminExamensPage() {
                   </select>
                   <p className="text-noir-600 text-xs mt-1">Les compétences de cette catégorie seront validées automatiquement si l'élève réussit</p>
                 </div>
-                <div>
-                  <label className="label mb-1 block">Quiz de base (questions)</label>
-                  <select value={form.quiz_id} onChange={e => setForm(f => ({ ...f, quiz_id: e.target.value }))} className="input w-full">
-                    <option value="">Sélectionner un quiz...</option>
-                    {quiz.map(q => <option key={q.id} value={q.id}>{q.titre}</option>)}
-                  </select>
-                  <p className="text-noir-600 text-xs mt-1">Les questions du quiz sélectionné seront utilisées pour l'examen</p>
-                </div>
+
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="label mb-1 block">Date et heure *</label>
