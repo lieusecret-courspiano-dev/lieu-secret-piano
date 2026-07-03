@@ -30,6 +30,7 @@ const Icons = {
   defis:        <svg width="18" height="18" fill="none" stroke="#fb923c" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>,
   fiches:       <svg width="18" height="18" fill="none" stroke="#34d399" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>,
   decouverte:   <svg width="18" height="18" fill="none" stroke="#a78bfa" strokeWidth="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>,
+  examens:      <svg width="18" height="18" fill="none" stroke="#fcd34d" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>,
   objectifs:    <svg width="18" height="18" fill="none" stroke="#f59e0b" strokeWidth="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2" fill="#f59e0b"/></svg>,
   journal:      <svg width="18" height="18" fill="none" stroke="#fb923c" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>,
   badges:       <svg width="18" height="18" fill="none" stroke="#a78bfa" strokeWidth="1.5" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>,
@@ -61,7 +62,8 @@ const NAV_GROUPS = [
     items: [
       { href: '/espace-eleve/progression',  label: 'Progression & Badges', icon: Icons.progression, badge: null },
       { href: '/espace-eleve/certificats',  label: 'Mes certificats',   icon: Icons.certificats,  badge: null },
-      { href: '/espace-eleve/quiz',         label: 'Quiz',              icon: Icons.progression,  badge: null },
+      { href: '/espace-eleve/quiz',         label: "Quiz d'entraînement", icon: Icons.progression, badge: null },
+      { href: '/espace-eleve/examens',      label: 'Examens finaux',    icon: Icons.examens,      badge: null },
     ],
   },
   {

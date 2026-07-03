@@ -42,6 +42,7 @@ const NAV_GROUPS = [
       { href: '/admin/ressources-premium', label: 'Ressources Premium', icon: Library   },
       { href: '/admin/ressources-admin',   label: 'Ressources élèves',  icon: BookOpen  },
       { href: '/admin/quiz',               label: 'Quiz',               icon: HelpCircle},
+      { href: '/admin/examens',             label: 'Examens finaux',     icon: HelpCircle},
       { href: '/admin/blog',               label: 'Blog',               icon: BookOpen  },
       { href: '/admin/medias',             label: 'Médias & Avis',      icon: Image     },
     ],
