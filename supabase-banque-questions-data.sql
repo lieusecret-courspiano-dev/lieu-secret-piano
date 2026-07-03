@@ -396,5 +396,52 @@ INSERT INTO banque_questions (categorie, type, question, options, bonne_reponse,
  NULL, 'Cadence finale et ritardando',
  'Pour créer une fin efficace : 1) Cadence parfaite (V-I) avec un accord final tenu, 2) Ritardando (ralentissement progressif), 3) Diminuendo (diminution du volume), 4) Répétition du dernier accord en s''estompant (fade out).', 2, 40);
 
--- Vérification
+
+-- ══════════════════════════════════════════════════════════════
+-- FONDAMENTAUX — 10 questions supplémentaires (total = 30)
+-- ══════════════════════════════════════════════════════════════
+
+INSERT INTO banque_questions (categorie, type, question, options, bonne_reponse, explication, points, position) VALUES
+
+('Fondamentaux', 'qcm', 'Combien y a-t-il de touches noires sur un piano standard de 88 touches ?',
+ '["32", "34", "36", "38"]', '36',
+ 'Un piano standard de 88 touches comporte 36 touches noires réparties en groupes de 2 et 3 sur toute l''étendue du clavier.', 1, 21),
+
+('Fondamentaux', 'qcm', 'Quelle note se trouve juste à gauche d''un groupe de 3 touches noires ?',
+ '["Do", "Fa", "Sol", "La"]', 'Fa',
+ 'Le Fa se trouve toujours à gauche d''un groupe de 3 touches noires. Avec le Do (à gauche des 2 touches noires), ce sont les deux repères principaux du clavier.', 1, 22),
+
+('Fondamentaux', 'qcm', 'Qu''est-ce qu''une octave ?',
+ '["Un intervalle de 5 notes", "Un intervalle de 7 notes", "La répétition de la même note 8 degrés plus haut ou plus bas", "Un accord de 8 notes"]', 'La répétition de la même note 8 degrés plus haut ou plus bas',
+ 'Une octave est l''intervalle entre deux notes portant le même nom, séparées de 12 demi-tons. Le son est identique mais à une hauteur différente (plus grave ou plus aigu).', 1, 23),
+
+('Fondamentaux', 'qcm', 'Quel est le nom du 5e degré d''une gamme majeure ?',
+ '["Tonique", "Médiante", "Dominante", "Sensible"]', 'Dominante',
+ 'Le 5e degré s''appelle la dominante. C''est le degré le plus important après la tonique (1er degré). La dominante crée une tension qui se résout naturellement sur la tonique.', 1, 24),
+
+('Fondamentaux', 'qcm', 'Combien de demi-tons y a-t-il dans une octave ?',
+ '["10", "11", "12", "13"]', '12',
+ 'Une octave contient exactement 12 demi-tons (touches blanches et noires confondues). C''est la base du système tempéré utilisé dans la musique occidentale.', 1, 25),
+
+('Fondamentaux', 'vrai_faux', 'La gamme de Ré majeur contient deux dièses : Fa# et Do#.',
+ NULL, 'Vrai',
+ 'La gamme de Ré majeur est : Ré-Mi-Fa#-Sol-La-Si-Do#-Ré. Elle contient bien Fa# et Do# pour respecter la formule T-T-D-T-T-T-D.', 1, 26),
+
+('Fondamentaux', 'vrai_faux', 'Un accord de Mi mineur est composé des notes Mi, Sol et Si.',
+ NULL, 'Vrai',
+ 'Mi mineur = Mi (fondamentale) + Sol (tierce mineure, 3 demi-tons) + Si (quinte juste, 7 demi-tons). En notation : Em = E-G-B.', 1, 27),
+
+('Fondamentaux', 'vrai_faux', 'Le dièse (#) monte la note d''un ton entier.',
+ NULL, 'Faux',
+ 'Le dièse (#) monte la note d''un demi-ton seulement (pas d''un ton entier). Par exemple, Do# est un demi-ton au-dessus de Do, pas un ton.', 1, 28),
+
+('Fondamentaux', 'reponse_courte', 'Quelle est la note enharmonique de Do# ?',
+ NULL, 'Réb',
+ 'Do# et Réb sont deux noms différents pour la même touche noire sur le piano. On parle d''enharmonie. Le choix entre les deux dépend du contexte harmonique.', 1, 29),
+
+('Fondamentaux', 'reponse_courte', 'Nommez les 7 notes de la gamme de Sol majeur dans l''ordre.',
+ NULL, 'Sol La Si Do Ré Mi Fa#',
+ 'La gamme de Sol majeur : Sol-La-Si-Do-Ré-Mi-Fa#-Sol. Elle ne contient qu''une seule altération : Fa#. C''est l''une des premières gammes à apprendre après Do majeur.', 2, 30);
+
 SELECT categorie, COUNT(*) as nb_questions FROM banque_questions GROUP BY categorie ORDER BY categorie;
+
