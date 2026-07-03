@@ -15,7 +15,7 @@ interface Eleve { id: string; prenom: string; nom: string; email: string }
 interface Session {
   id: string; eleve: { prenom: string; nom: string; email: string }
   score: number; reussi: boolean; niveau_medaille: string | null
-  submitted_at: string | null; tentative_num: number
+  eleve_id: string; submitted_at: string | null; tentative_num: number
 }
 
 const CATEGORIES = ['Fondamentaux', 'Compréhension et autonomie', 'Expression et maîtrise']
@@ -239,7 +239,12 @@ export default function AdminExamensPage() {
                             {s.reussi ? 'Réussi' : 'Échoué'}
                           </span>
                           {!s.reussi && (
-                            <button onClick={() => autoriserTentative(viewResultats, s.eleve?.email)} className="btn-outline text-xs px-2 py-1">
+                            <button onClick={async () => {
+                              await autoriserTentative(viewResultats!, s.eleve_id)
+                              // Recharger les résultats
+                              const data = await fetch(`/api/admin/examens/resultats?examen_id=${viewResultats}`).then(r => r.json())
+                              setResultats(Array.isArray(data) ? data : [])
+                            }} className="btn-outline text-xs px-2 py-1">
                               +1 tentative
                             </button>
                           )}

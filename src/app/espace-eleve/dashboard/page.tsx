@@ -76,11 +76,6 @@ export default function DashboardPage() {
             if (packData?.packs) { const active = packData.packs.find((p: any) => p.status === 'active'); if (active) setPack({ pack_label: active.pack_label, heures_restantes: active.heures_restantes, heures_total: active.heures_total, code: active.code }) } else if (packData?.pack_label) { setPack(packData) }
             if (Array.isArray(coursData)) { const now = new Date(); const upcoming = coursData.filter((c: Cours) => new Date(c.slot_start) > now && c.status === 'confirmed'); setProchainCours(upcoming[0] || null); setNbCours(coursData.filter((c: Cours) => new Date(c.slot_start) < now).length) }
             if (Array.isArray(quizData)) setQuizResults(quizData.filter((q: any) => q.nb_tentatives > 0))
-      if (Array.isArray(examensData)) {
-        const now = new Date()
-        const upcoming = examensData.filter((e: any) => new Date(e.date_examen) > now && (e.nb_tentatives - e.tentatives_utilisees) > 0).sort((a: any, b: any) => new Date(a.date_examen).getTime() - new Date(b.date_examen).getTime())
-        setProchainExamen(upcoming[0] || null)
-      }
             setLoading(false); return
           }
         }
@@ -132,6 +127,29 @@ export default function DashboardPage() {
 
   useEffect(() => { loadData() }, [loadData])
 
+  // Vérifier les mises à jour PWA au chargement
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistration().then(reg => {
+        if (reg) {
+          reg.update()
+          reg.addEventListener('updatefound', () => {
+            const newWorker = reg.installing
+            if (newWorker) {
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  // Nouvelle version disponible — recharger automatiquement
+                  newWorker.postMessage({ type: 'SKIP_WAITING' })
+                  window.location.reload()
+                }
+              })
+            }
+          })
+        }
+      }).catch(() => {})
+    }
+  }, [])
+
   async function changeAvatar(key: string) {
     setCurrentAvatar(key); setShowAvatarPicker(false)
     await fetch('/api/eleve/me', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ avatar: key }) })
@@ -171,6 +189,18 @@ export default function DashboardPage() {
               <p className="text-noir-400 text-sm">{me.email}</p>
             </div>
           </div>
+
+          {/* Bouton rafraîchir */}
+          <button
+            onClick={() => { try { sessionStorage.removeItem('dashboard_cache') } catch {} loadData(true) }}
+            className="p-2 rounded-xl text-noir-500 hover:text-gold-400 hover:bg-noir-800 transition-colors"
+            title="Rafraîchir les données"
+          >
+            <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+            </svg>
+          </button>
 
           {/* Streak */}
           {streak > 0 && (
