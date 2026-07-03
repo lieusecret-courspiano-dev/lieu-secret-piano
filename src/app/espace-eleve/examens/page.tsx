@@ -76,17 +76,11 @@ export default function ExamensPage() {
     if (!examen.id) return
     const exData = await fetch('/api/eleve/examens').then(r => r.json())
     const ex = (Array.isArray(exData) ? exData : []).find((e: any) => e.id === examen.id)
+    if (!ex?.quiz_id) { alert('Aucun quiz associé à cet examen'); return }
 
-    // Utiliser les questions propres à l'examen en priorité, sinon le quiz associé
-    let qs: any[] = []
-    if (ex?.questions_propres && ex.questions_propres.length > 0) {
-      qs = ex.questions_propres
-    } else if (ex?.quiz_id) {
-      const qData = await fetch(`/api/admin/quiz?id=${ex.quiz_id}`).then(r => r.json())
-      qs = qData?.questions || []
-    }
-
-    if (qs.length === 0) { alert('Aucune question dans cet examen. Contactez votre professeur.'); return }
+    const qData = await fetch(`/api/admin/quiz?id=${ex.quiz_id}`).then(r => r.json())
+    const qs = qData?.questions || []
+    if (qs.length === 0) { alert('Aucune question dans cet examen'); return }
 
     // Démarrer la session
     const res = await fetch('/api/eleve/examens/session', {
