@@ -52,7 +52,12 @@ export default function ExamensPage() {
         body: JSON.stringify({ action: 'submit', examen_id: activeExamen.id, session_id: sessionId, reponses: reponsesFinales }),
       })
       const d = await res.json()
-      if (res.ok) setResult(d)
+      if (res.ok) {
+        setResult(d)
+        fetch('/api/eleve/examens').then(r => r.json()).then(data => {
+          if (Array.isArray(data)) setExamens(data)
+        }).catch(() => {})
+      }
     } catch {} finally { setSubmitting(false) }
   }, [sessionId, activeExamen, submitting])
 
@@ -147,7 +152,7 @@ export default function ExamensPage() {
               </div>
             )}
             <div className="flex gap-3 justify-center">
-              <button onClick={() => { setActiveExamen(null); setResult(null); setSessionId(null) }} className="btn-outline">Retour aux examens</button>
+              <button onClick={() => { setActiveExamen(null); setResult(null); setSessionId(null); setQuestions([]) }} className="btn-outline">Retour aux examens</button>
               <a href="/espace-eleve/progression" className="btn-gold">Voir ma progression</a>
             </div>
           </div>
@@ -312,7 +317,7 @@ export default function ExamensPage() {
                           {derniereSession ? 'Nouvelle tentative' : "Commencer l'examen"}
                         </button>
                       )}
-                      {tentativesRestantes > 0 && isAvailable && (
+                      {tentativesRestantes > 0 && tentativesRestantes < ex.nb_tentatives && isAvailable && (
                         <p className="text-noir-600 text-xs text-center mt-1">{tentativesRestantes} tentative{tentativesRestantes > 1 ? 's' : ''} restante{tentativesRestantes > 1 ? 's' : ''}</p>
                       )}
                     </div>
