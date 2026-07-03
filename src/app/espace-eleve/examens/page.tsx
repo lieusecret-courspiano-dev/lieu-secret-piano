@@ -16,9 +16,9 @@ interface Question {
 }
 
 const MEDAILLE = {
-  or:     { label: 'Mention Or',     color: 'text-yellow-400', icon: <svg width="20" height="20" fill="none" stroke="#fbbf24" strokeWidth="1.5" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg> },
-  argent: { label: 'Mention Argent', color: 'text-gray-300',   icon: <svg width="20" height="20" fill="none" stroke="#d1d5db" strokeWidth="1.5" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg> },
-  bronze: { label: 'Mention Bronze', color: 'text-orange-400', icon: <svg width="20" height="20" fill="none" stroke="#fb923c" strokeWidth="1.5" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg> },
+  or:     { label: 'Mention Or',     color: 'text-yellow-400', icon: <svg width="18" height="18" fill="none" stroke="#fbbf24" strokeWidth="1.5" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg> },
+  argent: { label: 'Mention Argent', color: 'text-gray-300',   icon: <svg width="18" height="18" fill="none" stroke="#d1d5db" strokeWidth="1.5" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg> },
+  bronze: { label: 'Mention Bronze', color: 'text-orange-400', icon: <svg width="18" height="18" fill="none" stroke="#fb923c" strokeWidth="1.5" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg> },
 }
 
 export default function ExamensPage() {
