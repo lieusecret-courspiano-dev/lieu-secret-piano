@@ -61,8 +61,9 @@ export default function AdminExamensPage() {
   async function handleSave(e: React.FormEvent) {
     e.preventDefault(); setSaving(true)
     try {
-      // datetime-local renvoie "YYYY-MM-DDTHH:mm" sans fuseau → on l'envoie tel quel
-      const dateISO = form.date_examen.length === 16 ? form.date_examen + ':00' : form.date_examen
+      // Convertir l'heure locale saisie en UTC pour Supabase
+      const dateLocalInput = new Date(form.date_examen)
+      const dateISO = dateLocalInput.toISOString()
       const body = { ...form, date_examen: dateISO, eleve_ids: selectedEleves, quiz_id: form.quiz_id || null, questions_examen: questions }
       const url = editExamen ? '/api/admin/examens' : '/api/admin/examens'
       const method = editExamen ? 'PATCH' : 'POST'
@@ -97,7 +98,11 @@ export default function AdminExamensPage() {
 
   function startEdit(ex: Examen) {
     setEditExamen(ex)
-    setForm({ titre: ex.titre, description: ex.description || '', categorie: ex.categorie, quiz_id: '', score_min: ex.score_min, duree_minutes: ex.duree_minutes, date_examen: ex.date_examen.slice(0, 16), nb_tentatives: ex.nb_tentatives })
+    const dateUTC = new Date(ex.date_examen)
+    const offset = dateUTC.getTimezoneOffset() * 60000
+    const dateLocal = new Date(dateUTC.getTime() - offset)
+    const dateLocalStr = dateLocal.toISOString().slice(0, 16)
+    setForm({ titre: ex.titre, description: ex.description || '', categorie: ex.categorie, quiz_id: '', score_min: ex.score_min, duree_minutes: ex.duree_minutes, date_examen: dateLocalStr, nb_tentatives: ex.nb_tentatives })
     setShowForm(true)
   }
 
