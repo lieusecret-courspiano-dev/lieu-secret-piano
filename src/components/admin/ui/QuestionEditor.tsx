@@ -35,6 +35,7 @@ const EMPTY_Q: ExamenQuestion = {
 interface Props {
   questions: ExamenQuestion[]
   onChange: (questions: ExamenQuestion[]) => void
+  hideAddButton?: boolean
 }
 
 export function QuestionEditor({ questions, onChange, hideAddButton = false }: Props) {
