@@ -52,6 +52,7 @@ export default function DashboardPage() {
   const [badges, setBadges] = useState<Badge[]>([])
   const [travaux, setTravaux] = useState<Travail[]>([])
   const [quizResults, setQuizResults] = useState<QuizResult[]>([])
+  const [prochainExamen, setProchainExamen] = useState<any>(null)
   const [nbCours, setNbCours] = useState(0)
   const [journal, setJournal] = useState<JournalEntry[]>([])
   const [showAvatarPicker, setShowAvatarPicker] = useState(false)
@@ -75,13 +76,18 @@ export default function DashboardPage() {
             if (packData?.packs) { const active = packData.packs.find((p: any) => p.status === 'active'); if (active) setPack({ pack_label: active.pack_label, heures_restantes: active.heures_restantes, heures_total: active.heures_total, code: active.code }) } else if (packData?.pack_label) { setPack(packData) }
             if (Array.isArray(coursData)) { const now = new Date(); const upcoming = coursData.filter((c: Cours) => new Date(c.slot_start) > now && c.status === 'confirmed'); setProchainCours(upcoming[0] || null); setNbCours(coursData.filter((c: Cours) => new Date(c.slot_start) < now).length) }
             if (Array.isArray(quizData)) setQuizResults(quizData.filter((q: any) => q.nb_tentatives > 0))
+      if (Array.isArray(examensData)) {
+        const now = new Date()
+        const upcoming = examensData.filter((e: any) => new Date(e.date_examen) > now && (e.nb_tentatives - e.tentatives_utilisees) > 0).sort((a: any, b: any) => new Date(a.date_examen).getTime() - new Date(b.date_examen).getTime())
+        setProchainExamen(upcoming[0] || null)
+      }
             setLoading(false); return
           }
         }
       } catch {}
     }
     try {
-      const [meRes, progRes, badgesRes, travauxRes, packRes, coursRes, quizRes, journalRes] = await Promise.all([
+      const [meRes, progRes, badgesRes, travauxRes, packRes, coursRes, quizRes, journalRes, examensRes] = await Promise.all([
         fetch('/api/eleve/me'),
         fetch('/api/eleve/progression'),
         fetch('/api/eleve/badges'),
@@ -90,9 +96,10 @@ export default function DashboardPage() {
         fetch('/api/eleve/reservations'),
         fetch('/api/eleve/quiz'),
         fetch('/api/eleve/journal'),
+        fetch('/api/eleve/examens'),
       ])
       if (meRes.status === 401) { router.push('/espace-eleve/login'); return }
-      const [meData, progData, badgesData, travauxData, packData, coursData, quizData, journalData] = await Promise.all([
+      const [meData, progData, badgesData, travauxData, packData, coursData, quizData, journalData, examensData] = await Promise.all([
         meRes.json(), progRes.json(), badgesRes.json(), travauxRes.json(),
         packRes.json(), coursRes.json(), quizRes.json(), journalRes.json(),
       ])
@@ -113,6 +120,11 @@ export default function DashboardPage() {
         setNbCours(coursData.filter((c: Cours) => new Date(c.slot_start) < now).length)
       }
       if (Array.isArray(quizData)) setQuizResults(quizData.filter((q: any) => q.nb_tentatives > 0))
+      if (Array.isArray(examensData)) {
+        const now = new Date()
+        const upcoming = examensData.filter((e: any) => new Date(e.date_examen) > now && (e.nb_tentatives - e.tentatives_utilisees) > 0).sort((a: any, b: any) => new Date(a.date_examen).getTime() - new Date(b.date_examen).getTime())
+        setProchainExamen(upcoming[0] || null)
+      }
       // Sauvegarder dans le cache
       try { sessionStorage.setItem('dashboard_cache', JSON.stringify({ data: { meData, progData, badgesData, travauxData, packData, coursData, quizData, journalData }, timestamp: Date.now() })) } catch {}
     } catch (e) { console.error('Dashboard:', e) } finally { setLoading(false) }
@@ -252,6 +264,29 @@ export default function DashboardPage() {
         </div>
 
         {/* ── Grille: Pack + Travaux ── */}
+        {prochainExamen && (
+          <div className="card border-gold-500/20 mb-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <svg width="15" height="15" fill="none" stroke="#f59e0b" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <h2 className="text-white font-semibold text-sm">Examen à venir</h2>
+              </div>
+              <a href="/espace-eleve/examens" className="text-xs text-gold-400 hover:text-gold-300">Voir →</a>
+            </div>
+            <div className="mt-3 flex items-center justify-between flex-wrap gap-3">
+              <div>
+                <p className="text-white font-medium">{prochainExamen.titre}</p>
+                <p className="text-gold-400 text-xs mt-0.5">{prochainExamen.categorie}</p>
+                <p className="text-noir-400 text-xs mt-1">{DateTime.fromISO(prochainExamen.date_examen, { zone: 'utc' }).setZone('local').setLocale('fr').toFormat("d MMM yyyy 'à' HH'h'mm")} · {prochainExamen.duree_minutes} min</p>
+              </div>
+              <div className="bg-noir-800 border border-gold-500/20 rounded-xl px-4 py-2 text-center">
+                <p className="text-noir-400 text-xs mb-0.5">Disponible dans</p>
+                <p className="text-gold-400 font-mono font-bold text-sm">{(() => { const diff = DateTime.fromISO(prochainExamen.date_examen, { zone: 'utc' }).diff(DateTime.now(), ['days', 'hours', 'minutes']); const d = Math.floor(diff.days || 0); const h = Math.floor(diff.hours || 0); const m = Math.floor(diff.minutes || 0); if (d > 0) return `${d}j ${h}h ${m}min`; if (h > 0) return `${h}h ${m}min`; return `${m}min` })()}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="grid md:grid-cols-2 gap-4">
 
           {/* Mon pack */}

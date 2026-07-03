@@ -212,9 +212,9 @@ export default function ExamensPage() {
                 ))}
               </div>
             )}
-            {(q.type === 'reponse_courte' || q.type === 'reponse_libre' || q.type === 'audio') && (
+            {(q.type === 'reponse_courte' || q.type === 'reponse_libre' || q.type === 'audio' || q.type === 'image' || q.type === 'video') && (
               <input value={reponses[q.id] || ''} onChange={e => setReponses(r => ({ ...r, [q.id]: e.target.value }))}
-                className="input w-full" placeholder="Votre réponse..." />
+                className="input w-full mt-2" placeholder="Votre réponse..." />
             )}
           </div>
 
@@ -291,7 +291,15 @@ export default function ExamensPage() {
                           <div className="bg-noir-800 border border-noir-700 rounded-xl px-4 py-3 text-center">
                             <p className="text-noir-400 text-xs mb-1">Disponible dans</p>
                             <p className="text-white font-mono text-sm font-bold">
-                              {DateTime.fromISO(ex.date_examen, { zone: 'utc' }).diff(DateTime.now(), ['days', 'hours']).toObject().days || 0}j {Math.floor((DateTime.fromISO(ex.date_examen, { zone: 'utc' }).diff(DateTime.now(), 'hours').hours) % 24)}h
+                              {(() => {
+                                const diff = DateTime.fromISO(ex.date_examen, { zone: 'utc' }).diff(DateTime.now(), ['days', 'hours', 'minutes'])
+                                const d = Math.floor(diff.days || 0)
+                                const h = Math.floor(diff.hours || 0)
+                                const m = Math.floor(diff.minutes || 0)
+                                if (d > 0) return `${d}j ${h}h ${m}min`
+                                if (h > 0) return `${h}h ${m}min`
+                                return `${m}min`
+                              })()}
                             </p>
                           </div>
                         </div>
