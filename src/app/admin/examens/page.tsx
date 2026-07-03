@@ -54,6 +54,25 @@ export default function AdminExamensPage() {
     })
   }, [])
 
+  // Charger automatiquement les questions de la banque quand la catégorie change
+  // (seulement en mode création, sans questions déjà saisies)
+  useEffect(() => {
+    if (!showForm || editExamen || !form.categorie || questions.length > 0) return
+    fetch(`/api/admin/banque-questions?categorie=${encodeURIComponent(form.categorie)}`)
+      .then(r => r.json())
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          setQuestions(data.map((q: any, i: number) => ({
+            type: q.type, question: q.question,
+            options: q.options || ['', '', '', ''],
+            bonne_reponse: q.bonne_reponse || '', explication: q.explication || '',
+            audio_url: q.audio_url || '', image_url: q.image_url || '', video_url: q.video_url || '',
+            points: q.points || 1, position: i,
+          })))
+        }
+      }).catch(() => {})
+  }, [form.categorie, showForm, editExamen])
+
   function showMsg(type: 'ok'|'err', text: string) {
     setMsg({ type, text }); setTimeout(() => setMsg(null), 4000)
   }
@@ -71,6 +90,13 @@ export default function AdminExamensPage() {
       const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
       const d = await res.json()
       if (!res.ok) throw new Error(d.error || 'Erreur')
+      // Mettre à jour les questions si modification
+      if (editExamen) {
+        await fetch('/api/admin/examens/questions', {
+          method: 'PUT', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ examen_id: editExamen.id, questions }),
+        })
+      }
       showMsg('ok', editExamen ? 'Examen modifié' : 'Examen créé')
       setShowForm(false); setEditExamen(null); setForm({ ...EMPTY_FORM }); setSelectedEleves([]); setQuestions([])
       const ex = await fetch('/api/admin/examens').then(r => r.json())
@@ -119,13 +145,29 @@ export default function AdminExamensPage() {
     } catch { alert('Erreur lors du chargement de la banque') }
   }
 
-  function startEdit(ex: Examen) {
+  async function startEdit(ex: Examen) {
     setEditExamen(ex)
     const dateUTC = new Date(ex.date_examen)
     const offset = dateUTC.getTimezoneOffset() * 60000
     const dateLocal = new Date(dateUTC.getTime() - offset)
     const dateLocalStr = dateLocal.toISOString().slice(0, 16)
     setForm({ titre: ex.titre, description: ex.description || '', categorie: ex.categorie, quiz_id: '', score_min: ex.score_min, duree_minutes: ex.duree_minutes, date_examen: dateLocalStr, nb_tentatives: ex.nb_tentatives })
+    // Charger les questions existantes de cet examen
+    try {
+      const res = await fetch(`/api/admin/examens/questions?examen_id=${ex.id}`)
+      if (res.ok) {
+        const data = await res.json()
+        setQuestions(Array.isArray(data) ? data.map((q: any, i: number) => ({
+          id: q.id, type: q.type, question: q.question,
+          options: q.options || ['', '', '', ''],
+          bonne_reponse: q.bonne_reponse || '', explication: q.explication || '',
+          audio_url: q.audio_url || '', image_url: q.image_url || '', video_url: q.video_url || '',
+          points: q.points || 1, position: i,
+        })) : [])
+      } else {
+        setQuestions([])
+      }
+    } catch { setQuestions([]) }
     setShowForm(true)
   }
 
