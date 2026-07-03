@@ -35,7 +35,7 @@ function getGreeting(prenom: string): string {
 }
 
 function getCountdown(slotStart: string): string {
-  const diff = DateTime.fromISO(slotStart).diff(DateTime.now(), ['days', 'hours', 'minutes'])
+  const diff = DateTime.fromISO(slotStart, { zone: 'utc' }).diff(DateTime.now(), ['days', 'hours', 'minutes'])
   if (diff.days >= 1) return `dans ${Math.floor(diff.days)} jour${Math.floor(diff.days) > 1 ? 's' : ''}`
   if (diff.hours >= 1) return `dans ${Math.floor(diff.hours)}h${Math.floor(diff.minutes)}min`
   return `dans ${Math.floor(diff.minutes)} min`
@@ -180,10 +180,10 @@ export default function DashboardPage() {
               <div>
                 <p className="text-blue-400 text-xs font-semibold uppercase tracking-widest mb-1">Prochain cours</p>
                 <p className="text-white font-serif text-xl capitalize">
-                  {DateTime.fromISO(prochainCours.slot_start).setLocale('fr').toFormat('EEEE d MMMM')}
+                  {DateTime.fromISO(prochainCours.slot_start, { zone: 'utc' }).setZone('local').setLocale('fr').toFormat('EEEE d MMMM')}
                 </p>
                 <p className="text-blue-300 text-sm mt-0.5">
-                  {DateTime.fromISO(prochainCours.slot_start).toFormat('HH:mm')} — {DateTime.fromISO(prochainCours.slot_end).toFormat('HH:mm')}
+                  {DateTime.fromISO(prochainCours.slot_start, { zone: 'utc' }).setZone('local').toFormat('HH:mm')} — {DateTime.fromISO(prochainCours.slot_end, { zone: 'utc' }).setZone('local').toFormat('HH:mm')}
                   <span className="ml-2 text-blue-400 font-medium">· {getCountdown(prochainCours.slot_start)}</span>
                 </p>
               </div>

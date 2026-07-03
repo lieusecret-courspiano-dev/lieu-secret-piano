@@ -69,7 +69,7 @@ function ReservationContent() {
   const tabParam     = searchParams.get('tab')
   const codeParam    = searchParams.get('code')
 
-  const [timezone, setTimezone]           = useState('Europe/Paris')
+  const [timezone, setTimezone]           = useState(() => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Paris' } catch { return 'Europe/Paris' } })
   const [slots, setSlots]                 = useState<GeneratedSlot[]>([])
   const [events, setEvents]               = useState<Event[]>([])
   const [settings, setSettings]           = useState<Settings | null>(null)

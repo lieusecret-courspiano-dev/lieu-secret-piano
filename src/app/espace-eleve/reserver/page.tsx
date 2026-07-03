@@ -5,7 +5,7 @@ import { useState, useEffect, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import EleveLayout from '@/components/EleveNav'
 import { DateTime } from 'luxon'
-import { formatTime } from '@/lib/utils'
+import { formatTime, detectTimezone} from '@/lib/utils'
 import { TIMEZONES } from '@/types'
 import { ChevronLeft, ChevronRight, Calendar, Clock, Check, CreditCard, Gift, Package } from 'lucide-react'
 import { SkeletonCard } from '@/components/eleve/SkeletonCard'
@@ -97,8 +97,8 @@ function ReservationsTab({ onReserver }: { onReserver: () => void }) {
         <div className="space-y-3">
           {filtered.map(r => {
             const cfg = STATUS_CFG[r.status] || STATUS_CFG.pending
-            const start = DateTime.fromISO(r.slot_start)
-            const end   = DateTime.fromISO(r.slot_end)
+            const start = DateTime.fromISO(r.slot_start, { zone: 'utc' }).setZone('local')
+            const end   = DateTime.fromISO(r.slot_end, { zone: 'utc' }).setZone('local')
             const isPast = new Date(r.slot_start) <= now
             const heuresAvant = (new Date(r.slot_start).getTime() - Date.now()) / 3600000
             const peutAnnuler = !isPast && r.status !== 'cancelled' && heuresAvant >= 15
@@ -166,7 +166,7 @@ function ReserverEleveContent() {
   const [reservations, setReservations] = useState<Reservation[]>([])
   const [resLoading, setResLoading] = useState(false)
   const [resFilter, setResFilter] = useState<'a_venir' | 'passes'>('a_venir')
-  const [timezone, setTimezone] = useState('Europe/Paris')
+  const [timezone, setTimezone] = useState(() => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Paris' } catch { return 'Europe/Paris' } })
   const [slots, setSlots]     = useState<GeneratedSlot[]>([])
   const [currentMonth, setCurrentMonth] = useState(() => DateTime.now().startOf('month'))
   const [selectedDate, setSelectedDate] = useState<string | null>(null)

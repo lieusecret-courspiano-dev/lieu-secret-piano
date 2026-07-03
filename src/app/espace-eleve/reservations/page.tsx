@@ -117,8 +117,8 @@ export default function ReservationsPage() {
           <div className="space-y-3">
             {filtered.map(r => {
               const cfg = STATUS_CONFIG[r.status] || STATUS_CONFIG.pending
-              const start = DateTime.fromISO(r.slot_start)
-              const end = DateTime.fromISO(r.slot_end)
+              const start = DateTime.fromISO(r.slot_start, { zone: 'utc' }).setZone('local')
+              const end = DateTime.fromISO(r.slot_end, { zone: 'utc' }).setZone('local')
               const isPast = new Date(r.slot_start) <= now
               const heuresAvant = (new Date(r.slot_start).getTime() - Date.now()) / 3600000
               const peutAnnuler = !isPast && r.status !== 'cancelled' && heuresAvant >= 15
