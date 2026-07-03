@@ -22,8 +22,8 @@ export async function GET(req: NextRequest) {
 
   if (!autorisation) return NextResponse.json({ error: 'Non autorisé' }, { status: 403 })
 
-  // Charger les questions propres à l'examen
-  const { data: questions, error } = await supabaseAdmin
+  // 1. Charger les questions propres à l'examen
+  const { data: examQuestions, error } = await supabaseAdmin
     .from('examen_questions')
     .select('id, type, question, options, bonne_reponse, explication, audio_url, image_url, video_url, points, position')
     .eq('examen_id', examen_id)
@@ -31,8 +31,34 @@ export async function GET(req: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
+  let questions = examQuestions || []
+
+  // 2. Si pas de questions propres → tirer aléatoirement depuis la banque
+  if (questions.length === 0) {
+    // Récupérer la catégorie de l'examen
+    const { data: examen } = await supabaseAdmin
+      .from('examens')
+      .select('categorie, score_min')
+      .eq('id', examen_id)
+      .single()
+
+    if (examen?.categorie) {
+      const { data: banque } = await supabaseAdmin
+        .from('banque_questions')
+        .select('id, type, question, options, bonne_reponse, explication, audio_url, image_url, video_url, points, position')
+        .eq('categorie', examen.categorie)
+
+      if (banque && banque.length > 0) {
+        // Mélanger aléatoirement (Fisher-Yates)
+        const shuffled = [...banque].sort(() => Math.random() - 0.5)
+        // Prendre max 25 questions
+        questions = shuffled.slice(0, 25)
+      }
+    }
+  }
+
   // Ne pas exposer bonne_reponse au frontend pendant l'examen
-  const sanitized = (questions || []).map(({ bonne_reponse, ...q }) => q)
+  const sanitized = questions.map(({ bonne_reponse, ...q }: any) => q)
 
   return NextResponse.json(sanitized)
 }
