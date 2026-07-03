@@ -33,6 +33,7 @@ const SHORTCUTS = [
 function fmt(n: number) { return n.toFixed(2).replace('.', ',') + ' €' }
 
 export default function DashboardPage() {
+  const pathname = usePathname()
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
   const [from, setFrom] = useState(() => DateTime.now().minus({ days: 90 }).toFormat('yyyy-MM-dd'))

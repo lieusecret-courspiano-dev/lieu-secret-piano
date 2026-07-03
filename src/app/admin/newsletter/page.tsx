@@ -7,6 +7,7 @@ interface Subscriber {
 }
 
 export default function AdminNewsletterPage() {
+  const pathname = usePathname()
   const [subscribers, setSubscribers] = useState<Subscriber[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'tous' | 'actifs' | 'inactifs'>('actifs')

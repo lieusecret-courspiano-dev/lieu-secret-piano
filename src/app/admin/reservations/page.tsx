@@ -29,6 +29,7 @@ const STATUS_LABELS: Record<string, { label: string; color: string }> = {
 }
 
 export default function AdminReservations() {
+  const pathname = usePathname()
   const [reservations, setReservations] = useState<Reservation[]>([])
   const [loading, setLoading]           = useState(true)
   const [search, setSearch]             = useState('')

@@ -27,6 +27,7 @@ const EMPTY = { titre: '', description: '', niveau: 'fondamentaux', type: 'pdf',
 const EMPTY_ATTR = { eleve_email: '', note_admin: '', montant: '', payment_method: 'virement' }
 
 export default function AdminSupportsPage() {
+  const pathname = usePathname()
   const [supports, setSupports] = useState<Support[]>([])
   const [achats, setAchats] = useState<Achat[]>([])
   const [loading, setLoading] = useState(true)

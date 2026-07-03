@@ -37,6 +37,7 @@ const EMPTY = {
 }
 
 export default function AdminRessourcesPremiumPage() {
+  const pathname = usePathname()
   const [ressources, setRessources] = useState<Ressource[]>([])
   const [achats, setAchats] = useState<Achat[]>([])
   const [loading, setLoading] = useState(true)

@@ -57,6 +57,7 @@ function exportPDF(packs: CoursePack[]) {
 }
 
 export default function AdminPacks() {
+  const pathname = usePathname()
   const [packs, setPacks]       = useState<CoursePack[]>([])
   const [loading, setLoading]   = useState(true)
   const [search, setSearch]     = useState('')

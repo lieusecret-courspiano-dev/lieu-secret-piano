@@ -9,6 +9,7 @@ const TYPE_LABELS: Record<string, { label: string; color: string }> = {
   review_submitted: { label: 'Avis soumis', color: 'text-green-400 bg-green-500/10 border-green-500/20' },
 }
 export default function AdminEmails() {
+  const pathname = usePathname()
   const [logs, setLogs] = useState<EmailLog[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')

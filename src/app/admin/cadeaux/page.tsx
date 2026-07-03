@@ -35,6 +35,7 @@ function exportPDF(cards: GiftCard[]) {
 }
 
 export default function AdminCadeaux() {
+  const pathname = usePathname()
   const [cards, setCards] = useState<GiftCard[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')

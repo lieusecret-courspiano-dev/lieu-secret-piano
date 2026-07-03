@@ -11,6 +11,7 @@ const NIVEAU_LABELS: Record<string, string> = { tous: 'Tous niveaux', debutant: 
 const EMPTY_FORM = { titre: '', compositeur: '', niveau: 'tous', type: 'pdf', style: 'classique', description: '', url_pdf: '', url_video: '', url_audio: '', url_image: '', gratuit: true }
 
 export default function AdminPartitions() {
+  const pathname = usePathname()
   const [partitions, setPartitions] = useState<Partition[]>([])
   const [loading, setLoading] = useState(true)
   const [showCreate, setShowCreate] = useState(false)

@@ -8,6 +8,7 @@ const STATUS_LABELS: Record<string, string> = { pending: 'En attente', contacted
 const NIVEAUX: Record<string, string> = { debutant: 'Débutant', elementaire: 'Élémentaire', intermediaire: 'Intermédiaire', avance: 'Avancé' }
 
 export default function AdminEssais() {
+  const pathname = usePathname()
   const [essais, setEssais] = useState<Essai[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')

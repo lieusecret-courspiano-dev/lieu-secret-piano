@@ -36,6 +36,7 @@ const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?:
 }
 
 export default function AdminDashboard() {
+  const pathname = usePathname()
   const [data, setData]       = useState<{ monthlyData: MonthlyData[]; popularHours: PopularHour[]; paymentMethods: Record<string, number>; totals: Totals } | null>(null)
   const [loading, setLoading] = useState(true)
   const [activeChart, setActiveChart] = useState<'reservations' | 'revenus' | 'inscriptions'>('reservations')

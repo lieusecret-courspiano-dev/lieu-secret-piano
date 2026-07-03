@@ -26,6 +26,7 @@ const TYPE_LABELS: Record<string, string> = { pdf: 'PDF', video: 'Vidéo', audio
 const EMPTY_FORM = { titre: '', description: '', type: 'pdf', url: '', categorie: '', eleve_id: '', is_public: false }
 
 export default function AdminRessourcesPage() {
+  const pathname = usePathname()
   const [ressources, setRessources] = useState<Ressource[]>([])
   const [eleves, setEleves] = useState<Eleve[]>([])
   const [loading, setLoading] = useState(true)
