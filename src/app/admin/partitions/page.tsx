@@ -1,4 +1,5 @@
 'use client'
+import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { Plus, Music, Download } from 'lucide-react'
 

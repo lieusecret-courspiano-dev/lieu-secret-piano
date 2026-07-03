@@ -1,4 +1,5 @@
 'use client'
+import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { Search, Gift, Download, ToggleLeft, ToggleRight, Copy, Check } from 'lucide-react'
 interface GiftCard { id: string; code: string; montant: number; montant_restant: number; acheteur_nom: string; acheteur_email: string; destinataire_nom: string; message: string | null; status: string; expires_at: string; created_at: string }

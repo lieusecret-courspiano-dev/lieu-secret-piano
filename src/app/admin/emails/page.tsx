@@ -1,4 +1,5 @@
 'use client'
+import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { Search, Mail, Clock, Star } from 'lucide-react'
 interface EmailLog { id: string; key: string; type: string; reservation_id: string | null; created_at: string; reservation?: { student_name: string; student_email: string; slot_start: string | null } }

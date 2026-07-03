@@ -1,4 +1,5 @@
 'use client'
+import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { Plus, Pencil, Trash2, Eye, EyeOff, FileText, Video, Music, Link as LinkIcon, CheckCircle, Clock, UserPlus, X, Users } from 'lucide-react'
 

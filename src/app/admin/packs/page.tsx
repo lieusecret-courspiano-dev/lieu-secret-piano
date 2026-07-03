@@ -1,4 +1,5 @@
 'use client'
+import { usePathname } from 'next/navigation'
 
 import { useState, useEffect } from 'react'
 import { Search, Plus, ToggleLeft, ToggleRight, Copy, Check, BookOpen , Download } from 'lucide-react'
