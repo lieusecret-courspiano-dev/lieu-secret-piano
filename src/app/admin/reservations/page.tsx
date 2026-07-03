@@ -35,6 +35,9 @@ export default function AdminReservations() {
   const [loading, setLoading]           = useState(true)
   const [search, setSearch]             = useState('')
   const [filter, setFilter]             = useState<'all' | 'cours' | 'evenement' | 'virement'>('all')
+  const [periode, setPeriode]           = useState<'a_venir' | 'passees' | 'toutes'>('a_venir')
+  const [filterDate, setFilterDate]     = useState('')
+  const [filterNom, setFilterNom]       = useState('')
   const [selected, setSelected]         = useState<Reservation | null>(null)
   const [confirmLoading, setConfirmLoading] = useState(false)
   const [showConfirmModal, setShowConfirmModal] = useState(false)
@@ -96,12 +99,26 @@ export default function AdminReservations() {
     setSelected(null)
   }
 
+  const now = new Date()
   const filtered = reservations.filter(r => {
+    const slotDate = r.slot_start ? new Date(r.slot_start) : null
+    // Filtre période
+    const matchPeriode =
+      periode === 'toutes' ? true :
+      periode === 'a_venir' ? (slotDate ? slotDate > now : true) :
+      periode === 'passees' ? (slotDate ? slotDate <= now : false) : true
+    // Filtre recherche (nom ou email)
     const matchSearch = !search ||
       r.student_name.toLowerCase().includes(search.toLowerCase()) ||
       r.student_email.toLowerCase().includes(search.toLowerCase())
+    // Filtre nom spécifique
+    const matchNom = !filterNom ||
+      r.student_name.toLowerCase().includes(filterNom.toLowerCase()) ||
+      r.student_email.toLowerCase().includes(filterNom.toLowerCase())
+    // Filtre date
+    const matchDate = !filterDate || (slotDate && slotDate.toISOString().startsWith(filterDate))
     const matchFilter = filter === 'all' || r.type === filter || (filter === 'evenement' && ['atelier', 'evenement', 'masterclass'].includes(r.type))
-    return matchSearch && matchFilter
+    return matchPeriode && matchSearch && matchNom && matchDate && matchFilter
   })
 
   function formatDate(iso: string, tz: string) {
@@ -120,7 +137,27 @@ export default function AdminReservations() {
         <a href="/admin/essais" className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${pathname === '/admin/essais' ? 'bg-gold-500 text-noir-950' : 'text-noir-400 hover:text-white'}`}>Cours d'essai</a>
         </div>
 
-      {/* Filtres */}
+      {/* Filtres période */}
+      <div className="flex gap-2 mb-3 flex-wrap items-center">
+        {([
+          { key: 'a_venir', label: 'À venir' },
+          { key: 'passees', label: 'Passées' },
+          { key: 'toutes',  label: 'Toutes' },
+        ] as const).map(p => (
+          <button key={p.key} onClick={() => setPeriode(p.key)}
+            className={`px-4 py-1.5 rounded-full text-xs font-medium border transition-all ${periode === p.key ? 'bg-gold-500/10 border-gold-500/30 text-gold-400' : 'border-noir-700 text-noir-400 hover:border-noir-600'}`}>
+            {p.label}
+          </button>
+        ))}
+        <div className="ml-auto flex gap-2">
+          <input type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)}
+            className="input text-xs py-1.5 px-3 w-36" title="Filtrer par date" />
+          <input value={filterNom} onChange={e => setFilterNom(e.target.value)}
+            placeholder="Filtrer par nom..." className="input text-xs py-1.5 px-3 w-40" />
+        </div>
+      </div>
+
+      {/* Filtres type */}
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
         <div className="relative flex-1">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-noir-400" />
@@ -170,6 +207,11 @@ export default function AdminReservations() {
                     <span className={`text-xs px-2 py-0.5 rounded-full border ${STATUS_LABELS[r.status]?.color || 'text-noir-400'}`}>
                       {STATUS_LABELS[r.status]?.label || r.status}
                     </span>
+                    {r.slot_start && new Date(r.slot_start) <= new Date() && (
+                      <span className="text-xs px-2 py-0.5 rounded-full border border-noir-700 text-noir-600 bg-noir-800/30">
+                        Archivée
+                      </span>
+                    )}
                   </div>
                   <p className="text-noir-400 text-sm truncate">{r.student_email}</p>
                   <p className="text-noir-500 text-xs mt-1">

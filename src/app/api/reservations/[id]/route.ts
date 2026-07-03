@@ -70,25 +70,34 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
     }
   }
 
-  // Envoyer email d'annulation si reservation existait
+  // Envoyer email d'annulation SEULEMENT si la réservation est future et confirmée
   if (reservation) {
-    try {
-      const timezone = reservation.student_timezone || 'Europe/Paris'
-      let dateLocal  = ''
-      if (reservation.creneau_id) {
-        const { data: cr } = await supabaseAdmin.from('creneaux').select('start_time').eq('id', reservation.creneau_id).single()
-        if (cr) dateLocal = formatDateLocal(cr.start_time, timezone)
+    const slotStart = reservation.slot_start || null
+    const isFuture  = slotStart ? new Date(slotStart) > new Date() : false
+    const isConfirmed = reservation.status === 'confirmed'
+
+    if (isFuture && isConfirmed) {
+      try {
+        const timezone = reservation.student_timezone || 'Europe/Paris'
+        let dateLocal  = ''
+        if (reservation.creneau_id) {
+          const { data: cr } = await supabaseAdmin.from('creneaux').select('start_time').eq('id', reservation.creneau_id).single()
+          if (cr) dateLocal = formatDateLocal(cr.start_time, timezone)
+        } else if (slotStart) {
+          dateLocal = formatDateLocal(slotStart, timezone)
+        }
+        await sendCancellationEmail({
+          studentName:  reservation.student_name,
+          studentEmail: reservation.student_email,
+          type:         reservation.creneau_id ? 'Cours individuel' : (reservation.type || 'Cours'),
+          dateLocal,
+          cancelledBy:  'admin',
+        })
+      } catch (emailErr) {
+        console.error('Erreur email suppression:', emailErr)
       }
-      await sendCancellationEmail({
-        studentName:  reservation.student_name,
-        studentEmail: reservation.student_email,
-        type:         reservation.creneau_id ? 'Cours individuel' : (reservation.type || 'Cours'),
-        dateLocal,
-        cancelledBy:  'admin',
-      })
-    } catch (emailErr) {
-      console.error('Erreur email suppression:', emailErr)
     }
+    // Si réservation passée ou non confirmée → suppression silencieuse, pas d'email
   }
 
   const { error } = await supabaseAdmin.from('reservations').delete().eq('id', params.id)
