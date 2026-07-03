@@ -162,12 +162,14 @@ export async function POST(req: NextRequest) {
       }
 
       // Notification
-      await supabaseAdmin.from('eleve_notifications').insert({
-        eleve_id: eleve.id, type: 'badge',
-        titre: `Examen réussi — ${score}% ${niveau_medaille ? `(${niveau_medaille})` : ''}`,
-        message: `Félicitations ! Vous avez réussi l'examen "${examen.categorie}" avec ${score}%.`,
-        lien: '/espace-eleve/progression',
-      }).catch(() => {})
+      try {
+        await supabaseAdmin.from('eleve_notifications').insert({
+          eleve_id: eleve.id, type: 'badge',
+          titre: `Examen réussi — ${score}%${niveau_medaille ? ` (${niveau_medaille})` : ''}`,
+          message: `Félicitations ! Vous avez réussi l'examen "${examen.categorie}" avec ${score}%.`,
+          lien: '/espace-eleve/progression',
+        })
+      } catch {}
     }
 
     return NextResponse.json({ score, reussi, niveau_medaille, score_min: examen?.score_min ?? 75 })
@@ -208,10 +210,12 @@ async function generateCertifIfNeeded(eleveId: string, categorie: string, niveau
     commentaire: `Certificat obtenu par examen final${niveauLabel ? ` — ${niveauLabel}` : ''}.`,
   })
 
-  await supabaseAdmin.from('eleve_notifications').insert({
-    eleve_id: eleveId, type: 'certificat',
-    titre: `Certificat obtenu : ${certConf.titre}`,
-    message: `Votre certificat "${certConf.titre}" est disponible.`,
-    lien: '/espace-eleve/certificats',
-  }).catch(() => {})
+  try {
+    await supabaseAdmin.from('eleve_notifications').insert({
+      eleve_id: eleveId, type: 'certificat',
+      titre: `Certificat obtenu : ${certConf.titre}`,
+      message: `Votre certificat "${certConf.titre}" est disponible.`,
+      lien: '/espace-eleve/certificats',
+    })
+  } catch {}
 }

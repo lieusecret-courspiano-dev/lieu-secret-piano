@@ -96,7 +96,7 @@ export default function AdminExamensPage() {
     setShowForm(true)
   }
 
-  const MEDAILLE_LABELS: Record<string, string> = { or: 'Or', argent: 'Argent', bronze: 'Bronze' }
+  const MEDAILLE_LABELS: Record<string, string> = { or: 'Mention Or', argent: 'Mention Argent', bronze: 'Mention Bronze' }
   const MEDAILLE_COLORS: Record<string, string> = { or: 'text-yellow-400', argent: 'text-gray-300', bronze: 'text-orange-400' }
 
   if (loading) return <div className="p-8 flex justify-center"><div className="w-8 h-8 border-2 border-gold-500 border-t-transparent rounded-full animate-spin" /></div>
@@ -197,7 +197,7 @@ export default function AdminExamensPage() {
                         <div className="flex items-center gap-3">
                           {s.niveau_medaille && (
                             <span className={`text-sm font-bold ${MEDAILLE_COLORS[s.niveau_medaille] || ''}`}>
-                              {s.niveau_medaille === 'or' ? '🥇' : s.niveau_medaille === 'argent' ? '🥈' : '🥉'} {MEDAILLE_LABELS[s.niveau_medaille]}
+                              {MEDAILLE_LABELS[s.niveau_medaille]}
                             </span>
                           )}
                           <span className={`text-lg font-bold ${s.reussi ? 'text-green-400' : 'text-red-400'}`}>{s.score}%</span>
