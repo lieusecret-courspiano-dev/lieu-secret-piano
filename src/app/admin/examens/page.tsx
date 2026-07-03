@@ -96,6 +96,29 @@ export default function AdminExamensPage() {
     showMsg('ok', 'Nouvelle tentative autorisée')
   }
 
+  async function loadFromBanque() {
+    if (!form.categorie) return
+    try {
+      const res = await fetch(`/api/admin/banque-questions?categorie=${encodeURIComponent(form.categorie)}`)
+      const data = await res.json()
+      if (!Array.isArray(data) || data.length === 0) {
+        alert(`Aucune question dans la banque pour "${form.categorie}". Ajoutez-en dans l'onglet "Banque de questions".`)
+        return
+      }
+      if (questions.length > 0 && !confirm(`Remplacer les ${questions.length} question(s) actuelles par les ${data.length} questions de la banque ?`)) return
+      setQuestions(data.map((q: any, i: number) => ({
+        type: q.type, question: q.question,
+        options: q.options || ['', '', '', ''],
+        bonne_reponse: q.bonne_reponse || '',
+        explication: q.explication || '',
+        audio_url: q.audio_url || '',
+        image_url: q.image_url || '',
+        video_url: q.video_url || '',
+        points: q.points || 1, position: i,
+      })))
+    } catch { alert('Erreur lors du chargement de la banque') }
+  }
+
   function startEdit(ex: Examen) {
     setEditExamen(ex)
     const dateUTC = new Date(ex.date_examen)
@@ -117,6 +140,7 @@ export default function AdminExamensPage() {
       <div className="flex gap-1 bg-noir-900 border border-noir-800 rounded-xl p-1 mb-6 w-fit tab-switcher-admin">
 
         <a href="/admin/examens" className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${pathname === '/admin/examens' ? 'bg-gold-500 text-noir-950' : 'text-noir-400 hover:text-white'}`}>Examens finaux</a>
+        <a href="/admin/examens/banque" className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${pathname === '/admin/examens/banque' ? 'bg-gold-500 text-noir-950' : 'text-noir-400 hover:text-white'}`}>Banque de questions</a>
       </div>
 
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
