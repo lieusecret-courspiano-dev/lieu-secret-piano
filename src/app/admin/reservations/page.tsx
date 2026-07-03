@@ -101,12 +101,14 @@ export default function AdminReservations() {
 
   const now = new Date()
   const filtered = reservations.filter(r => {
-    const slotDate = r.slot_start ? new Date(r.slot_start) : null
+    // Utiliser slot_start ou date_heure de l'événement
+    const dateRef = r.slot_start || (r.event as any)?.date_heure || null
+    const slotDate = dateRef ? new Date(dateRef) : null
     // Filtre période
     const matchPeriode =
       periode === 'toutes' ? true :
-      periode === 'a_venir' ? (slotDate ? slotDate > now : true) :
-      periode === 'passees' ? (slotDate ? slotDate <= now : false) : true
+      periode === 'a_venir' ? (slotDate ? slotDate > now : r.status !== 'cancelled') :
+      periode === 'passees' ? (slotDate ? slotDate <= now : r.status === 'cancelled') : true
     // Filtre recherche (nom ou email)
     const matchSearch = !search ||
       r.student_name.toLowerCase().includes(search.toLowerCase()) ||
@@ -207,11 +209,14 @@ export default function AdminReservations() {
                     <span className={`text-xs px-2 py-0.5 rounded-full border ${STATUS_LABELS[r.status]?.color || 'text-noir-400'}`}>
                       {STATUS_LABELS[r.status]?.label || r.status}
                     </span>
-                    {r.slot_start && new Date(r.slot_start) <= new Date() && (
-                      <span className="text-xs px-2 py-0.5 rounded-full border border-noir-700 text-noir-600 bg-noir-800/30">
-                        Archivée
-                      </span>
-                    )}
+                    {(() => {
+                      const dr = r.slot_start || (r.event as any)?.date_heure
+                      return dr && new Date(dr) <= new Date() ? (
+                        <span className="text-xs px-2 py-0.5 rounded-full border border-noir-700 text-noir-600 bg-noir-800/30">
+                          Archivée
+                        </span>
+                      ) : null
+                    })()}
                   </div>
                   <p className="text-noir-400 text-sm truncate">{r.student_email}</p>
                   <p className="text-noir-500 text-xs mt-1">

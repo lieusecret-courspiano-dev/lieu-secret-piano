@@ -54,3 +54,19 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ success: true })
 }
+
+export async function DELETE(req: NextRequest) {
+  const isAdmin = await validateAdminSession()
+  if (!isAdmin) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
+
+  const { achat_id } = await req.json()
+  if (!achat_id) return NextResponse.json({ error: 'achat_id requis' }, { status: 400 })
+
+  const { error } = await supabaseAdmin
+    .from('supports_achats')
+    .delete()
+    .eq('id', achat_id)
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ success: true })
+}

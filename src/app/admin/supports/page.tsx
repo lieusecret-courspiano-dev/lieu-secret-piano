@@ -83,6 +83,22 @@ export default function AdminSupportsPage() {
     setSupports(prev => prev.map(x => x.id === s.id ? { ...x, est_publie: !x.est_publie } : x))
   }
 
+  async function deleteAchat(id: string) {
+    if (!confirm('Supprimer ce paiement ? Cette action est irréversible.')) return
+    try {
+      const res = await fetch('/api/admin/supports/confirm', {
+        method: 'DELETE', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ achat_id: id }),
+      })
+      if (res.ok) {
+        setAchats(prev => prev.filter(a => a.id !== id))
+      } else {
+        const d = await res.json()
+        alert(d.error || 'Erreur lors de la suppression')
+      }
+    } catch { alert('Erreur réseau') }
+  }
+
   async function confirmAchat(id: string) {
     await fetch('/api/admin/supports/confirm', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ achat_id: id }) })
     setAchats(prev => prev.map(a => a.id === id ? { ...a, statut: 'actif' } : a))
@@ -233,6 +249,14 @@ export default function AdminSupportsPage() {
                   {a.statut === 'en_attente' && (
                     <button onClick={() => confirmAchat(a.id)} className="btn-gold text-xs px-3 py-1.5">Confirmer</button>
                   )}
+                  <button onClick={() => deleteAchat(a.id)}
+                    className="text-noir-600 hover:text-red-400 transition-colors p-1.5 rounded-lg hover:bg-red-500/10"
+                    title="Supprimer ce paiement">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                      <path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+                    </svg>
+                  </button>
                 </div>
               </div>
             ))}
