@@ -47,12 +47,13 @@ export default function AdminElevesPage() {
   async function handleResendWelcome(id: string, email: string, prenom: string) {
     if (!confirm(`Renvoyer l'email de bienvenue à ${email} ?`)) return
     try {
-      const res = await fetch('/api/admin/eleves', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prenom, nom: '', email }),
+      // Utiliser PATCH sur l'élève existant pour régénérer le token et renvoyer l'email
+      const res = await fetch(`/api/admin/eleves/${id}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resend_welcome: true }),
       })
       const data = await res.json()
-      if (data.emailError) alert(`Erreur email : ${data.message}`)
+      if (!res.ok) alert(`Erreur : ${data.error || 'Impossible d\'envoyer l\'email'}`)
       else alert(`Email de bienvenue renvoyé à ${email}`)
     } catch { alert('Erreur lors de l\'envoi') }
   }
