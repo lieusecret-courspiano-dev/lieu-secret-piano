@@ -33,6 +33,13 @@ export async function GET(req: NextRequest) {
 
   let questions = examQuestions || []
 
+  // Mélanger et limiter à 25 questions (qu'elles viennent de examen_questions ou de la banque)
+  if (questions.length > 25) {
+    questions = [...questions].sort(() => Math.random() - 0.5).slice(0, 25)
+  } else if (questions.length > 0) {
+    questions = [...questions].sort(() => Math.random() - 0.5)
+  }
+
   // 2. Si pas de questions propres → tirer aléatoirement depuis la banque
   if (questions.length === 0) {
     // Récupérer la catégorie de l'examen

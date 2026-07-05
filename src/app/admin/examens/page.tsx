@@ -111,6 +111,28 @@ export default function AdminExamensPage() {
     showMsg('ok', 'Examen supprimé')
   }
 
+  function exportResultats(format: 'csv') {
+    if (resultats.length === 0) return
+    const rows = [
+      ['Élève', 'Email', 'Score', 'Réussi', 'Médaille', 'Tentative', 'Date'],
+      ...resultats.map(s => [
+        `${s.eleve?.prenom || ''} ${s.eleve?.nom || ''}`.trim(),
+        s.eleve?.email || '',
+        `${Math.round(s.score || 0)}%`,
+        s.reussi ? 'Oui' : 'Non',
+        s.niveau_medaille || '',
+        String(s.tentative_num || 1),
+        s.submitted_at ? new Date(s.submitted_at).toLocaleDateString('fr-FR') : '',
+      ])
+    ]
+    const csv = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n')
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a'); a.href = url
+    a.download = `resultats-examen-${new Date().toISOString().slice(0,10)}.csv`
+    a.click(); URL.revokeObjectURL(url)
+  }
+
   async function loadResultats(examen_id: string) {
     setViewResultats(examen_id)
     const data = await fetch(`/api/admin/examens/resultats?examen_id=${examen_id}`).then(r => r.json())
@@ -152,11 +174,14 @@ export default function AdminExamensPage() {
     const dateLocal = new Date(dateUTC.getTime() - offset)
     const dateLocalStr = dateLocal.toISOString().slice(0, 16)
     setForm({ titre: ex.titre, description: ex.description || '', categorie: ex.categorie, quiz_id: '', score_min: ex.score_min, duree_minutes: ex.duree_minutes, date_examen: dateLocalStr, nb_tentatives: ex.nb_tentatives })
-    // Charger les questions existantes de cet examen
+    // Charger les questions ET les élèves existants en parallèle
     try {
-      const res = await fetch(`/api/admin/examens/questions?examen_id=${ex.id}`)
-      if (res.ok) {
-        const data = await res.json()
+      const [qRes, eRes] = await Promise.all([
+        fetch(`/api/admin/examens/questions?examen_id=${ex.id}`),
+        fetch(`/api/admin/examens/eleves?examen_id=${ex.id}`),
+      ])
+      if (qRes.ok) {
+        const data = await qRes.json()
         setQuestions(Array.isArray(data) ? data.map((q: any, i: number) => ({
           id: q.id, type: q.type, question: q.question,
           options: q.options || ['', '', '', ''],
@@ -164,10 +189,12 @@ export default function AdminExamensPage() {
           audio_url: q.audio_url || '', image_url: q.image_url || '', video_url: q.video_url || '',
           points: q.points || 1, position: i,
         })) : [])
-      } else {
-        setQuestions([])
-      }
-    } catch { setQuestions([]) }
+      } else { setQuestions([]) }
+      if (eRes.ok) {
+        const eData = await eRes.json()
+        setSelectedEleves(Array.isArray(eData) ? eData.map((e: any) => e.eleve_id) : [])
+      } else { setSelectedEleves([]) }
+    } catch { setQuestions([]); setSelectedEleves([]) }
     setShowForm(true)
   }
 
@@ -253,6 +280,12 @@ export default function AdminExamensPage() {
           <div className="bg-noir-900 border border-noir-700 rounded-2xl w-full max-w-4xl shadow-2xl max-h-[95vh] flex flex-col">
             <div className="flex items-center justify-between px-6 py-4 border-b border-noir-800 shrink-0">
               <h2 className="text-white font-serif text-xl">Résultats de l'examen</h2>
+              <div className="flex gap-2">
+                <button onClick={() => exportResultats('csv')} className="btn-outline text-xs px-3 py-1.5 flex items-center gap-1.5">
+                  <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  CSV
+                </button>
+              </div>
               <button onClick={() => setViewResultats(null)} className="text-noir-400 hover:text-white p-1">
                 <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
@@ -334,15 +367,20 @@ export default function AdminExamensPage() {
                     <label className="label mb-1 block">Durée (minutes)</label>
                     <div className="flex gap-2">
                       <select value={DUREES.includes(form.duree_minutes) ? form.duree_minutes : 0}
-                        onChange={e => { const v = parseInt(e.target.value); if (v > 0) setForm(f => ({ ...f, duree_minutes: v })) }}
+                        onChange={e => {
+                          const v = parseInt(e.target.value)
+                          if (v > 0) setForm(f => ({ ...f, duree_minutes: v }))
+                          else setForm(f => ({ ...f, duree_minutes: 25 })) // valeur initiale pour personnalisé
+                        }}
                         className="input flex-1">
                         {DUREES.map(d => <option key={d} value={d}>{d} min</option>)}
                         <option value={0}>Personnalisé</option>
                       </select>
                       {!DUREES.includes(form.duree_minutes) && (
                         <input type="number" min="5" max="300" value={form.duree_minutes}
-                          onChange={e => setForm(f => ({ ...f, duree_minutes: parseInt(e.target.value) || 60 }))}
-                          className="input w-20 text-center" placeholder="min" />
+                          onChange={e => setForm(f => ({ ...f, duree_minutes: Math.max(5, parseInt(e.target.value) || 25) }))}
+                          className="input w-20 text-center" placeholder="min"
+                          autoFocus />
                       )}
                     </div>
                   </div>
