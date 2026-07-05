@@ -40,6 +40,10 @@ export default function AdminExamensPage() {
   const [msg, setMsg] = useState<{type: 'ok'|'err'; text: string} | null>(null)
   const [viewResultats, setViewResultats] = useState<string | null>(null)
   const [resultats, setResultats] = useState<Session[]>([])
+  const [gererElevesExamen, setGererElevesExamen] = useState<Examen | null>(null)
+  const [gererElevesSelected, setGererElevesSelected] = useState<string[]>([])
+  const [gererElevesResultats, setGererElevesResultats] = useState<Record<string, { reussi: boolean; score: number }>>({})
+  const [savingEleves, setSavingEleves] = useState(false)
 
   useEffect(() => {
     Promise.all([
@@ -131,6 +135,46 @@ export default function AdminExamensPage() {
     const a = document.createElement('a'); a.href = url
     a.download = `resultats-examen-${new Date().toISOString().slice(0,10)}.csv`
     a.click(); URL.revokeObjectURL(url)
+  }
+
+  async function openGererEleves(ex: Examen) {
+    setGererElevesExamen(ex)
+    // Charger les élèves déjà sélectionnés
+    const [eRes, rRes] = await Promise.all([
+      fetch(`/api/admin/examens/eleves?examen_id=${ex.id}`),
+      fetch(`/api/admin/examens/resultats?examen_id=${ex.id}`),
+    ])
+    const eData = await eRes.json()
+    const rData = await rRes.json()
+    setGererElevesSelected(Array.isArray(eData) ? eData.map((e: any) => e.eleve_id) : [])
+    // Indexer les résultats par eleve_id (garder le meilleur score)
+    const resultatsMap: Record<string, { reussi: boolean; score: number }> = {}
+    if (Array.isArray(rData)) {
+      rData.forEach((s: any) => {
+        if (!resultatsMap[s.eleve_id] || s.score > resultatsMap[s.eleve_id].score) {
+          resultatsMap[s.eleve_id] = { reussi: s.reussi, score: Math.round(s.score) }
+        }
+      })
+    }
+    setGererElevesResultats(resultatsMap)
+  }
+
+  async function saveGererEleves() {
+    if (!gererElevesExamen) return
+    setSavingEleves(true)
+    try {
+      // Supprimer les anciens et réinsérer les nouveaux
+      await fetch('/api/admin/examens/eleves', {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ examen_id: gererElevesExamen.id, eleve_ids: gererElevesSelected }),
+      })
+      showMsg('ok', 'Élèves mis à jour')
+      setGererElevesExamen(null)
+      // Recharger les examens
+      const data = await fetch('/api/admin/examens').then(r => r.json())
+      setExamens(Array.isArray(data) ? data : [])
+    } catch { showMsg('err', 'Erreur lors de la mise à jour') }
+    setSavingEleves(false)
   }
 
   async function loadResultats(examen_id: string) {
@@ -258,12 +302,16 @@ export default function AdminExamensPage() {
                       <span>{nbSessions} session{nbSessions > 1 ? 's' : ''}</span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex items-center gap-2 shrink-0 flex-wrap">
                     <button onClick={() => loadResultats(ex.id)} className="btn-outline text-xs px-3 py-1.5">Résultats</button>
-                    <button onClick={() => startEdit(ex)} className="text-noir-400 hover:text-gold-400 p-1.5 transition-colors">
+                    <button onClick={() => openGererEleves(ex)} className="btn-outline text-xs px-3 py-1.5 flex items-center gap-1">
+                      <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                      Élèves
+                    </button>
+                    <button onClick={() => startEdit(ex)} className="text-noir-400 hover:text-gold-400 p-1.5 transition-colors" title="Modifier">
                       <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                     </button>
-                    <button onClick={() => handleDelete(ex.id)} className="text-noir-600 hover:text-red-400 p-1.5 transition-colors">
+                    <button onClick={() => handleDelete(ex.id)} className="text-noir-600 hover:text-red-400 p-1.5 transition-colors" title="Supprimer">
                       <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
                     </button>
                   </div>
@@ -275,6 +323,56 @@ export default function AdminExamensPage() {
       )}
 
       {/* Modal résultats */}
+      {/* ── Modale Gérer les élèves ── */}
+      {gererElevesExamen && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-noir-900 border border-noir-700 rounded-2xl w-full max-w-lg shadow-2xl max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-noir-800 shrink-0">
+              <div>
+                <h2 className="text-white font-serif text-lg">Gérer les élèves</h2>
+                <p className="text-gold-400 text-xs mt-0.5">{gererElevesExamen.titre}</p>
+              </div>
+              <button onClick={() => setGererElevesExamen(null)} className="text-noir-400 hover:text-white p-1">
+                <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto px-6 py-4">
+              <p className="text-noir-400 text-xs mb-4">
+                Cochez les élèves autorisés à passer cet examen. Les élèves ayant déjà réussi sont indiqués.
+              </p>
+              <div className="space-y-1.5">
+                {eleves.map(el => {
+                  const res = gererElevesResultats[el.id]
+                  const isSelected = gererElevesSelected.includes(el.id)
+                  return (
+                    <label key={el.id} className={`flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-colors ${isSelected ? 'bg-gold-500/5 border border-gold-500/20' : 'hover:bg-noir-800 border border-transparent'}`}>
+                      <input type="checkbox" checked={isSelected}
+                        onChange={() => setGererElevesSelected(prev => isSelected ? prev.filter(id => id !== el.id) : [...prev, el.id])}
+                        className="rounded border-noir-600 shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <span className="text-white text-sm">{el.prenom} {el.nom}</span>
+                        <span className="text-noir-500 text-xs ml-2">{el.email}</span>
+                      </div>
+                      {res && (
+                        <span className={`text-xs px-2 py-0.5 rounded-full border shrink-0 ${res.reussi ? 'text-green-400 border-green-500/30 bg-green-500/10' : 'text-red-400 border-red-500/30 bg-red-500/10'}`}>
+                          {res.reussi ? `Réussi ${res.score}%` : `Échoué ${res.score}%`}
+                        </span>
+                      )}
+                    </label>
+                  )
+                })}
+              </div>
+            </div>
+            <div className="px-6 py-4 border-t border-noir-800 shrink-0 flex gap-3">
+              <button onClick={() => setGererElevesExamen(null)} className="btn-outline flex-1">Annuler</button>
+              <button onClick={saveGererEleves} disabled={savingEleves} className="btn-gold flex-1">
+                {savingEleves ? 'Enregistrement...' : `Enregistrer (${gererElevesSelected.length} élève${gererElevesSelected.length > 1 ? 's' : ''})`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {viewResultats && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
           <div className="bg-noir-900 border border-noir-700 rounded-2xl w-full max-w-4xl shadow-2xl max-h-[95vh] flex flex-col">
