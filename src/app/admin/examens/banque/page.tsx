@@ -80,6 +80,11 @@ export default function BanqueQuestionsPage() {
     setEditQ({ ...q })
     setEditIdx(idx)
     setIsNew(false)
+    setOpenCat(q.categorie) // Forcer l'ouverture de la bonne catégorie
+    // Scroll vers le formulaire après rendu
+    setTimeout(() => {
+      document.getElementById(`edit-form-${q.categorie.replace(/\s+/g, '-')}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 100)
   }
 
   function cancelEdit() { setEditQ(null); setEditIdx(null); setIsNew(false) }
@@ -171,7 +176,7 @@ export default function BanqueQuestionsPage() {
                   <div className="mt-4 space-y-2">
                     {/* Formulaire nouvelle/édition question */}
                     {editQ && editQ.categorie === cat && (
-                      <div className="border border-gold-500/30 bg-gold-500/5 rounded-xl p-4 space-y-3 mb-4">
+                      <div id={`edit-form-${cat.replace(/\s+/g, '-')}`} className="border border-gold-500/30 bg-gold-500/5 rounded-xl p-4 space-y-3 mb-4">
                         <p className="text-gold-400 text-xs font-semibold uppercase tracking-wider">
                           {isNew ? 'Nouvelle question' : 'Modifier la question'}
                         </p>
