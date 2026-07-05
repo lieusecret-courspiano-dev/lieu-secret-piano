@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
   }
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.lieusecret-courspiano.fr'
-  const headers = cronSecret ? { authorization: `Bearer ${cronSecret}` } : {}
+  const headers: Record<string, string> = cronSecret ? { authorization: `Bearer ${cronSecret}` } : {}
 
   const jobs = [
     { name: 'reminders',          path: '/api/cron/reminders' },
