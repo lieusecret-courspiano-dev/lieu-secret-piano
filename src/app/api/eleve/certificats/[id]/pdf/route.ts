@@ -24,95 +24,159 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   const numero = cert.numero || 'LS-2025-001'
   const nom_cert = cert.nom_certificat || 'Formation Piano'
 
-  try {
-    const PDFDocument = (await import('pdfkit')).default
-    const doc = new PDFDocument({ size: 'A4', layout: 'landscape', margin: 0,
-      info: { Title: `Certificat — ${nom_complet}`, Author: 'Lieu Secret', Subject: nom_cert }
-    })
+  // HTML optimisé pour impression PDF (Ctrl+P → Enregistrer en PDF)
+  const html = `<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<title>Certificat — ${nom_complet}</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap');
+  * { margin:0; padding:0; box-sizing:border-box; }
+  @page { size: A4 landscape; margin: 0; }
+  html { width:297mm; height:210mm; }
+  body { width:297mm; height:210mm; background:#faf8f4; font-family:'Cormorant Garamond',Georgia,serif; overflow:hidden; }
 
-    const chunks: Buffer[] = []
-    doc.on('data', (chunk: Buffer) => chunks.push(chunk))
-
-    await new Promise<void>((resolve) => {
-      doc.on('end', resolve)
-      const W = 841.89; const H = 595.28
-      const sideW = 72; const contentX = sideW + 40; const contentW = W - sideW - 80
-
-      // Fond crème
-      doc.rect(0, 0, W, H).fill('#faf8f4')
-      // Bande latérale
-      doc.rect(0, 0, sideW, H).fill('#1a1a2e')
-      doc.moveTo(sideW - 1, 30).lineTo(sideW - 1, H - 30).strokeColor('#c9a84c').lineWidth(0.5).stroke()
-      // Texte vertical
-      doc.save().translate(sideW / 2, H / 2).rotate(-90)
-      doc.fontSize(7).fillColor('#c9a84c').fillOpacity(0.6).font('Helvetica')
-        .text('LIEU SECRET — ÉCOLE DE PIANO EN LIGNE', -130, -4, { width: 260, align: 'center' })
-      doc.restore().fillOpacity(1)
-      // Bordure
-      const m = 20
-      doc.rect(sideW + m, m, W - sideW - m * 2, H - m * 2).strokeColor('#c9a84c').lineWidth(0.4).stroke()
-      // Filigrane
-      doc.save().translate(W * 0.62, H * 0.5).rotate(-15)
-      doc.fontSize(120).fillColor('#1a1a2e').fillOpacity(0.035).font('Helvetica-Bold').text('LS', -60, -60)
-      doc.restore().fillOpacity(1)
-
-      let y = 45
-      // En-tête
-      doc.fontSize(13).fillColor('#1a1a2e').font('Helvetica-Bold')
-        .text('LIEU SECRET', contentX, y, { width: contentW, align: 'left', characterSpacing: 3 })
-      doc.fontSize(7).fillColor('#999').font('Helvetica')
-        .text('ÉCOLE DE PIANO EN LIGNE', contentX, y + 18, { characterSpacing: 2 })
-      doc.fontSize(7).fillColor('#bbb').font('Courier')
-        .text(`N° ${numero}`, contentX, y + 5, { width: contentW, align: 'right' })
-      y += 42
-      // Ligne dorée
-      doc.moveTo(contentX, y).lineTo(contentX + contentW, y).strokeColor('#c9a84c').lineWidth(0.4).stroke()
-      y += 22
-      // Corps
-      doc.fontSize(8).fillColor('#999').font('Helvetica')
-        .text('CERTIFICAT DE RÉUSSITE', contentX, y, { characterSpacing: 2.5 })
-      y += 16
-      doc.fontSize(20).fillColor('#1a1a2e').font('Helvetica-Bold').text('Formation Piano', contentX, y)
-      y += 26
-      doc.fontSize(8).fillColor('#999').font('Helvetica')
-        .text('DÉCERNÉ À', contentX, y, { characterSpacing: 2 })
-      y += 14
-      doc.fontSize(28).fillColor('#c9a84c').font('Helvetica-Oblique').text(nom_complet, contentX, y)
-      y += 38
-      doc.fontSize(8).fillColor('#999').font('Helvetica')
-        .text('POUR AVOIR VALIDÉ AVEC SUCCÈS', contentX, y, { characterSpacing: 2 })
-      y += 14
-      doc.fontSize(13).fillColor('#1a1a2e').font('Helvetica-Bold').text(nom_cert, contentX, y)
-
-      // Footer
-      doc.moveTo(contentX, H - 65).lineTo(contentX + contentW, H - 65)
-        .strokeColor('#c9a84c').lineWidth(0.3).strokeOpacity(0.3).stroke().strokeOpacity(1)
-      const fY = H - 55
-      doc.fontSize(6).fillColor('#bbb').font('Helvetica')
-        .text("DATE D'OBTENTION", contentX, fY, { characterSpacing: 1.5 })
-      doc.fontSize(9).fillColor('#444').font('Helvetica').text(date_fr, contentX, fY + 10)
-      const sigX = contentX + contentW / 2 - 60
-      doc.moveTo(sigX, fY + 8).lineTo(sigX + 120, fY + 8).strokeColor('#ccc').lineWidth(0.5).stroke()
-      doc.fontSize(6).fillColor('#bbb').font('Helvetica')
-        .text('SIGNATURE', sigX, fY + 11, { width: 120, align: 'center', characterSpacing: 1.5 })
-      doc.fontSize(9).fillColor('#555').font('Helvetica-Oblique')
-        .text('Lieu Secret', sigX, fY + 21, { width: 120, align: 'center' })
-      doc.fontSize(6).fillColor('#bbb').font('Helvetica')
-        .text('DÉLIVRÉ PAR', contentX, fY, { width: contentW, align: 'right', characterSpacing: 1.5 })
-      doc.fontSize(9).fillColor('#444').font('Helvetica')
-        .text('lieusecret-courspiano.fr', contentX, fY + 10, { width: contentW, align: 'right' })
-      doc.end()
-    })
-
-    const pdfBuffer = Buffer.concat(chunks)
-    return new NextResponse(pdfBuffer, {
-      headers: {
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="Certificat-${nom_cert.replace(/\s+/g, '-')}-${numero}.pdf"`,
-      },
-    })
-  } catch (err) {
-    console.error('[PDF] Erreur pdfkit:', err)
-    return NextResponse.json({ error: 'Erreur génération PDF' }, { status: 500 })
+  /* Bouton impression — masqué à l'impression */
+  .print-bar {
+    position:fixed; top:0; left:0; right:0; z-index:9999;
+    background:#1a1a2e; padding:10px 20px;
+    display:flex; align-items:center; justify-content:space-between;
   }
+  .print-bar span { color:#c9a84c; font-family:Georgia,serif; font-size:14px; letter-spacing:0.1em; }
+  .print-btn {
+    background:#c9a84c; color:#1a1a2e; border:none;
+    padding:8px 24px; font-family:Georgia,serif; font-size:13px;
+    cursor:pointer; letter-spacing:0.1em; font-weight:bold;
+  }
+  .print-btn:hover { background:#d4b05a; }
+  @media print { .print-bar { display:none !important; } }
+
+  /* Certificat */
+  .cert {
+    width:297mm; height:210mm;
+    display:flex; position:relative; overflow:hidden;
+    -webkit-print-color-adjust:exact; print-color-adjust:exact;
+  }
+
+  /* Bande latérale */
+  .sidebar {
+    width:26mm; background:#1a1a2e; flex-shrink:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    position:relative;
+  }
+  .sidebar::after {
+    content:''; position:absolute; right:0; top:25mm; bottom:25mm;
+    width:0.5px; background:rgba(201,168,76,0.3);
+  }
+  .sidebar-text {
+    writing-mode:vertical-rl; transform:rotate(180deg);
+    font-family:Georgia,serif; font-size:7pt; letter-spacing:0.3em;
+    text-transform:uppercase; color:rgba(201,168,76,0.65);
+  }
+
+  /* Contenu principal */
+  .main {
+    flex:1; padding:13mm 16mm 11mm 14mm;
+    display:flex; flex-direction:column; position:relative;
+  }
+
+  /* Filigrane */
+  .watermark {
+    position:absolute; top:50%; left:55%;
+    transform:translate(-50%,-50%) rotate(-15deg);
+    font-size:100pt; font-weight:700; color:rgba(26,26,46,0.04);
+    letter-spacing:0.1em; pointer-events:none; user-select:none;
+  }
+
+  /* Bordure décorative */
+  .border-deco {
+    position:absolute; top:7mm; right:7mm; bottom:7mm; left:33mm;
+    border:0.4pt solid rgba(201,168,76,0.22); pointer-events:none;
+  }
+
+  .content { position:relative; z-index:1; flex:1; display:flex; flex-direction:column; }
+
+  /* En-tête */
+  .header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:7mm; }
+  .school-name { font-size:13pt; font-weight:700; color:#1a1a2e; letter-spacing:0.22em; text-transform:uppercase; }
+  .school-sub { font-size:6.5pt; color:#999; letter-spacing:0.18em; text-transform:uppercase; margin-top:2mm; font-family:Georgia,serif; }
+  .cert-num { font-size:6.5pt; color:#bbb; letter-spacing:0.08em; font-family:'Courier New',monospace; text-align:right; }
+
+  /* Ligne dorée */
+  .gold-line { height:0.4pt; background:linear-gradient(to right,#c9a84c,rgba(201,168,76,0.05)); margin-bottom:7mm; }
+
+  /* Corps */
+  .body { flex:1; display:flex; flex-direction:column; justify-content:center; }
+  .label-sm { font-size:7.5pt; color:#999; letter-spacing:0.22em; text-transform:uppercase; margin-bottom:2.5mm; font-family:Georgia,serif; }
+  .cert-title { font-size:20pt; font-weight:700; color:#1a1a2e; margin-bottom:5mm; line-height:1.2; }
+  .recipient { font-size:26pt; font-style:italic; color:#c9a84c; margin-bottom:5mm; line-height:1.1; }
+  .competence { font-size:13pt; font-weight:600; color:#1a1a2e; }
+
+  /* Footer */
+  .footer {
+    display:flex; justify-content:space-between; align-items:flex-end;
+    padding-top:5mm; border-top:0.4pt solid rgba(201,168,76,0.18);
+    margin-top:auto;
+  }
+  .footer-label { font-size:6pt; color:#bbb; letter-spacing:0.18em; text-transform:uppercase; margin-bottom:1.5mm; font-family:Georgia,serif; }
+  .footer-value { font-size:8.5pt; color:#444; }
+  .sig-line { width:42mm; height:0.4pt; background:#ccc; margin:0 auto 1.5mm; }
+  .sig-name { font-size:9.5pt; font-style:italic; color:#555; text-align:center; }
+</style>
+</head>
+<body>
+<div class="print-bar">
+  <span>Certificat — ${nom_complet}</span>
+  <button class="print-btn" onclick="window.print()">Enregistrer en PDF</button>
+</div>
+<div class="cert">
+  <div class="sidebar">
+    <div class="sidebar-text">Lieu Secret — École de Piano en Ligne</div>
+  </div>
+  <div class="main">
+    <div class="watermark">LS</div>
+    <div class="border-deco"></div>
+    <div class="content">
+      <div class="header">
+        <div>
+          <div class="school-name">Lieu Secret</div>
+          <div class="school-sub">École de Piano en Ligne</div>
+        </div>
+        <div class="cert-num">N° ${numero}</div>
+      </div>
+      <div class="gold-line"></div>
+      <div class="body">
+        <div class="label-sm">Certificat de réussite</div>
+        <div class="cert-title">Formation Piano<br>Lieu Secret</div>
+        <div class="label-sm">Décerné à</div>
+        <div class="recipient">${nom_complet}</div>
+        <div class="label-sm">Pour avoir validé avec succès</div>
+        <div class="competence">${nom_cert}</div>
+      </div>
+      <div class="footer">
+        <div>
+          <div class="footer-label">Date d'obtention</div>
+          <div class="footer-value">${date_fr}</div>
+        </div>
+        <div style="text-align:center">
+          <div class="sig-line"></div>
+          <div class="footer-label">Signature</div>
+          <div class="sig-name">Lieu Secret</div>
+        </div>
+        <div style="text-align:right">
+          <div class="footer-label">Délivré par</div>
+          <div class="footer-value">lieusecret-courspiano.fr</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>`
+
+  return new NextResponse(html, {
+    headers: { 'Content-Type': 'text/html; charset=utf-8' },
+  })
 }
