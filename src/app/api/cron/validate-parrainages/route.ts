@@ -13,8 +13,8 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    // Récupérer les filleuls en attente depuis plus de 48h
-    const cutoff48h = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString()
+    // Récupérer les filleuls en attente depuis plus de 24h
+    const cutoff48h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
     const { data: pendingFilleuls } = await supabaseAdmin
       .from('parrainage_filleuls')
       .select('*, parrainage:parrainages(*)')
