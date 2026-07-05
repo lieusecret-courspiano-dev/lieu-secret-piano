@@ -125,8 +125,7 @@ export async function POST(req: NextRequest) {
         let totalPoints = 0
         let pointsObtenus = 0
         questions.forEach((q: any) => {
-          // Les questions reponse_libre ne sont pas corrigées automatiquement
-          if (q.type === 'reponse_libre') return
+          // Toutes les questions sont corrigées automatiquement
           totalPoints += q.points || 1
           const rep = (reponses[q.id] || '').toString().toLowerCase().trim()
           const bonneRep = (q.bonne_reponse || '').toString().toLowerCase().trim()

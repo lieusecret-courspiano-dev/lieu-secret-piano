@@ -159,10 +159,7 @@ export default function ExamensPage() {
                   {result.corrections.map((c, i) => (
                     <div key={i} className={`rounded-xl p-3 border text-xs ${c.type === 'reponse_libre' ? 'border-noir-700 bg-noir-800/50' : c.correct ? 'border-green-500/20 bg-green-500/5' : 'border-red-500/20 bg-red-500/5'}`}>
                       <p className="text-white font-medium mb-1">{i + 1}. {c.question}</p>
-                      {c.type === 'reponse_libre' ? (
-                        <p className="text-noir-400 italic">Question ouverte — correction manuelle</p>
-                      ) : (
-                        <>
+                      <>
                           <p className={c.correct ? 'text-green-400' : 'text-red-400'}>
                             Votre réponse : {c.reponse_eleve || '(sans réponse)'} {c.correct ? '✓' : '✗'}
                           </p>
@@ -171,7 +168,6 @@ export default function ExamensPage() {
                           )}
                           {c.explication && <p className="text-noir-400 mt-1 italic">{c.explication}</p>}
                         </>
-                      )}
                     </div>
                   ))}
                 </div>
