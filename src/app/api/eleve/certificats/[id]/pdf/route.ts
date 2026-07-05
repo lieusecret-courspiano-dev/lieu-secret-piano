@@ -25,83 +25,148 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
   const eleve_data = cert.eleve as any
   const nom_complet = `${eleve_data?.prenom || ''} ${eleve_data?.nom || ''}`.trim()
-  const date_fr = new Date(cert.date_obtention).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+  const date_fr = new Date(cert.date_obtention).toLocaleDateString('fr-FR', {
+    day: 'numeric', month: 'long', year: 'numeric'
+  })
 
-  const medailleColor = cert.niveau?.includes('Or') ? '#f59e0b' : cert.niveau?.includes('Argent') ? '#9ca3af' : cert.niveau?.includes('Bronze') ? '#cd7c2f' : '#f59e0b'
-  const medailleIcon = cert.niveau?.includes('Or') ? '🥇' : cert.niveau?.includes('Argent') ? '🥈' : cert.niveau?.includes('Bronze') ? '🥉' : ''
+  const niveauLabel = cert.niveau?.includes('Or') ? 'Mention Or'
+    : cert.niveau?.includes('Argent') ? 'Mention Argent'
+    : cert.niveau?.includes('Bronze') ? 'Mention Bronze' : ''
+  const niveauColor = cert.niveau?.includes('Or') ? '#c9a84c'
+    : cert.niveau?.includes('Argent') ? '#9ca3af'
+    : cert.niveau?.includes('Bronze') ? '#b87333' : '#c9a84c'
 
   const html = `<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500&display=swap');
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { width: 297mm; height: 210mm; background: #0a0a1a; font-family: 'Inter', sans-serif; display: flex; align-items: center; justify-content: center; }
-  .page { width: 100%; height: 100%; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
-  .border-outer { position: absolute; inset: 8mm; border: 2px solid rgba(245,158,11,0.4); border-radius: 4px; }
-  .border-inner { position: absolute; inset: 11mm; border: 1px solid rgba(245,158,11,0.2); border-radius: 3px; }
-  .corner { position: absolute; width: 20px; height: 20px; border-color: #f59e0b; border-style: solid; }
-  .corner-tl { top: 7mm; left: 7mm; border-width: 2px 0 0 2px; }
-  .corner-tr { top: 7mm; right: 7mm; border-width: 2px 2px 0 0; }
-  .corner-bl { bottom: 7mm; left: 7mm; border-width: 0 0 2px 2px; }
-  .corner-br { bottom: 7mm; right: 7mm; border-width: 0 2px 2px 0; }
-  .content { position: relative; z-index: 10; text-align: center; padding: 0 30mm; }
-  .logo { font-family: 'Cormorant Garamond', serif; font-size: 11pt; color: #f59e0b; letter-spacing: 0.4em; text-transform: uppercase; margin-bottom: 4mm; }
-  .logo-sub { font-size: 7pt; color: rgba(245,158,11,0.6); letter-spacing: 0.3em; text-transform: uppercase; margin-bottom: 8mm; }
-  .divider { width: 60mm; height: 1px; background: linear-gradient(to right, transparent, #f59e0b, transparent); margin: 0 auto 8mm; }
-  .title { font-family: 'Cormorant Garamond', serif; font-size: 28pt; color: #ffffff; font-weight: 700; margin-bottom: 6mm; line-height: 1.1; }
-  .subtitle { font-size: 9pt; color: rgba(255,255,255,0.5); letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 10mm; }
-  .certifie { font-size: 9pt; color: rgba(255,255,255,0.6); margin-bottom: 4mm; }
-  .nom { font-family: 'Cormorant Garamond', serif; font-size: 26pt; color: #f59e0b; font-style: italic; margin-bottom: 8mm; }
-  .pour { font-size: 9pt; color: rgba(255,255,255,0.6); margin-bottom: 3mm; }
-  .niveau { font-family: 'Cormorant Garamond', serif; font-size: 16pt; color: #ffffff; font-weight: 600; margin-bottom: 3mm; }
-  .medaille { font-size: 14pt; margin-bottom: 8mm; color: ${medailleColor}; }
-  .divider2 { width: 40mm; height: 1px; background: linear-gradient(to right, transparent, rgba(245,158,11,0.4), transparent); margin: 0 auto 8mm; }
-  .footer { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 6mm; }
-  .footer-item { text-align: center; }
-  .footer-label { font-size: 6pt; color: rgba(255,255,255,0.3); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 2mm; }
-  .footer-value { font-size: 8pt; color: rgba(255,255,255,0.7); }
-  .numero { font-family: monospace; font-size: 7pt; color: rgba(245,158,11,0.5); letter-spacing: 0.1em; }
-  .signature-line { width: 40mm; height: 1px; background: rgba(255,255,255,0.2); margin: 0 auto 2mm; }
-  .bg-deco { position: absolute; inset: 0; opacity: 0.03; background: radial-gradient(ellipse at center, #f59e0b 0%, transparent 70%); }
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=EB+Garamond:wght@400;500&display=swap');
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  html, body { width:297mm; height:210mm; background:#faf8f4; }
+  .page {
+    width:297mm; height:210mm;
+    background:#faf8f4;
+    display:flex; align-items:stretch;
+    font-family:'EB Garamond', Georgia, serif;
+    position:relative; overflow:hidden;
+  }
+  .sidebar {
+    width:26mm; background:#1a1a2e;
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    padding:12mm 0; flex-shrink:0;
+  }
+  .sidebar-text {
+    writing-mode:vertical-rl; transform:rotate(180deg);
+    font-family:'Cormorant Garamond',serif;
+    font-size:7.5pt; letter-spacing:0.3em;
+    text-transform:uppercase; color:rgba(201,168,76,0.65);
+  }
+  .sidebar-line { width:0.5pt; background:rgba(201,168,76,0.25); flex:1; margin:5mm 0; }
+  .main { flex:1; display:flex; flex-direction:column; padding:13mm 16mm 11mm 14mm; position:relative; }
+  .watermark {
+    position:absolute; top:50%; left:50%;
+    transform:translate(-50%,-50%);
+    font-family:'Cormorant Garamond',serif;
+    font-size:80pt; font-weight:700;
+    color:rgba(26,26,46,0.035);
+    letter-spacing:0.08em; white-space:nowrap;
+    pointer-events:none; z-index:0;
+  }
+  .border-deco {
+    position:absolute; top:7mm; right:7mm; bottom:7mm; left:33mm;
+    border:0.4pt solid rgba(201,168,76,0.2);
+    pointer-events:none; z-index:0;
+  }
+  .content { position:relative; z-index:1; flex:1; display:flex; flex-direction:column; }
+  .header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:7mm; }
+  .school-name {
+    font-family:'Cormorant Garamond',serif;
+    font-size:12.5pt; font-weight:700;
+    color:#1a1a2e; letter-spacing:0.22em; text-transform:uppercase;
+  }
+  .school-sub { font-size:6.5pt; color:#999; letter-spacing:0.18em; text-transform:uppercase; margin-top:1.5mm; }
+  .numero-cert { text-align:right; font-size:6.5pt; color:#bbb; letter-spacing:0.08em; font-family:'Courier New',monospace; }
+  .gold-line { height:0.4pt; background:linear-gradient(to right,#c9a84c,rgba(201,168,76,0.08)); margin-bottom:7mm; }
+  .body { flex:1; display:flex; flex-direction:column; justify-content:center; }
+  .certifie-label { font-size:7.5pt; color:#999; letter-spacing:0.22em; text-transform:uppercase; margin-bottom:2.5mm; }
+  .cert-title {
+    font-family:'Cormorant Garamond',serif;
+    font-size:20pt; font-weight:600; color:#1a1a2e;
+    margin-bottom:5mm; line-height:1.2;
+  }
+  .recipient-label { font-size:7.5pt; color:#999; letter-spacing:0.18em; text-transform:uppercase; margin-bottom:2mm; }
+  .recipient-name {
+    font-family:'Cormorant Garamond',serif;
+    font-size:26pt; font-style:italic; color:#c9a84c;
+    margin-bottom:5mm; line-height:1.1;
+  }
+  .competence-label { font-size:7.5pt; color:#999; letter-spacing:0.18em; text-transform:uppercase; margin-bottom:2mm; }
+  .competence-name {
+    font-family:'Cormorant Garamond',serif;
+    font-size:13pt; font-weight:600; color:#1a1a2e;
+    margin-bottom:${niveauLabel ? '3mm' : '0'};
+  }
+  .niveau-badge {
+    display:inline-block; font-size:7.5pt;
+    color:${niveauColor}; border:0.4pt solid ${niveauColor};
+    padding:1mm 4mm; letter-spacing:0.15em;
+    text-transform:uppercase; margin-bottom:5mm;
+  }
+  .footer {
+    display:flex; justify-content:space-between; align-items:flex-end;
+    padding-top:5mm; border-top:0.4pt solid rgba(201,168,76,0.18);
+  }
+  .footer-label { font-size:6pt; color:#bbb; letter-spacing:0.18em; text-transform:uppercase; margin-bottom:1.5mm; }
+  .footer-value { font-size:8.5pt; color:#444; }
+  .signature-area { text-align:center; }
+  .signature-line { width:42mm; height:0.4pt; background:#ccc; margin:0 auto 1.5mm; }
+  .signature-name { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:9.5pt; color:#555; }
 </style>
 </head>
 <body>
 <div class="page">
-  <div class="bg-deco"></div>
-  <div class="border-outer"></div>
-  <div class="border-inner"></div>
-  <div class="corner corner-tl"></div>
-  <div class="corner corner-tr"></div>
-  <div class="corner corner-bl"></div>
-  <div class="corner corner-br"></div>
-  <div class="content">
-    <div class="logo">Lieu Secret</div>
-    <div class="logo-sub">École de Piano en Ligne</div>
-    <div class="divider"></div>
-    <div class="title">Certificat de Réussite</div>
-    <div class="subtitle">Formation Piano</div>
-    <div class="certifie">Ce certificat est décerné à</div>
-    <div class="nom">${nom_complet}</div>
-    <div class="pour">pour avoir validé avec succès</div>
-    <div class="niveau">${cert.nom_certificat || cert.niveau || 'Formation Piano'}</div>
-    ${medailleIcon ? `<div class="medaille">${medailleIcon} ${cert.niveau?.split('—')[1]?.trim() || ''}</div>` : ''}
-    ${cert.commentaire ? `<div style="font-size:8pt;color:rgba(255,255,255,0.5);margin-bottom:6mm;font-style:italic;">${cert.commentaire}</div>` : ''}
-    <div class="divider2"></div>
-    <div class="footer">
-      <div class="footer-item">
-        <div class="footer-label">Date d'obtention</div>
-        <div class="footer-value">${date_fr}</div>
+  <div class="sidebar">
+    <div class="sidebar-line"></div>
+    <div class="sidebar-text">Lieu Secret — École de Piano</div>
+    <div class="sidebar-line"></div>
+  </div>
+  <div class="main">
+    <div class="watermark">LS</div>
+    <div class="border-deco"></div>
+    <div class="content">
+      <div class="header">
+        <div>
+          <div class="school-name">Lieu Secret</div>
+          <div class="school-sub">École de Piano en Ligne</div>
+        </div>
+        <div class="numero-cert">N° ${cert.numero || 'LS-2025-001'}</div>
       </div>
-      <div class="footer-item">
-        <div class="signature-line"></div>
-        <div class="footer-label">Signature du professeur</div>
-        <div class="footer-value" style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:10pt;color:rgba(255,255,255,0.6);">Lieu Secret</div>
+      <div class="gold-line"></div>
+      <div class="body">
+        <div class="certifie-label">Certificat de réussite</div>
+        <div class="cert-title">Formation Piano<br>Lieu Secret</div>
+        <div class="recipient-label">Décerné à</div>
+        <div class="recipient-name">${nom_complet}</div>
+        <div class="competence-label">Pour avoir validé avec succès</div>
+        <div class="competence-name">${cert.nom_certificat || 'Formation Piano'}</div>
+        ${niveauLabel ? `<div class="niveau-badge">${niveauLabel}</div>` : ''}
       </div>
-      <div class="footer-item">
-        <div class="footer-label">Numéro de certificat</div>
-        <div class="numero">${cert.numero || 'LS-2025-001'}</div>
+      <div class="footer">
+        <div>
+          <div class="footer-label">Date d'obtention</div>
+          <div class="footer-value">${date_fr}</div>
+        </div>
+        <div class="signature-area">
+          <div class="signature-line"></div>
+          <div class="footer-label">Signature</div>
+          <div class="signature-name">Lieu Secret</div>
+        </div>
+        <div style="text-align:right">
+          <div class="footer-label">Délivré par</div>
+          <div class="footer-value">lieusecret-courspiano.fr</div>
+        </div>
       </div>
     </div>
   </div>
@@ -109,7 +174,6 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 </body>
 </html>`
 
-  // Essayer wkhtmltopdf
   const tmpHtml = join(tmpdir(), `cert-${params.id}.html`)
   const tmpPdf  = join(tmpdir(), `cert-${params.id}.pdf`)
 
@@ -130,12 +194,11 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       },
     })
   } catch {
-    // Fallback : retourner le HTML
     await unlink(tmpHtml).catch(() => {})
-    return new NextResponse(html, {
+    // Fallback HTML avec instruction d'impression
+    return new NextResponse(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Certificat</title><script>window.onload=function(){window.print()}</script></head><body>${html}</body></html>`, {
       headers: {
         'Content-Type': 'text/html; charset=utf-8',
-        'Content-Disposition': `inline; filename="Certificat-${cert.numero || 'LS'}.html"`,
       },
     })
   }

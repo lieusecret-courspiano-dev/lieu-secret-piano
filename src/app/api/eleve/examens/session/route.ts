@@ -12,9 +12,9 @@ const CERT_CONFIG: Record<string, { titre: string; niveau: string; type: string 
 }
 
 function getMedaille(score: number): string | null {
-  if (score >= 95) return 'or'
-  if (score >= 85) return 'argent'
-  if (score >= 75) return 'bronze'
+  if (score >= 90) return 'or'
+  if (score >= 80) return 'argent'
+  if (score >= 70) return 'bronze'
   return null
 }
 
