@@ -91,8 +91,9 @@ export async function PATCH(req: NextRequest) {
           <p style="color:#f59e0b;font-weight:bold;margin:0 0 8px;">Validation en cours</p>
           <p style="margin:0;font-size:14px;">Votre heure bonus sera créditée automatiquement dès que votre filleul aura :</p>
           <ul style="margin:8px 0;font-size:14px;">
-            <li>Attendu 24h après son inscription</li>
-            <li>Réservé son premier cours</li>
+            <li>Réservé et effectué son premier cours</li>
+            <li>Attendu 24h après ce premier cours</li>
+            <li>Le cours ne doit pas avoir été annulé</li>
           </ul>
         </div>
         <p>Continuez à partager votre code <strong style="color:#f59e0b;">${code}</strong> !</p>

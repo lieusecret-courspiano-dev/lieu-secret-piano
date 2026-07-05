@@ -27,15 +27,20 @@ export async function GET(req: NextRequest) {
 
     let validated = 0
     for (const filleul of pendingFilleuls) {
-      // PROTECTION 2: Vérifier que le filleul a fait au moins 1 réservation confirmée
-      const { count: nbResa } = await supabaseAdmin
-        .from('reservations')
-        .select('*', { count: 'exact', head: true })
-        .eq('student_email', filleul.filleul_email.toLowerCase())
-        .eq('status', 'confirmed')
+      // PROTECTION 2: Vérifier que le filleul a au moins 1 cours passé, confirmé, non annulé
+      // ET que ce cours date d'au moins 24h (délai anti-annulation)
+      const now = new Date().toISOString()
+      const cutoff24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
 
-      if (!nbResa || nbResa < 1) {
-        console.log(`[parrainage] Filleul ${filleul.filleul_email} pas encore de réservation — skip`)
+      const { data: resaPassees } = await supabaseAdmin
+        .from('reservations')
+        .select('id, slot_start, status')
+        .eq('student_email', filleul.filleul_email.toLowerCase())
+        .eq('status', 'confirmed')   // Confirmé = non annulé
+        .lt('slot_start', cutoff24h) // Cours passé depuis au moins 24h
+
+      if (!resaPassees || resaPassees.length === 0) {
+        console.log(`[parrainage] Filleul ${filleul.filleul_email} — aucun cours passé depuis 24h — skip`)
         continue
       }
 
