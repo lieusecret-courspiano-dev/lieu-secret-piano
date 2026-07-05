@@ -83,7 +83,7 @@ export default function AdminExamensPage() {
       // Convertir l'heure locale saisie en UTC pour Supabase
       const dateLocalInput = new Date(form.date_examen)
       const dateISO = dateLocalInput.toISOString()
-      const body = { ...form, date_examen: dateISO, eleve_ids: selectedEleves, quiz_id: form.quiz_id || null, questions_examen: questions }
+      const body = { ...form, date_examen: dateISO, eleve_ids: selectedEleves, quiz_id: form.quiz_id || null }
       const url = editExamen ? '/api/admin/examens' : '/api/admin/examens'
       const method = editExamen ? 'PATCH' : 'POST'
       const payload = editExamen ? { id: editExamen.id, ...body } : body

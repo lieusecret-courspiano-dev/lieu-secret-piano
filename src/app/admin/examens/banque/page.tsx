@@ -84,8 +84,12 @@ export default function BanqueQuestionsPage() {
     // Scroll vers le formulaire d'édition après rendu
     setTimeout(() => {
       const el = document.getElementById(`edit-form-${q.categorie.replace(/\s+/g, '-')}`)
-      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
-    }, 150)
+      if (el) {
+        const rect = el.getBoundingClientRect()
+        const scrollTop = window.scrollY || document.documentElement.scrollTop
+        window.scrollTo({ top: scrollTop + rect.top - 100, behavior: 'smooth' })
+      }
+    }, 200)
   }
 
   function cancelEdit() { setEditQ(null); setEditIdx(null); setIsNew(false) }

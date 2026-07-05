@@ -331,10 +331,18 @@ export default function ExamensPage() {
                             </p>
                           </div>
                         </div>
-                      ) : tentativesRestantes <= 0 ? (
-                        <span className="text-xs text-noir-500 border border-noir-700 px-3 py-2 rounded-xl block text-center">
-                          Tentatives épuisées
-                        </span>
+                      ) : tentativesRestantes <= 0 || derniereSession?.reussi ? (
+                        <div className="text-center">
+                          {derniereSession?.reussi ? (
+                            <span className="text-xs text-green-400 border border-green-500/30 bg-green-500/10 px-3 py-2 rounded-xl block text-center">
+                              Examen réussi
+                            </span>
+                          ) : (
+                            <span className="text-xs text-noir-500 border border-noir-700 px-3 py-2 rounded-xl block text-center">
+                              Tentatives épuisées
+                            </span>
+                          )}
+                        </div>
                       ) : (
                         <button onClick={() => startExamen(ex)} className="btn-gold text-sm px-5 py-2.5">
                           {derniereSession ? 'Nouvelle tentative' : "Commencer l'examen"}
