@@ -2,13 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic'
 import { supabaseAdmin } from '@/lib/supabase'
 import { getEleveFromSession } from '@/lib/eleve-auth'
-import { exec } from 'child_process'
-import { promisify } from 'util'
-import { writeFile, readFile, unlink } from 'fs/promises'
-import { tmpdir } from 'os'
-import { join } from 'path'
-
-const execAsync = promisify(exec)
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   const eleve = await getEleveFromSession()
@@ -151,7 +144,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         <div class="recipient-name">${nom_complet}</div>
         <div class="competence-label">Pour avoir validé avec succès</div>
         <div class="competence-name">${cert.nom_certificat || 'Formation Piano'}</div>
-        ${niveauLabel ? `<div class="niveau-badge">${niveauLabel}</div>` : ''}
+
       </div>
       <div class="footer">
         <div>
@@ -174,32 +167,34 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 </body>
 </html>`
 
-  const tmpHtml = join(tmpdir(), `cert-${params.id}.html`)
-  const tmpPdf  = join(tmpdir(), `cert-${params.id}.pdf`)
-
-  try {
-    await writeFile(tmpHtml, html, 'utf8')
-    await execAsync(
-      `wkhtmltopdf --page-width 297mm --page-height 210mm --orientation Landscape --no-background --enable-local-file-access --quiet "${tmpHtml}" "${tmpPdf}"`,
-      { timeout: 30000 }
-    )
-    const pdfBuffer = await readFile(tmpPdf)
-    await unlink(tmpHtml).catch(() => {})
-    await unlink(tmpPdf).catch(() => {})
-
-    return new NextResponse(pdfBuffer, {
-      headers: {
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="Certificat-${(cert.nom_certificat || 'Lieu-Secret').replace(/\s+/g, '-')}-${cert.numero || ''}.pdf"`,
-      },
-    })
-  } catch {
-    await unlink(tmpHtml).catch(() => {})
-    // Fallback HTML avec instruction d'impression
-    return new NextResponse(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Certificat</title><script>window.onload=function(){window.print()}</script></head><body>${html}</body></html>`, {
-      headers: {
-        'Content-Type': 'text/html; charset=utf-8',
-      },
-    })
+  const printHtml = `<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Certificat</title>
+<style>
+  @page { size: A4 landscape; margin: 0; }
+  @media print { html, body { width:297mm; height:210mm; margin:0; padding:0; } .no-print { display:none !important; } }
+  body { margin:0; padding:0; }
+  .print-btn {
+    position:fixed; top:12px; right:12px; z-index:9999;
+    background:#1a1a2e; color:#c9a84c;
+    border:1px solid #c9a84c; padding:8px 20px;
+    font-family:Georgia,serif; font-size:13px;
+    cursor:pointer; border-radius:4px; letter-spacing:0.1em;
   }
+  .print-btn:hover { background:#c9a84c; color:#1a1a2e; }
+</style>
+</head>
+<body>
+<button class="print-btn no-print" onclick="window.print()">Enregistrer en PDF</button>
+${html}
+</body>
+</html>`
+
+  return new NextResponse(printHtml, {
+    headers: {
+      'Content-Type': 'text/html; charset=utf-8',
+    },
+  })
 }
