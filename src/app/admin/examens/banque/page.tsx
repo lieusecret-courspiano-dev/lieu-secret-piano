@@ -8,10 +8,10 @@ const CATEGORIES = ['Fondamentaux', 'Compréhension et autonomie', 'Expression e
 const TYPES = [
   { value: 'qcm',           label: 'QCM — une bonne réponse' },
   { value: 'vrai_faux',     label: 'Vrai / Faux' },
-  { value: 'reponse_courte',label: 'Réponse courte' },
-  { value: 'audio',         label: 'Question audio' },
-  { value: 'image',         label: 'Question avec image' },
-  { value: 'video',         label: 'Question avec vidéo' },
+  { value: 'reponse_courte',label: 'Réponse courte (texte libre)' },
+  { value: 'audio',         label: 'Question audio + réponse texte' },
+  { value: 'image',         label: 'Question avec image + réponse texte' },
+  { value: 'video',         label: 'Question avec vidéo + réponse texte' },
 ]
 
 interface BanqueQuestion {
@@ -80,11 +80,12 @@ export default function BanqueQuestionsPage() {
     setEditQ({ ...q })
     setEditIdx(idx)
     setIsNew(false)
-    setOpenCat(q.categorie) // Forcer l'ouverture de la bonne catégorie
-    // Scroll vers le formulaire après rendu
+    setOpenCat(q.categorie)
+    // Scroll vers le formulaire d'édition après rendu
     setTimeout(() => {
-      document.getElementById(`edit-form-${q.categorie.replace(/\s+/g, '-')}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }, 100)
+      const el = document.getElementById(`edit-form-${q.categorie.replace(/\s+/g, '-')}`)
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    }, 150)
   }
 
   function cancelEdit() { setEditQ(null); setEditIdx(null); setIsNew(false) }

@@ -20,10 +20,10 @@ const TYPES = [
   { value: 'qcm',           label: 'QCM — une bonne réponse' },
   { value: 'qcm_multiple',  label: 'QCM — plusieurs bonnes réponses' },
   { value: 'vrai_faux',     label: 'Vrai / Faux' },
-  { value: 'reponse_courte',label: 'Réponse courte' },
-  { value: 'audio',         label: 'Question audio' },
-  { value: 'image',         label: 'Question avec image' },
-  { value: 'video',         label: 'Question avec vidéo' },
+  { value: 'reponse_courte',label: 'Réponse courte (texte)' },
+  { value: 'audio',         label: 'Audio + réponse texte' },
+  { value: 'image',         label: 'Image + réponse texte' },
+  { value: 'video',         label: 'Vidéo + réponse texte' },
 ]
 
 const EMPTY_Q: ExamenQuestion = {
