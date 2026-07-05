@@ -125,11 +125,19 @@ export async function POST(req: NextRequest) {
         let totalPoints = 0
         let pointsObtenus = 0
         questions.forEach((q: any) => {
+          // Les questions reponse_libre ne sont pas corrigées automatiquement
+          if (q.type === 'reponse_libre') return
           totalPoints += q.points || 1
-          const rep = reponses[q.id]
-          if (rep && rep.toString().toLowerCase().trim() === q.bonne_reponse?.toString().toLowerCase().trim()) {
-            pointsObtenus += q.points || 1
-          }
+          const rep = (reponses[q.id] || '').toString().toLowerCase().trim()
+          const bonneRep = (q.bonne_reponse || '').toString().toLowerCase().trim()
+          if (!rep || !bonneRep) return
+          // Validation flexible : accepte si la réponse contient la bonne réponse ou vice versa
+          // (pour les questions audio/image/vidéo avec réponses courtes)
+          const isCorrect = rep === bonneRep ||
+            (q.type !== 'qcm' && q.type !== 'vrai_faux' && (
+              rep.includes(bonneRep) || bonneRep.includes(rep)
+            ))
+          if (isCorrect) pointsObtenus += q.points || 1
         })
         score = totalPoints > 0 ? Math.round((pointsObtenus / totalPoints) * 100) : 0
       }
@@ -183,7 +191,31 @@ export async function POST(req: NextRequest) {
       } catch {}
     }
 
-    return NextResponse.json({ score, reussi, niveau_medaille, score_min: examen?.score_min ?? 75 })
+    // Construire le détail des corrections
+    let corrections: any[] = []
+    if (reponses) {
+      const { data: qDetails } = await supabaseAdmin
+        .from('examen_questions')
+        .select('id, type, question, bonne_reponse, explication, points')
+        .eq('examen_id', session.examen_id)
+        .order('position')
+      const qList = (qDetails && qDetails.length > 0) ? qDetails : []
+      corrections = qList.map((q: any) => {
+        const rep = (reponses[q.id] || '').toString().toLowerCase().trim()
+        const bonneRep = (q.bonne_reponse || '').toString().toLowerCase().trim()
+        const isCorrect = q.type !== 'reponse_libre' && rep && bonneRep && (
+          rep === bonneRep || (q.type !== 'qcm' && q.type !== 'vrai_faux' && (rep.includes(bonneRep) || bonneRep.includes(rep)))
+        )
+        return {
+          question: q.question, type: q.type,
+          reponse_eleve: reponses[q.id] || '',
+          bonne_reponse: q.bonne_reponse || '',
+          explication: q.explication || '',
+          correct: isCorrect, points: q.points || 1,
+        }
+      })
+    }
+    return NextResponse.json({ score, reussi, niveau_medaille, score_min: examen?.score_min ?? 75, corrections })
   }
 
   return NextResponse.json({ error: 'Action invalide' }, { status: 400 })

@@ -33,7 +33,7 @@ export default function ExamensPage() {
   const [currentQ, setCurrentQ] = useState(0)
   const [timeLeft, setTimeLeft] = useState(0)
   const [submitting, setSubmitting] = useState(false)
-  const [result, setResult] = useState<{ score: number; reussi: boolean; niveau_medaille: string | null; score_min: number } | null>(null)
+  const [result, setResult] = useState<{ score: number; reussi: boolean; niveau_medaille: string | null; score_min: number; corrections?: any[] } | null>(null)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
@@ -151,7 +151,34 @@ export default function ExamensPage() {
                 <p className="text-noir-400 text-xs">Vous n'avez pas atteint le score minimum. Continuez à vous entraîner et demandez à votre professeur une nouvelle tentative.</p>
               </div>
             )}
-            <div className="flex gap-3 justify-center">
+            {/* Détail des corrections */}
+            {result.corrections && result.corrections.length > 0 && (
+              <div className="mt-6 text-left">
+                <p className="text-white font-semibold text-sm mb-3">Détail des réponses</p>
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {result.corrections.map((c, i) => (
+                    <div key={i} className={`rounded-xl p-3 border text-xs ${c.type === 'reponse_libre' ? 'border-noir-700 bg-noir-800/50' : c.correct ? 'border-green-500/20 bg-green-500/5' : 'border-red-500/20 bg-red-500/5'}`}>
+                      <p className="text-white font-medium mb-1">{i + 1}. {c.question}</p>
+                      {c.type === 'reponse_libre' ? (
+                        <p className="text-noir-400 italic">Question ouverte — correction manuelle</p>
+                      ) : (
+                        <>
+                          <p className={c.correct ? 'text-green-400' : 'text-red-400'}>
+                            Votre réponse : {c.reponse_eleve || '(sans réponse)'} {c.correct ? '✓' : '✗'}
+                          </p>
+                          {!c.correct && c.bonne_reponse && (
+                            <p className="text-gold-400">Bonne réponse : {c.bonne_reponse}</p>
+                          )}
+                          {c.explication && <p className="text-noir-400 mt-1 italic">{c.explication}</p>}
+                        </>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="flex gap-3 justify-center mt-4">
               <button onClick={() => { setActiveExamen(null); setResult(null); setSessionId(null); setQuestions([]) }} className="btn-outline">Retour aux examens</button>
               <a href="/espace-eleve/progression" className="btn-gold">Voir ma progression</a>
             </div>
