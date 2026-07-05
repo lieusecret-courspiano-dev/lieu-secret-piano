@@ -17,7 +17,7 @@ export async function GET() {
   // 2. Examens que l'élève a déjà passés (même s'il a été retiré de la liste)
   const { data: sessionsPassees } = await supabaseAdmin
     .from('examen_sessions')
-    .select('examen_id, examen:examens(*)')
+    .select('examen_id')
     .eq('eleve_id', eleve.id)
     .not('submitted_at', 'is', null)
 
@@ -33,11 +33,23 @@ export async function GET() {
     }
   }
 
-  // Ajouter les examens passés non encore dans la liste
+  // Ajouter les IDs des examens passés non encore dans la liste
+  const idsManquants: string[] = []
   for (const s of (sessionsPassees || [])) {
-    if (s.examen_id && !examenIds.has(s.examen_id) && s.examen) {
+    if (s.examen_id && !examenIds.has(s.examen_id)) {
       examenIds.add(s.examen_id)
-      examensMap[s.examen_id] = { examen: s.examen, tentatives: 0 }
+      idsManquants.push(s.examen_id)
+    }
+  }
+
+  // Charger les données des examens manquants
+  if (idsManquants.length > 0) {
+    const { data: examensManquants } = await supabaseAdmin
+      .from('examens')
+      .select('*')
+      .in('id', idsManquants)
+    for (const ex of (examensManquants || [])) {
+      examensMap[ex.id] = { examen: ex, tentatives: 0 }
     }
   }
 
