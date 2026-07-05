@@ -345,13 +345,26 @@ export default function AdminExamensPage() {
                   const res = gererElevesResultats[el.id]
                   const isSelected = gererElevesSelected.includes(el.id)
                   return (
-                    <label key={el.id} className={`flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-colors ${isSelected ? 'bg-gold-500/5 border border-gold-500/20' : 'hover:bg-noir-800 border border-transparent'}`}>
+                    <label key={el.id}
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors border ${
+                        res?.reussi
+                          ? 'border-green-500/20 bg-green-500/5 cursor-not-allowed opacity-80'
+                          : isSelected
+                            ? 'bg-gold-500/5 border-gold-500/20 cursor-pointer'
+                            : 'hover:bg-noir-800 border-transparent cursor-pointer'
+                      }`}
+                      title={res?.reussi ? 'Cet élève a déjà réussi cet examen — non modifiable' : ''}>
                       <input type="checkbox" checked={isSelected}
-                        onChange={() => setGererElevesSelected(prev => isSelected ? prev.filter(id => id !== el.id) : [...prev, el.id])}
-                        className="rounded border-noir-600 shrink-0" />
+                        disabled={res?.reussi}
+                        onChange={() => {
+                          if (res?.reussi) return // Bloquer si réussi
+                          setGererElevesSelected(prev => isSelected ? prev.filter(id => id !== el.id) : [...prev, el.id])
+                        }}
+                        className="rounded border-noir-600 shrink-0 disabled:opacity-50 disabled:cursor-not-allowed" />
                       <div className="flex-1 min-w-0">
-                        <span className="text-white text-sm">{el.prenom} {el.nom}</span>
+                        <span className={`text-sm ${res?.reussi ? 'text-green-300' : 'text-white'}`}>{el.prenom} {el.nom}</span>
                         <span className="text-noir-500 text-xs ml-2">{el.email}</span>
+                        {res?.reussi && <span className="text-green-500/60 text-xs ml-2 italic">— examen réussi, verrouillé</span>}
                       </div>
                       {res && (
                         <span className={`text-xs px-2 py-0.5 rounded-full border shrink-0 ${res.reussi ? 'text-green-400 border-green-500/30 bg-green-500/10' : 'text-red-400 border-red-500/30 bg-red-500/10'}`}>
