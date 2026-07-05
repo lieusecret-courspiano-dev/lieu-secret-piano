@@ -244,6 +244,12 @@ export default function AdminExamensPage() {
 
   const MEDAILLE_LABELS: Record<string, string> = { or: 'Or', argent: 'Argent', bronze: 'Bronze' }
   const MEDAILLE_COLORS: Record<string, string> = { or: 'text-yellow-400', argent: 'text-gray-300', bronze: 'text-orange-400' }
+  function getMedailleAdmin(score: number): string | null {
+    if (score >= 90) return 'or'
+    if (score >= 80) return 'argent'
+    if (score >= 70) return 'bronze'
+    return null
+  }
 
   if (loading) return <div className="p-8 flex justify-center"><div className="w-8 h-8 border-2 border-gold-500 border-t-transparent rounded-full animate-spin" /></div>
 

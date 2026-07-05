@@ -21,6 +21,14 @@ const MEDAILLE = {
   bronze: { label: 'Mention Bronze', color: 'text-orange-400', icon: <svg width="18" height="18" fill="none" stroke="#fb923c" strokeWidth="1.5" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg> },
 }
 
+// Recalcule la médaille selon les seuils actuels (indépendamment de ce qui est en base)
+function getMedailleFromScore(score: number): keyof typeof MEDAILLE | null {
+  if (score >= 90) return 'or'
+  if (score >= 80) return 'argent'
+  if (score >= 70) return 'bronze'
+  return null
+}
+
 export default function ExamensPage() {
   const router = useRouter()
   const [examens, setExamens] = useState<Examen[]>([])
@@ -125,7 +133,8 @@ export default function ExamensPage() {
 
   // ── Vue résultat ──────────────────────────────────────────────────────────────
   if (result) {
-    const med = result.niveau_medaille ? MEDAILLE[result.niveau_medaille as keyof typeof MEDAILLE] : null
+    const medKey = result.reussi ? getMedailleFromScore(Math.round(result.score)) : null
+    const med = medKey ? MEDAILLE[medKey] : null
     return (
       <EleveLayout>
         <div className="p-4 md:p-6 max-w-2xl mx-auto">
@@ -286,7 +295,8 @@ export default function ExamensPage() {
               const isAvailable = now >= dateEx  // dateEx est en UTC, now aussi → comparaison correcte
               const tentativesRestantes = ex.nb_tentatives - ex.tentatives_utilisees
               const derniereSession = ex.derniere_session
-              const med = derniereSession?.niveau_medaille ? MEDAILLE[derniereSession.niveau_medaille as keyof typeof MEDAILLE] : null
+              const medKey = derniereSession ? getMedailleFromScore(Math.round(derniereSession.score)) : null
+              const med = medKey ? MEDAILLE[medKey] : null
 
               return (
                 <div key={ex.id} className={`card transition-all ${isAvailable && tentativesRestantes > 0 ? 'border-gold-500/20' : ''}`}>
