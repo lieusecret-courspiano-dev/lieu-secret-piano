@@ -72,7 +72,7 @@ export async function PATCH(req: NextRequest) {
     parrainage_id: parrainage.id,
     filleul_email: filleul_email.toLowerCase(),
     filleul_nom: filleul_nom || filleul_email,
-    status: 'pending',  // Sera validé après 48h + 1 réservation
+    status: 'pending',  // Sera validé après 24h + 1 réservation
     created_at: new Date().toISOString(),
   })
 
@@ -91,7 +91,7 @@ export async function PATCH(req: NextRequest) {
           <p style="color:#f59e0b;font-weight:bold;margin:0 0 8px;">Validation en cours</p>
           <p style="margin:0;font-size:14px;">Votre heure bonus sera créditée automatiquement dès que votre filleul aura :</p>
           <ul style="margin:8px 0;font-size:14px;">
-            <li>Attendu 48h après son inscription</li>
+            <li>Attendu 24h après son inscription</li>
             <li>Réservé son premier cours</li>
           </ul>
         </div>
