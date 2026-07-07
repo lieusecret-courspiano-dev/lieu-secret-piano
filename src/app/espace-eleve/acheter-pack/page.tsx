@@ -104,7 +104,7 @@ export default function AcheterPackElevePage() {
 
   if (pending) return (
     <EleveLayout prenom={me?.prenom} nbNotifs={me?.nb_notifs_non_lues || 0}>
-      <div className="p-6 md:p-8 flex items-center justify-center min-h-[60vh]">
+      <div className="p-6 md:p-4 md:p-8 flex items-center justify-center min-h-[60vh]">
         <div className="card text-center max-w-md w-full py-12">
           <div className="w-16 h-16 rounded-full bg-gold-500/10 border border-gold-500/30 flex items-center justify-center mx-auto mb-6">
             <Building2 size={32} className="text-gold-400" />
@@ -129,7 +129,7 @@ export default function AcheterPackElevePage() {
 
   return (
     <EleveLayout prenom={me?.prenom} nbNotifs={me?.nb_notifs_non_lues || 0}>
-      <div className="p-4 md:p-6 lg:p-8 pb-24 md:pb-8">
+      <div className="p-4 md:p-6 lg:p-4 md:p-8 pb-24 md:pb-4 md:pb-8">
         <div className="mb-6">
           <h1 className="font-serif text-2xl text-white">Acheter un pack de cours</h1>
           <p className="text-noir-400 text-sm mt-1">Choisissez votre formule et économisez sur vos cours</p>

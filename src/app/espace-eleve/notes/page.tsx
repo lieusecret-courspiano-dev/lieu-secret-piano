@@ -70,7 +70,7 @@ export default function NotesPage() {
 
   return (
     <EleveLayout>
-      <div className="p-4 md:p-6 lg:p-8 pb-24 md:pb-8 max-w-5xl mx-auto">
+      <div className="p-4 md:p-6 lg:p-4 md:p-8 pb-24 md:pb-4 md:pb-8 max-w-5xl mx-auto">
 
         <div className="mb-6">
           <h1 className="text-2xl font-serif text-white mb-1">Notes de cours</h1>

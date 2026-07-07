@@ -145,7 +145,7 @@ export default function MediathequeElevePage() {
 
   return (
     <EleveLayout prenom={prenom} nbNotifs={0} nbMedias={medias.length} nbRessources={nbRessources}>
-      <div className="p-4 md:p-6 lg:p-8 pb-24 md:pb-8">
+      <div className="p-4 md:p-6 lg:p-4 md:p-8 pb-24 md:pb-4 md:pb-8">
         {/* Grand titre */}
         <div className="mb-8">
           <h1 className="font-serif text-3xl md:text-4xl text-white mb-2 animate-fade-in-up">Médiathèque</h1>

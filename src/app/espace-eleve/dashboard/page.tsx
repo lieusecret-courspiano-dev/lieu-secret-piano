@@ -172,7 +172,7 @@ export default function DashboardPage() {
 
   return (
     <EleveLayout>
-      <div className="p-4 md:p-6 lg:p-8 pb-24 md:pb-8 max-w-5xl mx-auto space-y-5">
+      <div className="p-4 md:p-6 lg:p-4 md:p-8 pb-24 md:pb-4 md:pb-8 max-w-5xl mx-auto space-y-5">
 
         {/* ── Header ── */}
         <div className="flex items-center justify-between flex-wrap gap-4">
@@ -335,7 +335,7 @@ export default function DashboardPage() {
                     <p className="text-white font-bold text-3xl leading-none">{pack.heures_restantes}<span className="text-lg text-noir-400 ml-1">h</span></p>
                     <p className="text-noir-400 text-xs mt-1">restantes sur {pack.heures_total}h · {pack.pack_label}</p>
                   </div>
-                  <span className={`text-xs px-2 py-1 rounded-full border font-medium ${pack.heures_restantes <= 2 ? 'bg-red-500/10 border-red-500/30 text-red-400' : pack.heures_restantes <= 4 ? 'bg-orange-500/10 border-orange-500/30 text-orange-400' : 'bg-green-500/10 border-green-500/30 text-green-400'}`}>
+                  <span className={`text-xs px-2.5 py-1.5 rounded-full border font-medium ${pack.heures_restantes <= 2 ? 'bg-red-500/10 border-red-500/30 text-red-400' : pack.heures_restantes <= 4 ? 'bg-orange-500/10 border-orange-500/30 text-orange-400' : 'bg-green-500/10 border-green-500/30 text-green-400'}`}>
                     {pack.heures_restantes <= 2 ? 'Faible' : pack.heures_restantes <= 4 ? 'Bientôt épuisé' : 'Actif'}
                   </span>
                 </div>
@@ -435,7 +435,7 @@ export default function DashboardPage() {
 
         {/* ── Avatar picker ── */}
         {showAvatarPicker && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 p-4 bg-black/70 backdrop-blur-sm">
             <div className="bg-noir-900 border border-noir-700 rounded-2xl w-full max-w-sm shadow-2xl p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-white font-serif text-lg">Choisir un avatar</h3>

@@ -64,7 +64,7 @@ export default function PlaylistPage() {
 
   return (
     <EleveLayout>
-      <div className="p-4 md:p-6 lg:p-8 pb-24 md:pb-8 max-w-2xl mx-auto">
+      <div className="p-4 md:p-6 lg:p-4 md:p-8 pb-24 md:pb-4 md:pb-8 max-w-2xl mx-auto">
         <div className="mb-6">
           <h1 className="font-serif text-2xl text-white">Playlist de pratique</h1>
           <p className="text-noir-400 text-sm mt-1">Organisez votre session de travail</p>
@@ -139,7 +139,7 @@ export default function PlaylistPage() {
             <div>
               <p className="label mb-3 block">Sélectionnez vos morceaux ({playlist.length} sélectionné{playlist.length > 1 ? 's' : ''})</p>
               {morceaux.length === 0 ? (
-                <div className="card text-center py-8">
+                <div className="card text-center py-4 md:py-8">
                   <p className="text-noir-400 text-sm">Aucun morceau dans votre répertoire</p>
                   <a href="/espace-eleve/repertoire" className="btn-gold text-xs px-4 py-2 mt-3 inline-block">Ajouter des morceaux</a>
                 </div>

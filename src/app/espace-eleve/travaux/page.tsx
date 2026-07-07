@@ -63,7 +63,7 @@ export default function TravauxPage() {
 
   return (
     <EleveLayout>
-      <div className="p-4 md:p-6 lg:p-8 pb-24 md:pb-8 max-w-2xl mx-auto">
+      <div className="p-4 md:p-6 lg:p-4 md:p-8 pb-24 md:pb-4 md:pb-8 max-w-2xl mx-auto">
 
         {/* Header */}
         <div className="mb-6">

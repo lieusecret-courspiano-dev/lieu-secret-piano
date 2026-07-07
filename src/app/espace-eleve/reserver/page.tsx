@@ -340,7 +340,7 @@ function ReserverEleveContent() {
 
   if (success) return (
     <EleveLayout prenom={me?.prenom} nbNotifs={me?.nb_notifs_non_lues || 0}>
-      <div className="p-6 md:p-8 flex items-center justify-center min-h-[60vh]">
+      <div className="p-6 md:p-4 md:p-8 flex items-center justify-center min-h-[60vh]">
         <div className="card text-center max-w-sm w-full py-12">
           <div className="w-16 h-16 rounded-full bg-green-500/10 border border-green-500/30 flex items-center justify-center mx-auto mb-6">
             <Check size={32} className="text-green-400" />
@@ -358,7 +358,7 @@ function ReserverEleveContent() {
 
   return (
     <EleveLayout prenom={me?.prenom} nbNotifs={me?.nb_notifs_non_lues || 0}>
-      <div className="p-4 md:p-6 lg:p-8 pb-24 md:pb-8" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+      <div className="p-4 md:p-6 lg:p-4 md:p-8 pb-24 md:pb-4 md:pb-8" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
         {/* Onglets */}
         <div className="flex gap-1 bg-noir-900 border border-noir-800 rounded-xl p-1 mb-6 w-fit">
           <button onClick={() => setActiveTab('reserver')}

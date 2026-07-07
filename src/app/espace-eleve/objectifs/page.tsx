@@ -91,7 +91,7 @@ export default function ObjectifsPage() {
 
   if (loading) return (
     <EleveLayout>
-      <div className="p-4 md:p-6 lg:p-8 space-y-3">
+      <div className="p-4 md:p-6 lg:p-4 md:p-8 space-y-3">
         {[...Array(4)].map((_, i) => <SkeletonCard key={i} className="h-28" />)}
       </div>
     </EleveLayout>
@@ -99,7 +99,7 @@ export default function ObjectifsPage() {
 
   return (
     <EleveLayout>
-      <div className="p-4 md:p-6 lg:p-8 pb-24 md:pb-8 max-w-2xl mx-auto">
+      <div className="p-4 md:p-6 lg:p-4 md:p-8 pb-24 md:pb-4 md:pb-8 max-w-2xl mx-auto">
 
         {/* Header */}
         <div className="flex items-center justify-between mb-6 flex-wrap gap-3">

@@ -402,7 +402,7 @@ export default function EleveQuizPage() {
   // ── Liste des quiz ──
   return (
     <EleveLayout>
-      <div className="p-4 md:p-6 lg:p-8 pb-24 md:pb-8">
+      <div className="p-4 md:p-6 lg:p-4 md:p-8 pb-24 md:pb-4 md:pb-8">
         <div className="mb-6">
           <h1 className="text-2xl font-serif text-white">Quiz pédagogiques</h1>
           <p className="text-noir-400 text-sm mt-1">Testez vos connaissances et validez vos compétences</p>

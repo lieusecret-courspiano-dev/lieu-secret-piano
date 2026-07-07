@@ -30,7 +30,7 @@ export default function TemoignagePage() {
 
   return (
     <EleveLayout prenom={prenom} nbNotifs={0}>
-      <div className="p-4 md:p-6 lg:p-8 pb-24 md:pb-8">
+      <div className="p-4 md:p-6 lg:p-4 md:p-8 pb-24 md:pb-4 md:pb-8">
         <h1 className="font-serif text-2xl text-white mb-6">Laisser un Témoignage</h1>
         {sent ? (<div className="card border-green-500/30 text-center py-12"><svg className="mx-auto mb-4 text-green-400" width="48" height="48" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><h2 className="font-serif text-xl text-white mb-2">Merci pour votre témoignage !</h2><p className="text-noir-400 text-sm">Il sera publié après validation par votre professeur.</p></div>) : (
           <div className="card max-w-lg">

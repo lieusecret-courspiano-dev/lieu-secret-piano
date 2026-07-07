@@ -93,7 +93,7 @@ export default function RepertoirePage() {
 
   return (
     <EleveLayout>
-      <div className="p-4 md:p-6 lg:p-8 pb-24 md:pb-8 max-w-4xl mx-auto">
+      <div className="p-4 md:p-6 lg:p-4 md:p-8 pb-24 md:pb-4 md:pb-8 max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
           <div>
             <h1 className="text-2xl font-serif text-white">Mon répertoire</h1>
@@ -157,7 +157,7 @@ export default function RepertoirePage() {
                     </div>
                     <div className="flex flex-col gap-1 shrink-0">
                       <select value={m.statut} onChange={e => updateStatut(m.id, e.target.value)}
-                        className="text-xs bg-noir-800 border border-noir-700 text-noir-300 rounded-lg px-2 py-1 cursor-pointer">
+                        className="text-xs bg-noir-800 border border-noir-700 text-noir-300 rounded-lg px-2.5 py-1.5 cursor-pointer">
                         {Object.entries(STATUT_CONFIG).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
                       </select>
                       <button onClick={() => deleteMorceau(m.id)} className="text-noir-700 hover:text-red-400 transition-colors text-xs text-center">Supprimer</button>

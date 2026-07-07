@@ -30,7 +30,7 @@ export default function PackPage() {
 
   return (
     <EleveLayout prenom={prenom} nbNotifs={0}>
-      <div className="p-4 md:p-6 lg:p-8 pb-24 md:pb-8">
+      <div className="p-4 md:p-6 lg:p-4 md:p-8 pb-24 md:pb-4 md:pb-8">
         <div className="flex items-center justify-between mb-6 animate-fade-in-up">
           <h1 className="font-serif text-2xl text-white">Mon Pack</h1>
           <a href="/espace-eleve/acheter-pack" className="btn-gold text-sm px-4 py-2 flex items-center gap-2">
@@ -38,7 +38,7 @@ export default function PackPage() {
             Acheter / Recharger
           </a>
         </div>
-        {!activePack ? (<div className="card text-center py-12"><p className="text-noir-400 mb-4">Vous n&apos;avez pas de pack actif</p><Link href="/espace-eleve/acheter-pack" className="btn-gold px-8">Acheter un pack</Link></div>) : (
+        {!activePack ? (<div className="card text-center py-12"><p className="text-noir-400 mb-4">Vous n&apos;avez pas de pack actif</p><Link href="/espace-eleve/acheter-pack" className="btn-gold px-4 md:px-8">Acheter un pack</Link></div>) : (
           <div className="space-y-6">
             <div className="card border-gold-500/30 relative overflow-hidden">
               <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-gold-500 to-transparent" />

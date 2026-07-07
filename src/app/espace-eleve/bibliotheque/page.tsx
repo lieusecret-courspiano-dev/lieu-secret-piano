@@ -145,7 +145,7 @@ export default function BibliothequeePage() {
 
   return (
     <EleveLayout prenom={prenom} nbNotifs={0}>
-      <div className="p-4 md:p-6 lg:p-8 pb-24 md:pb-8">
+      <div className="p-4 md:p-6 lg:p-4 md:p-8 pb-24 md:pb-4 md:pb-8">
         <div className="mb-6">
           <h1 className="font-serif text-2xl md:text-3xl text-white mb-1 animate-fade-in-up">Bibliothèque musicale</h1>
           <p className="text-noir-400 text-sm">Référence des gammes et accords — consultez pendant vos pratiques</p>
@@ -188,7 +188,7 @@ export default function BibliothequeePage() {
 
         {/* Panneau détail avec clavier - centré et visible */}
         {selected && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 p-4 bg-black/60 backdrop-blur-sm">
             <div className="bg-noir-900 border border-noir-700 rounded-2xl p-5 shadow-2xl w-full max-w-md">
               <div className="flex items-center justify-between mb-4">
                 <div>
@@ -201,7 +201,7 @@ export default function BibliothequeePage() {
               </div>
               <div className="flex gap-2 flex-wrap mb-4">
                 {selected.notes.map((n, i) => (
-                  <span key={i} className="px-2 py-1 bg-gold-500/10 border border-gold-500/20 text-gold-400 text-xs rounded-lg font-medium">{n}</span>
+                  <span key={i} className="px-2.5 py-1.5 bg-gold-500/10 border border-gold-500/20 text-gold-400 text-xs rounded-lg font-medium">{n}</span>
                 ))}
               </div>
               <MiniPiano highlighted={selected.touches} />

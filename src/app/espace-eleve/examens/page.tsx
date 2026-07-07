@@ -275,7 +275,7 @@ export default function ExamensPage() {
   // ── Liste des examens ─────────────────────────────────────────────────────────
   return (
     <EleveLayout>
-      <div className="p-4 md:p-6 lg:p-8 pb-24 md:pb-8 max-w-3xl mx-auto">
+      <div className="p-4 md:p-6 lg:p-4 md:p-8 pb-24 md:pb-4 md:pb-8 max-w-3xl mx-auto">
         <div className="mb-6">
           <h1 className="font-serif text-2xl text-white">Mes examens</h1>
           <p className="text-noir-400 text-sm mt-1">Examens finaux de validation des compétences</p>

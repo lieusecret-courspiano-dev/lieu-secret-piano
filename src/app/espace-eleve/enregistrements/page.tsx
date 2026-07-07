@@ -202,7 +202,7 @@ export default function EnregistrementsPage() {
 
   return (
     <EleveLayout prenom={prenom} nbNotifs={0}>
-      <div className="p-4 md:p-6 lg:p-8 pb-24 md:pb-8">
+      <div className="p-4 md:p-6 lg:p-4 md:p-8 pb-24 md:pb-4 md:pb-8">
 
         {/* Titre */}
         <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
@@ -234,7 +234,7 @@ export default function EnregistrementsPage() {
             </div>
             <p className="text-white font-semibold text-lg mb-2">Aucun enregistrement</p>
             <p className="text-noir-400 text-sm max-w-sm mx-auto mb-6">Enregistrez vos exercices et envoyez-les à votre professeur pour recevoir des retours personnalisés.</p>
-            <button onClick={() => setShowForm(true)} className="btn-gold px-8">Envoyer mon premier enregistrement</button>
+            <button onClick={() => setShowForm(true)} className="btn-gold px-4 md:px-8">Envoyer mon premier enregistrement</button>
           </div>
         ) : (
           <div className="space-y-4">

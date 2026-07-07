@@ -37,7 +37,7 @@ export default function ProgressionPage() {
 
   if (loading) return (
     <EleveLayout>
-      <div className="p-4 md:p-6 lg:p-8 space-y-4">
+      <div className="p-4 md:p-6 lg:p-4 md:p-8 space-y-4">
         {[...Array(4)].map((_, i) => <SkeletonCard key={i} className="h-32" />)}
       </div>
     </EleveLayout>
@@ -49,7 +49,7 @@ export default function ProgressionPage() {
 
   return (
     <EleveLayout>
-      <div className="p-4 md:p-6 lg:p-8 pb-24 md:pb-8 max-w-4xl mx-auto">
+      <div className="p-4 md:p-6 lg:p-4 md:p-8 pb-24 md:pb-4 md:pb-8 max-w-4xl mx-auto">
 
         {/* Header */}
         <div className="mb-8">
@@ -156,7 +156,7 @@ export default function ProgressionPage() {
         </div>
 
         {/* Message encouragement */}
-        <div className="card text-center py-8 border-gold-500/20 bg-gold-500/5">
+        <div className="card text-center py-4 md:py-8 border-gold-500/20 bg-gold-500/5">
           
           <p className="text-white font-medium text-sm">
             {prog.pourcentage >= 100 ? 'Formation complète ! Félicitations !' :

@@ -85,7 +85,7 @@ export default function BadgesPage() {
 
   if (loading) return (
     <EleveLayout>
-      <div className="p-4 md:p-6 lg:p-8 grid grid-cols-2 md:grid-cols-3 gap-4">
+      <div className="p-4 md:p-6 lg:p-4 md:p-8 grid grid-cols-2 md:grid-cols-3 gap-4">
         {[...Array(9)].map((_, i) => <SkeletonCard key={i} className="h-36" />)}
       </div>
     </EleveLayout>
@@ -93,7 +93,7 @@ export default function BadgesPage() {
 
   return (
     <EleveLayout>
-      <div className="p-4 md:p-6 lg:p-8 pb-24 md:pb-8 max-w-4xl mx-auto">
+      <div className="p-4 md:p-6 lg:p-4 md:p-8 pb-24 md:pb-4 md:pb-8 max-w-4xl mx-auto">
 
         {/* Header */}
         <div className="mb-6">

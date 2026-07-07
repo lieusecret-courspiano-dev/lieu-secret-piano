@@ -52,7 +52,7 @@ export default function CertificatsPage() {
 
   return (
     <EleveLayout>
-      <div className="p-4 md:p-6 lg:p-8 pb-24 md:pb-8 max-w-4xl mx-auto">
+      <div className="p-4 md:p-6 lg:p-4 md:p-8 pb-24 md:pb-4 md:pb-8 max-w-4xl mx-auto">
 
         {/* Header */}
         <div className="mb-8">
@@ -86,7 +86,7 @@ export default function CertificatsPage() {
                         {cfg.emoji}
                       </div>
                       {cert.numero && (
-                        <span className="text-xs text-noir-600 font-mono bg-noir-800 px-2 py-1 rounded-lg">
+                        <span className="text-xs text-noir-600 font-mono bg-noir-800 px-2.5 py-1.5 rounded-lg">
                           {cert.numero}
                         </span>
                       )}

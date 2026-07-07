@@ -80,7 +80,7 @@ function SetupContent() {
         </div>
 
         {success ? (
-          <div className="card border-green-500/30 text-center py-8">
+          <div className="card border-green-500/30 text-center py-4 md:py-8">
             <svg width="40" height="40" fill="none" stroke="#22c55e" strokeWidth="1.5" viewBox="0 0 24 24" className="mx-auto mb-3">
               <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
               <polyline points="22 4 12 14.01 9 11.01"/>

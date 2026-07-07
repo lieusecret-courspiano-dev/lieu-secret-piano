@@ -120,7 +120,7 @@ function SupportViewer({ support, onClose }: { support: Support; onClose: () => 
         )}
 
         {isAudio && support.fichier_url && (
-          <div className="flex flex-col items-center justify-center h-full gap-6 p-8">
+          <div className="flex flex-col items-center justify-center h-full gap-6 p-4 md:p-8">
             <div className="w-24 h-24 rounded-full bg-gold-500/10 border-2 border-gold-500/30 flex items-center justify-center">
               <Play size={36} className="text-gold-400" />
             </div>
@@ -142,7 +142,7 @@ function SupportViewer({ support, onClose }: { support: Support; onClose: () => 
         )}
 
         {!support.fichier_url && (
-          <div className="flex flex-col items-center justify-center h-full gap-4 p-8">
+          <div className="flex flex-col items-center justify-center h-full gap-4 p-4 md:p-8">
             <FileText size={48} className="text-noir-600" />
             <p className="text-noir-400 text-center">Ce support n&apos;a pas encore de fichier associé.</p>
           </div>
@@ -259,7 +259,7 @@ export default function MesSupportsPage() {
 
   return (
     <EleveLayout>
-      <div className="p-4 md:p-6 lg:p-8 pb-24 md:pb-8">
+      <div className="p-4 md:p-6 lg:p-4 md:p-8 pb-24 md:pb-4 md:pb-8">
         <div className="mb-6">
           <h1 className="text-2xl font-serif text-white">Mes supports de cours</h1>
         <SubNav items={[{href:'/espace-eleve/ressources',label:'Ressources'},{href:'/espace-eleve/partitions',label:'Médiathèque'},{href:'/espace-eleve/mes-supports',label:'Mes supports'}]} />

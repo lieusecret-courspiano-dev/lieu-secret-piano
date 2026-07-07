@@ -131,7 +131,7 @@ function AcheterSupportContent() {
 
   return (
     <EleveLayout>
-      <div className="p-4 md:p-6 max-w-lg mx-auto pb-24 md:pb-8">
+      <div className="p-4 md:p-6 max-w-lg mx-auto pb-24 md:pb-4 md:pb-8">
         {/* Retour */}
         <button onClick={() => router.back()} className="flex items-center gap-2 text-noir-400 hover:text-white text-sm mb-6 transition-colors">
           <ArrowLeft size={16} /> Retour

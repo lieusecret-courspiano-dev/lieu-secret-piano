@@ -154,7 +154,7 @@ export default function PartagerPage() {
 
   return (
     <EleveLayout prenom={prenom} nbNotifs={0}>
-      <div className="p-4 md:p-6 lg:p-8 pb-24 md:pb-8 max-w-2xl mx-auto">
+      <div className="p-4 md:p-6 lg:p-4 md:p-8 pb-24 md:pb-4 md:pb-8 max-w-2xl mx-auto">
         <div className="mb-6">
           <h1 className="font-serif text-2xl md:text-3xl text-white mb-1 animate-fade-in-up">Partager mes progrès</h1>
           <p className="text-noir-400 text-sm">Générez une image à partager sur vos réseaux sociaux</p>
