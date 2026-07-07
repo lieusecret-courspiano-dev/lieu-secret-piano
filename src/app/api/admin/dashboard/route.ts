@@ -93,12 +93,15 @@ export async function GET(req: NextRequest) {
     })
 
     // Ressources premium vendues (revenus réels)
-    const { data: ressourcesPremiumAll } = await supabaseAdmin
-      .from('ressources_premium_achats')
-      .select('id, montant, payment_method, statut, created_at')
-      .eq('statut', 'actif')
-      .neq('attribue_manuellement', true)
-      .catch(() => ({ data: null }))
+    let ressourcesPremiumAll: any[] | null = null
+    try {
+      const { data: rpData } = await supabaseAdmin
+        .from('ressources_premium_achats')
+        .select('id, montant, payment_method, statut, created_at')
+        .eq('statut', 'actif')
+        .neq('attribue_manuellement', true)
+      ressourcesPremiumAll = rpData
+    } catch { ressourcesPremiumAll = [] }
 
     const ressourcesPremium = ((ressourcesPremiumAll as any) || []).filter((r: any) => {
       const dateRef = r.created_at?.substring(0, 10)
