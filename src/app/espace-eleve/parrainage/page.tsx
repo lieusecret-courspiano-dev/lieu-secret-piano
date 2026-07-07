@@ -85,7 +85,7 @@ export default function ParrainagePage() {
         {/* Comment ça marche */}
         <div className="card mb-6">
           <h2 className="text-white font-semibold text-sm mb-4">Comment ça marche ?</h2>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {[
               { step: '1', icon: <svg width="20" height="20" fill="none" stroke="#f59e0b" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>, text: 'Partagez votre code' },
               { step: '2', icon: <svg width="20" height="20" fill="none" stroke="#f59e0b" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>, text: "Votre ami s'inscrit" },
@@ -152,7 +152,7 @@ export default function ParrainagePage() {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-2 gap-3 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
               <div className="card text-center py-4">
                 <p className="text-3xl font-bold text-white">{data.nb_filleuls}</p>
                 <p className="text-xs text-noir-400 mt-1">Filleul{data.nb_filleuls > 1 ? 's' : ''} parrainé{data.nb_filleuls > 1 ? 's' : ''}</p>

@@ -146,7 +146,7 @@ export default function MetronomePage() {
         {/* Presets */}
         <div className="card mb-4">
           <p className="text-noir-400 text-xs font-bold uppercase tracking-wider mb-3">Tempos courants</p>
-          <div className="grid grid-cols-4 gap-1.5">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
             {PRESETS.map(p => (
               <button key={p.label} onClick={() => setBpm(p.bpm)}
                 className={`py-2 rounded-xl text-xs font-medium transition-all border ${Math.abs(bpm - p.bpm) <= 5 ? 'bg-gold-500/10 border-gold-500/30 text-gold-400' : 'border-noir-700 text-noir-400 hover:border-noir-600 hover:text-white'}`}>

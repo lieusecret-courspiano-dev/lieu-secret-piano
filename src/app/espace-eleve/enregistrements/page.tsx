@@ -32,7 +32,7 @@ function AudioPlayer({ url, type }: { url: string; type: string }) {
   }
 
   return (
-    <div className="flex items-center gap-3 bg-noir-800 rounded-xl px-4 py-3">
+    <div className="flex items-center gap-2 sm:gap-3 bg-noir-800 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3">
       <audio ref={ref as React.RefObject<HTMLAudioElement>} src={url}
         onTimeUpdate={() => { const a = ref.current as HTMLAudioElement; if (a) setProgress((a.currentTime / a.duration) * 100) }}
         onLoadedMetadata={() => { const a = ref.current as HTMLAudioElement; if (a) setDuration(a.duration) }}
@@ -41,7 +41,7 @@ function AudioPlayer({ url, type }: { url: string; type: string }) {
         const a = ref.current as HTMLAudioElement
         if (!a) return
         if (playing) { a.pause(); setPlaying(false) } else { a.play(); setPlaying(true) }
-      }} className="w-9 h-9 rounded-full bg-gold-500 flex items-center justify-center shrink-0 hover:bg-gold-400 transition-colors">
+      }} className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gold-500 flex items-center justify-center shrink-0 hover:bg-gold-400 transition-colors">
         {playing ? <Pause size={14} className="text-noir-950" /> : <Play size={14} className="text-noir-950 ml-0.5" />}
       </button>
       <div className="flex-1">
