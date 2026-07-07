@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import EleveLayout from '@/components/EleveNav'
+import SubNavDecouverte from '@/components/eleve/SubNavDecouverte'
 
 // Bibliothèque de gammes et accords
 const GAMMES = [
@@ -146,6 +147,7 @@ export default function BibliothequeePage() {
   return (
     <EleveLayout prenom={prenom} nbNotifs={0}>
       <div className="p-4 md:p-6 lg:p-4 md:p-8 pb-24 md:pb-4 md:pb-8">
+        <SubNavDecouverte />
         <div className="mb-6">
           <h1 className="font-serif text-2xl md:text-3xl text-white mb-1 animate-fade-in-up">Bibliothèque musicale</h1>
           <p className="text-noir-400 text-sm">Référence des gammes et accords — consultez pendant vos pratiques</p>

@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import EleveLayout from '@/components/EleveNav'
+import SubNavDecouverte from '@/components/eleve/SubNavDecouverte'
 
 const PRESETS = [
   { label: 'Largo',      bpm: 50  },
@@ -95,6 +96,7 @@ export default function MetronomePage() {
   return (
     <EleveLayout prenom={prenom} nbNotifs={0}>
       <div className="p-4 md:p-6 lg:p-4 md:p-8 pb-24 md:pb-4 md:pb-8 max-w-lg mx-auto">
+        <SubNavDecouverte />
 
         {/* Titre */}
         <div className="mb-8 text-center">

@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import EleveLayout from '@/components/EleveNav'
+import SubNavDecouverte from '@/components/eleve/SubNavDecouverte'
 
 const FICHES = [
   {
@@ -119,6 +120,7 @@ export default function FichesPage() {
   return (
     <EleveLayout>
       <div className="p-4 md:p-6 lg:p-4 md:p-8 pb-24 md:pb-4 md:pb-8 max-w-4xl mx-auto">
+        <SubNavDecouverte />
         <div className="mb-6">
           <h1 className="font-serif text-2xl text-white">Fiches de révision</h1>
           <p className="text-noir-400 text-sm mt-1">Révisions rapides — 30 secondes par fiche</p>

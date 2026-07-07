@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import EleveLayout from '@/components/EleveNav'
+import SubNavDecouverte from '@/components/eleve/SubNavDecouverte'
 
 interface Morceau {
   id: string; titre: string; compositeur: string | null
@@ -65,6 +66,7 @@ export default function PlaylistPage() {
   return (
     <EleveLayout>
       <div className="p-4 md:p-6 lg:p-4 md:p-8 pb-24 md:pb-4 md:pb-8 max-w-2xl mx-auto">
+        <SubNavDecouverte />
         <div className="mb-6">
           <h1 className="font-serif text-2xl text-white">Playlist de pratique</h1>
           <p className="text-noir-400 text-sm mt-1">Organisez votre session de travail</p>

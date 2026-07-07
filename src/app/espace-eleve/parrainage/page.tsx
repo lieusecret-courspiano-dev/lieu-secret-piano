@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import EleveLayout from '@/components/EleveNav'
+import SubNavDecouverte from '@/components/eleve/SubNavDecouverte'
 import { SkeletonCard } from '@/components/eleve/SkeletonCard'
 
 interface ParrainageData {
@@ -68,6 +69,7 @@ export default function ParrainagePage() {
   if (loading || creating) return (
     <EleveLayout>
       <div className="p-4 md:p-6 space-y-4">
+        <SubNavDecouverte />
         {[...Array(3)].map((_, i) => <SkeletonCard key={i} className="h-32" />)}
       </div>
     </EleveLayout>
