@@ -113,6 +113,7 @@ export default function DashboardPage() {
     { name: 'Événements', value: data.revenus.events },
     { name: 'CB direct', value: data.revenus.cb_direct },
     { name: 'Supports', value: data.revenus.supports || 0 },
+    { name: 'Ressources premium', value: (data.revenus as any).ressources || 0 },
   ].filter(d => d.value > 0) : []
 
   return (
@@ -166,12 +167,13 @@ export default function DashboardPage() {
             <h2 className="text-white font-medium text-sm mb-3 flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-gold-500 inline-block" /> Revenus encaissés
             </h2>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-3 md:mb-4">
+            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 md:gap-4 mb-3 md:mb-4">
               {[
                 { label: "Chiffre d'affaires", value: fmt(data.revenus.total), color: 'text-gold-400', border: 'border-gold-500/30' },
                 { label: 'Packs vendus', value: fmt(data.revenus.packs), color: 'text-blue-400', border: '' },
                 { label: 'Bons cadeaux', value: fmt(data.revenus.cadeaux), color: 'text-purple-400', border: '' },
                 { label: 'Événements', value: fmt(data.revenus.events), color: 'text-green-400', border: '' },
+                { label: 'Ressources premium', value: fmt((data.revenus as any).ressources || 0), color: 'text-orange-400', border: '' },
               ].map((s, i) => (
                 <div key={i} className={`card ${s.border}`}>
                   <div className={`text-xl font-bold ${s.color} mb-1`}>{s.value}</div>
@@ -240,7 +242,7 @@ export default function DashboardPage() {
                 ))}
               </div>
             </div>
-            <ResponsiveContainer width="100%" height={180}>
+            <ResponsiveContainer width="100%" height={200}>
               <AreaChart data={data.monthlyData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
                 <defs>
                   <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
@@ -249,9 +251,9 @@ export default function DashboardPage() {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#2a2a45" />
-                <XAxis dataKey="label" tick={{ fill: '#7070a0', fontSize: 11 }} />
-                <YAxis tick={{ fill: '#7070a0', fontSize: 11 }} />
-                <Tooltip contentStyle={{ background: '#252540', border: '1px solid #3a3a5c', borderRadius: 8 }} labelStyle={{ color: '#f59e0b' }} />
+                <XAxis dataKey="label" tick={{ fill: '#7070a0', fontSize: 10 }} angle={-30} textAnchor="end" height={40} />
+                <YAxis tick={{ fill: '#7070a0', fontSize: 10 }} width={45} />
+                <Tooltip contentStyle={{ background: '#252540', border: '1px solid #3a3a5c', borderRadius: 8, fontSize: 11 }} labelStyle={{ color: '#f59e0b', fontSize: 11 }} wrapperStyle={{ zIndex: 100 }} />
                 <Area type="monotone" dataKey={activeChart === 'revenus' ? 'revenus' : 'cours'} stroke="#f59e0b" fill="url(#grad)" strokeWidth={2} />
               </AreaChart>
             </ResponsiveContainer>
@@ -261,7 +263,7 @@ export default function DashboardPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               <div className="card">
                 <h2 className="text-white font-medium mb-4">Répartition des revenus</h2>
-                <ResponsiveContainer width="100%" height={160}>
+                <ResponsiveContainer width="100%" height={180}>
                   <PieChart>
                     <Pie data={pieData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} dataKey="value">
                       {pieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
@@ -273,7 +275,7 @@ export default function DashboardPage() {
               </div>
               <div className="card">
                 <h2 className="text-white font-medium mb-4">Revenus par source</h2>
-                <ResponsiveContainer width="100%" height={160}>
+                <ResponsiveContainer width="100%" height={180}>
                   <BarChart data={data.monthlyData.slice(-6)} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#2a2a45" />
                     <XAxis dataKey="label" tick={{ fill: '#7070a0', fontSize: 10 }} />

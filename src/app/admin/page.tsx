@@ -182,8 +182,8 @@ export default function AdminDashboard() {
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="#3a3a5c" />
-            <XAxis dataKey="label" tick={{ fill: '#7070a0', fontSize: 11 }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fill: '#7070a0', fontSize: 11 }} axisLine={false} tickLine={false} />
+            <XAxis dataKey="label" tick={{ fill: '#7070a0', fontSize: 10 }} angle={-30} textAnchor="end" height={40} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fill: '#7070a0', fontSize: 10 }} width={40} axisLine={false} tickLine={false} />
             <Tooltip content={<CustomTooltip />} />
             <Area
               type="monotone"
@@ -244,8 +244,8 @@ export default function AdminDashboard() {
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={popularHours} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#3a3a5c" />
-              <XAxis dataKey="label" tick={{ fill: '#7070a0', fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: '#7070a0', fontSize: 11 }} axisLine={false} tickLine={false} />
+              <XAxis dataKey="label" tick={{ fill: '#7070a0', fontSize: 10 }} width={40} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: '#7070a0', fontSize: 10 }} width={40} axisLine={false} tickLine={false} />
               <Tooltip content={<CustomTooltip />} />
               <Bar dataKey="count" name="Cours" fill="#f59e0b" radius={[4,4,0,0]}>
                 {popularHours.map((_, i) => <Cell key={i} fill={i === 0 ? '#f59e0b' : i === 1 ? '#fbbf24' : '#d97706'} />)}
