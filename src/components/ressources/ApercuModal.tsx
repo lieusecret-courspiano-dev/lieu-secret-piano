@@ -172,7 +172,7 @@ export default function ApercuModal({ ressource, onClose, onBuy }: ApercuModalPr
 
           <div className="flex-1 overflow-y-auto p-5">
             {showYoutube && <YoutubeEmbed url={youtubeUrl} apercuDuree={ressource.apercu_duree} />}
-            {showPdf     && <PdfViewer url={effectiveUrl} apercuPages={ressource.apercu_pages} nbPages={ressource.nb_pages} />}
+            {showPdf     && <PdfViewer url={effectiveUrl} apercuPages={ressource.apercu_pages} nbPages={ressource.nb_pages} isPaid={!ressource.est_gratuit} />}
             {showAudio   && <AudioPlayer url={effectiveUrl} apercuDuree={ressource.apercu_duree} />}
             {showVideo   && <VideoPlayer url={effectiveUrl} apercuDuree={ressource.apercu_duree} />}
             {!hasContent && (
