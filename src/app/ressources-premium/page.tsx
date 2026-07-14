@@ -55,6 +55,7 @@ function TechBadge({ icon, label }: { icon: React.ReactNode; label: string }) {
   )
 }
 
+// fix: miniature PDF placeholder
 function RessourceCard({ r, onApercu }: { r: Ressource; onApercu: (r: Ressource) => void }) {
   const hasApercu = !!(r.youtube_url || r.apercu_url || r.fichier_url)
 
