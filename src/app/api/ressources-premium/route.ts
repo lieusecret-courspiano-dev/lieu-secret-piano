@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
   // Créer l'achat
   const { data: achat, error } = await supabaseAdmin
     .from('ressources_premium_achats')
-    .insert({ ressource_id, acheteur_email, acheteur_nom, montant, payment_method: payment_method || 'virement', statut })
+    .insert({ ressource_id, acheteur_email, acheteur_nom, montant, payment_method: ressource.est_gratuit ? 'gratuit' : (payment_method || 'virement'), statut })
     .select().single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
