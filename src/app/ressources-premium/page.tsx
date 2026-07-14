@@ -56,8 +56,7 @@ function TechBadge({ icon, label }: { icon: React.ReactNode; label: string }) {
 }
 
 // fix: miniature PDF placeholder
-function RessourceCard({ r, onApercu }: { r: Ressource; onApercu: (r: Ressource) => void }) {
-  const hasApercu = !!(r.youtube_url || r.apercu_url || r.fichier_url)
+function RessourceCard({ r }: { r: Ressource }) {
 
   // Miniature YouTube automatique si pas d'image
   const getYtId = (url: string) => {
@@ -97,14 +96,6 @@ function RessourceCard({ r, onApercu }: { r: Ressource; onApercu: (r: Ressource)
         </div>
 
         {/* Badge aperçu */}
-        {hasApercu && (
-          <div className="absolute bottom-3 right-3">
-            <span className="bg-green-500/90 text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
-              <svg width="8" height="8" fill="currentColor" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-              Aperçu
-            </span>
-          </div>
-        )}
       </div>
 
       {/* Contenu */}
@@ -167,7 +158,7 @@ function RessourceCard({ r, onApercu }: { r: Ressource; onApercu: (r: Ressource)
         <div className="flex gap-2 mt-auto">
 
           <Link href={`/ressources-premium/${r.id}`}
-            className={`${hasApercu ? 'flex-1' : 'w-full'} btn-gold py-2.5 text-sm text-center flex items-center justify-center gap-1.5`}>
+            className={`btn-gold py-2.5 text-sm text-center flex items-center justify-center gap-1.5`}>
             {r.est_gratuit ? 'Accéder' : 'Acheter'}
           </Link>
         </div>
@@ -269,7 +260,7 @@ export default function RessourcesPremiumPage() {
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {filtered.map((r, i) => (
                 <FadeUp key={r.id} delay={i * 0.07}>
-                  <RessourceCard r={r} onApercu={setApercuRessource} />
+                  <RessourceCard r={r} />
                 </FadeUp>
               ))}
             </div>
@@ -338,8 +329,7 @@ function TechBadge({ icon, label }: { icon: React.ReactNode; label: string }) {
 }
 
 // fix: miniature PDF placeholder
-function RessourceCard({ r, onApercu }: { r: Ressource; onApercu: (r: Ressource) => void }) {
-  const hasApercu = !!(r.youtube_url || r.apercu_url || r.fichier_url)
+function RessourceCard({ r }: { r: Ressource }) {
 
   // Miniature YouTube automatique si pas d'image
   const getYtId = (url: string) => {
@@ -379,14 +369,6 @@ function RessourceCard({ r, onApercu }: { r: Ressource; onApercu: (r: Ressource)
         </div>
 
         {/* Badge aperçu */}
-        {hasApercu && (
-          <div className="absolute bottom-3 right-3">
-            <span className="bg-green-500/90 text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
-              <svg width="8" height="8" fill="currentColor" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-              Aperçu
-            </span>
-          </div>
-        )}
       </div>
 
       {/* Contenu */}
@@ -449,7 +431,7 @@ function RessourceCard({ r, onApercu }: { r: Ressource; onApercu: (r: Ressource)
         <div className="flex gap-2 mt-auto">
 
           <Link href={`/ressources-premium/${r.id}`}
-            className={`${hasApercu ? 'flex-1' : 'w-full'} btn-gold py-2.5 text-sm text-center flex items-center justify-center gap-1.5`}>
+            className={`btn-gold py-2.5 text-sm text-center flex items-center justify-center gap-1.5`}>
             {r.est_gratuit ? 'Accéder' : 'Acheter'}
           </Link>
         </div>
@@ -551,7 +533,7 @@ export default function RessourcesPremiumPage() {
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {filtered.map((r, i) => (
                 <FadeUp key={r.id} delay={i * 0.07}>
-                  <RessourceCard r={r} onApercu={setApercuRessource} />
+                  <RessourceCard r={r} />
                 </FadeUp>
               ))}
             </div>
