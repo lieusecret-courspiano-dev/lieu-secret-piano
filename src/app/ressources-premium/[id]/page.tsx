@@ -1,4 +1,6 @@
 'use client'
+import dynamic from 'next/dynamic'
+const PdfThumbnail = dynamic(() => import('@/components/ressources/PdfThumbnail'), { ssr: false })
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -109,12 +111,21 @@ export default function RessourcePremiumPage() {
             {/* Infos ressource */}
             <div className="lg:col-span-3">
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-                {ressource.image_url && (
+                {/* Miniature : image manuelle ou 1ère page PDF */}
+                {ressource.image_url ? (
                   <div className="aspect-video rounded-2xl overflow-hidden mb-6">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={ressource.image_url} alt={ressource.titre} className="w-full h-full object-cover" />
                   </div>
-                )}
+                ) : ressource.type === 'documentation' && (ressource.fichier_url || ressource.apercu_url) ? (
+                  <div className="aspect-video rounded-2xl overflow-hidden mb-6 bg-white">
+                    <PdfThumbnail
+                      url={ressource.fichier_url || ressource.apercu_url || ''}
+                      titre={ressource.titre}
+                      nbPages={ressource.nb_pages}
+                    />
+                  </div>
+                ) : null}
 
                 <div className="flex items-center gap-2 mb-4 flex-wrap">
                   <span className="bg-gold-500/10 text-gold-400 text-xs font-semibold px-3 py-1 rounded-full border border-gold-500/20">
