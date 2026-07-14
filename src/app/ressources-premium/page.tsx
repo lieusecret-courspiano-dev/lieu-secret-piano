@@ -543,17 +543,7 @@ export default function RessourcesPremiumPage() {
 
       <PublicFooter />
 
-      {/* Modal aperçu */}
-      {apercuRessource && (
-          ressource={apercuRessource}
-          onClose={() => setApercuRessource(null)}
-          onBuy={() => {
-            const id = apercuRessource.id
-            setApercuRessource(null)
-            window.location.href = `/ressources-premium/${id}`
-          }}
-        />
-      )}
+
     </div>
   )
 }
