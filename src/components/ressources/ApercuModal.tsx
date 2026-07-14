@@ -1,6 +1,8 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import dynamic from 'next/dynamic'
+const PdfViewer = dynamic(() => import('./PdfViewer'), { ssr: false })
 
 interface ApercuModalProps {
   ressource: {
@@ -85,74 +87,6 @@ function AudioPlayer({ url, apercuDuree }: { url: string; apercuDuree?: number |
         </div>
       </div>
       {blocked && <div className="bg-noir-900 border border-gold-500/20 rounded-xl p-4 text-center"><p className="text-white text-sm font-semibold mb-1">Aperçu terminé</p><p className="text-noir-400 text-xs">Achetez pour écouter l'audio complet</p></div>}
-    </div>
-  )
-}
-
-function PdfViewer({ url, apercuPages, nbPages }: { url: string; apercuPages?: number | null; nbPages?: number | null }) {
-  const pages = apercuPages || 3
-  const total = nbPages || '?'
-  const [loaded, setLoaded] = useState(false)
-  const [error, setError] = useState(false)
-  const [mode, setMode] = useState<'direct'|'google'|'pdfjs'>('direct')
-
-  // Priorité : embed direct (Supabase/Cloudinary supportent ça), puis fallback Google Docs
-  const googleViewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`
-  const pdfjsUrl = `https://mozilla.github.io/pdf.js/web/viewer.html?file=${encodeURIComponent(url)}`
-  const viewerUrl = mode === 'direct' ? url : mode === 'google' ? googleViewerUrl : pdfjsUrl
-
-  return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between bg-noir-800 rounded-xl px-4 py-2.5">
-        <div>
-          <span className="text-gold-400 text-xs font-semibold">Aperçu gratuit</span>
-          <span className="text-noir-500 text-xs ml-2">— {pages} premières pages sur {total}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-noir-600 text-xs">PDF</span>
-          <button onClick={() => { setMode(m => m === 'direct' ? 'google' : m === 'google' ? 'pdfjs' : 'direct'); setLoaded(false); setError(false) }}
-            className="text-xs text-gold-500 hover:text-gold-400 underline">
-            {mode === 'direct' ? 'Essayer Google Docs' : mode === 'google' ? 'Essayer PDF.js' : 'Embed direct'}
-          </button>
-        </div>
-      </div>
-      <div className="rounded-xl overflow-hidden bg-noir-900 border border-noir-700 relative" style={{ height: '460px' }}>
-        {!loaded && !error && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-center">
-              <div className="w-8 h-8 border-2 border-gold-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-              <p className="text-noir-400 text-xs">Chargement du document...</p>
-            </div>
-          </div>
-        )}
-        {error ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-6 text-center">
-            <div className="w-14 h-14 rounded-2xl bg-gold-500/10 border border-gold-500/20 flex items-center justify-center">
-              <svg width="24" height="24" fill="none" stroke="#f59e0b" strokeWidth="1.5" viewBox="0 0 24 24">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
-              </svg>
-            </div>
-            <div>
-              <p className="text-white text-sm font-semibold mb-1">Aperçu non disponible dans le navigateur</p>
-              <p className="text-noir-400 text-xs mb-4">Le document peut être ouvert dans un nouvel onglet.</p>
-            </div>
-            <div className="flex flex-wrap gap-2 justify-center">
-              <button onClick={() => { setError(false); setLoaded(false); setMode('google') }}
-                className="btn-outline text-xs px-3 py-2">Google Docs</button>
-              <button onClick={() => { setError(false); setLoaded(false); setMode('pdfjs') }}
-                className="btn-outline text-xs px-3 py-2">PDF.js</button>
-              <a href={url} target="_blank" rel="noopener noreferrer" className="btn-gold text-xs px-3 py-2">Ouvrir</a>
-            </div>
-          </div>
-        ) : (
-          <iframe key={`${viewerUrl}-${mode}`} src={viewerUrl} className="w-full h-full"
-            style={{ border: 'none', opacity: loaded ? 1 : 0, transition: 'opacity 0.3s' }}
-            title="Aperçu PDF" onLoad={() => setLoaded(true)} onError={() => setError(true)} />
-        )}
-      </div>
-      <div className="bg-gradient-to-r from-gold-500/10 to-noir-900 border border-gold-500/20 rounded-xl p-4 text-center">
-        <p className="text-noir-400 text-xs">Aperçu limité aux {pages} premières pages. Ce document contient {total} pages au total.</p>
-      </div>
     </div>
   )
 }
