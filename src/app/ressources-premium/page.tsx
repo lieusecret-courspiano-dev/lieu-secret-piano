@@ -7,7 +7,6 @@ import PublicNav from '@/components/PublicNav'
 import PublicFooter from '@/components/PublicFooter'
 const PdfThumbnail = dynamic(() => import('@/components/ressources/PdfThumbnail'), { ssr: false })
 
-const ApercuModal = dynamic(() => import('@/components/ressources/ApercuModal'), { ssr: false })
 
 function FadeUp({ children, delay = 0, className = '' }: { children: React.ReactNode; delay?: number; className?: string }) {
   const ref = useRef(null)
@@ -290,7 +289,6 @@ import PublicNav from '@/components/PublicNav'
 import PublicFooter from '@/components/PublicFooter'
 const PdfThumbnail = dynamic(() => import('@/components/ressources/PdfThumbnail'), { ssr: false })
 
-const ApercuModal = dynamic(() => import('@/components/ressources/ApercuModal'), { ssr: false })
 
 function FadeUp({ children, delay = 0, className = '' }: { children: React.ReactNode; delay?: number; className?: string }) {
   const ref = useRef(null)
@@ -565,7 +563,6 @@ export default function RessourcesPremiumPage() {
 
       {/* Modal aperçu */}
       {apercuRessource && (
-        <ApercuModal
           ressource={apercuRessource}
           onClose={() => setApercuRessource(null)}
           onBuy={() => {
