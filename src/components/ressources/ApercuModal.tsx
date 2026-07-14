@@ -94,11 +94,12 @@ function PdfViewer({ url, apercuPages, nbPages }: { url: string; apercuPages?: n
   const total = nbPages || '?'
   const [loaded, setLoaded] = useState(false)
   const [error, setError] = useState(false)
-  const [useEmbed, setUseEmbed] = useState(false)
+  const [mode, setMode] = useState<'direct'|'google'|'pdfjs'>('direct')
 
-  const isCloudinary = url.includes('cloudinary.com') || url.includes('res.cloudinary')
+  // Priorité : embed direct (Supabase/Cloudinary supportent ça), puis fallback Google Docs
   const googleViewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`
-  const viewerUrl = (isCloudinary || useEmbed) ? url : googleViewerUrl
+  const pdfjsUrl = `https://mozilla.github.io/pdf.js/web/viewer.html?file=${encodeURIComponent(url)}`
+  const viewerUrl = mode === 'direct' ? url : mode === 'google' ? googleViewerUrl : pdfjsUrl
 
   return (
     <div className="space-y-3">
@@ -109,12 +110,10 @@ function PdfViewer({ url, apercuPages, nbPages }: { url: string; apercuPages?: n
         </div>
         <div className="flex items-center gap-2">
           <span className="text-noir-600 text-xs">PDF</span>
-          {!isCloudinary && (
-            <button onClick={() => { setUseEmbed(v => !v); setLoaded(false); setError(false) }}
-              className="text-xs text-gold-500 hover:text-gold-400 underline">
-              {useEmbed ? 'Viewer externe' : 'Embed direct'}
-            </button>
-          )}
+          <button onClick={() => { setMode(m => m === 'direct' ? 'google' : m === 'google' ? 'pdfjs' : 'direct'); setLoaded(false); setError(false) }}
+            className="text-xs text-gold-500 hover:text-gold-400 underline">
+            {mode === 'direct' ? 'Essayer Google Docs' : mode === 'google' ? 'Essayer PDF.js' : 'Embed direct'}
+          </button>
         </div>
       </div>
       <div className="rounded-xl overflow-hidden bg-noir-900 border border-noir-700 relative" style={{ height: '460px' }}>
@@ -137,14 +136,16 @@ function PdfViewer({ url, apercuPages, nbPages }: { url: string; apercuPages?: n
               <p className="text-white text-sm font-semibold mb-1">Aperçu non disponible dans le navigateur</p>
               <p className="text-noir-400 text-xs mb-4">Le document peut être ouvert dans un nouvel onglet.</p>
             </div>
-            <div className="flex gap-2">
-              <button onClick={() => { setError(false); setLoaded(false); setUseEmbed(v => !v) }}
-                className="btn-outline text-xs px-4 py-2">Réessayer</button>
-              <a href={url} target="_blank" rel="noopener noreferrer" className="btn-gold text-xs px-4 py-2">Ouvrir le PDF</a>
+            <div className="flex flex-wrap gap-2 justify-center">
+              <button onClick={() => { setError(false); setLoaded(false); setMode('google') }}
+                className="btn-outline text-xs px-3 py-2">Google Docs</button>
+              <button onClick={() => { setError(false); setLoaded(false); setMode('pdfjs') }}
+                className="btn-outline text-xs px-3 py-2">PDF.js</button>
+              <a href={url} target="_blank" rel="noopener noreferrer" className="btn-gold text-xs px-3 py-2">Ouvrir</a>
             </div>
           </div>
         ) : (
-          <iframe key={viewerUrl} src={viewerUrl} className="w-full h-full"
+          <iframe key={`${viewerUrl}-${mode}`} src={viewerUrl} className="w-full h-full"
             style={{ border: 'none', opacity: loaded ? 1 : 0, transition: 'opacity 0.3s' }}
             title="Aperçu PDF" onLoad={() => setLoaded(true)} onError={() => setError(true)} />
         )}
