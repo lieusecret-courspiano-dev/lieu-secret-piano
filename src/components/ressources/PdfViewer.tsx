@@ -132,11 +132,7 @@ export default function PdfViewer({ url, apercuPages, nbPages, isPaid = false }:
           <p className="text-white text-sm font-semibold mb-1">Aperçu non disponible</p>
           <p className="text-noir-400 text-xs mb-4">Le document ne peut pas être prévisualisé directement.</p>
         </div>
-        {!isPaid && (
-          <a href={url} target="_blank" rel="noopener noreferrer" className="btn-gold text-xs px-5 py-2">
-            Ouvrir le PDF
-          </a>
-        )}
+
       </div>
     )
   }
