@@ -65,30 +65,33 @@ function RessourceCard({ r, onApercu }: { r: Ressource; onApercu: (r: Ressource)
   }
   const ytId = r.youtube_url ? getYtId(r.youtube_url) : null
 
-  // Générer miniature PDF depuis Cloudinary (1ère page → image JPG)
-  const getPdfThumbnail = (url: string | null) => {
-    if (!url) return null
-    if (url.includes('cloudinary.com') && (url.includes('.pdf') || url.includes('/raw/'))) {
-      // Transformer: /upload/ → /upload/pg_1,f_jpg,w_800,q_auto/  et remplacer extension
-      return url
-        .replace('/upload/', '/upload/pg_1,f_jpg,w_800,q_auto/')
-        .replace(/\.pdf$/i, '.jpg')
-        .replace('/raw/upload/', '/image/upload/')
-    }
-    return null
-  }
-
-  const pdfThumb = r.type === 'documentation' ? getPdfThumbnail(r.fichier_url || r.apercu_url) : null
-  const thumbnail = r.image_url || pdfThumb || (ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : null)
+  const thumbnail = r.image_url || (ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : null)
 
   return (
     <div className="group bg-noir-900 border border-noir-800 rounded-2xl overflow-hidden hover:border-gold-500/30 transition-all hover:-translate-y-1 h-full flex flex-col shadow-lg hover:shadow-gold-500/10">
 
       {/* Thumbnail */}
       <div className="aspect-video bg-gradient-to-br from-gold-500/10 to-noir-800 flex items-center justify-center relative overflow-hidden">
-        {thumbnail ? (
+        {thumbnail && !thumbnail.includes('.pdf') && !thumbnail.includes('/raw/') ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={thumbnail} alt={r.titre} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+        ) : r.type === 'documentation' ? (
+          /* Placeholder élégant pour PDF */
+          <div className="flex flex-col items-center justify-center gap-3 p-4 text-center w-full h-full bg-gradient-to-br from-noir-800 to-noir-900">
+            <div className="w-14 h-14 rounded-2xl bg-gold-500/15 border border-gold-500/30 flex items-center justify-center">
+              <svg width="28" height="28" fill="none" stroke="#f59e0b" strokeWidth="1.5" viewBox="0 0 24 24">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/>
+                <polyline points="10 9 9 9 8 9"/>
+              </svg>
+            </div>
+            <div>
+              <p className="text-white text-xs font-semibold line-clamp-2 leading-tight">{r.titre}</p>
+              {r.nb_pages && <p className="text-gold-500/70 text-xs mt-1">{r.nb_pages} pages · PDF</p>}
+            </div>
+          </div>
         ) : (
           <div className="text-gold-500/25 scale-[2]">{TYPE_ICONS[r.type] || TYPE_ICONS.autre}</div>
         )}
