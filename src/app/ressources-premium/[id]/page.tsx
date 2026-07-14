@@ -13,6 +13,9 @@ interface Ressource {
   prix: number; est_gratuit: boolean; image_url: string | null
   duree_minutes: number | null; nb_places: number | null
   date_coaching: string | null; niveau: string
+  fichier_url?: string | null; apercu_url?: string | null
+  nb_pages?: number | null; youtube_url?: string | null
+  zoom_url?: string | null; token_acces?: string | null
 }
 
 const TYPE_LABELS: Record<string, string> = {
