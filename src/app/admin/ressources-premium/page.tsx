@@ -37,6 +37,20 @@ const EMPTY = {
   apercu_duree: '30', apercu_pages: '3', apercu_url: '',
 }
 
+// Label lisible pour le mode de paiement
+function paymentLabel(method: string, montant: number): string {
+  if (montant === 0 || method === 'gratuit') return 'Gratuit'
+  const labels: Record<string, string> = {
+    stripe: 'Carte bancaire',
+    paypal: 'PayPal',
+    virement: 'Virement',
+    cadeau: 'Bon cadeau',
+    gratuit: 'Gratuit',
+  }
+  return labels[method] || method
+}
+
+
 export default function AdminRessourcesPremiumPage() {
   const pathname = usePathname()
   const [ressources, setRessources] = useState<Ressource[]>([])
@@ -432,7 +446,7 @@ export default function AdminRessourcesPremiumPage() {
                   <p className="text-noir-400 text-xs mt-0.5">{a.acheteur_nom} · {a.acheteur_email}</p>
                   <div className="flex items-center gap-2 mt-1 flex-wrap">
                     <span className="text-xs text-gold-400">{a.montant} €</span>
-                    <span className="text-xs text-noir-500 capitalize">{a.payment_method}</span>
+                    <span className="text-xs text-noir-500 capitalize">{paymentLabel(a.payment_method, a.montant)}</span>
                     <span className="text-xs text-noir-500">{new Date(a.created_at).toLocaleDateString('fr-FR')}</span>
                   </div>
                 </div>
