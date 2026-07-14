@@ -7,6 +7,7 @@ interface ApercuModalProps {
     id: string; titre: string; type: string; prix: number; est_gratuit: boolean
     fichier_url?: string | null; youtube_url?: string | null; zoom_url?: string | null
     apercu_url?: string | null; apercu_duree?: number | null; apercu_pages?: number | null; nb_pages?: number | null
+    image_url?: string | null
   }
   onClose: () => void
   onBuy: () => void
@@ -72,7 +73,8 @@ function AudioPlayer({ url, apercuDuree }: { url: string; apercuDuree?: number |
       <div className="flex items-center gap-4 mb-4">
         <button onClick={togglePlay} disabled={blocked}
           className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${blocked ? 'bg-noir-700 text-noir-500 cursor-not-allowed' : 'bg-gold-500 text-noir-950 hover:bg-gold-400'}`}>
-          {playing ? <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+          {playing
+            ? <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
             : <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>}
         </button>
         <div className="flex-1">
@@ -92,7 +94,11 @@ function PdfViewer({ url, apercuPages, nbPages }: { url: string; apercuPages?: n
   const total = nbPages || '?'
   const [loaded, setLoaded] = useState(false)
   const [error, setError] = useState(false)
-  const viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`
+  const [useEmbed, setUseEmbed] = useState(false)
+
+  const isCloudinary = url.includes('cloudinary.com') || url.includes('res.cloudinary')
+  const googleViewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`
+  const viewerUrl = (isCloudinary || useEmbed) ? url : googleViewerUrl
 
   return (
     <div className="space-y-3">
@@ -101,7 +107,15 @@ function PdfViewer({ url, apercuPages, nbPages }: { url: string; apercuPages?: n
           <span className="text-gold-400 text-xs font-semibold">Aperçu gratuit</span>
           <span className="text-noir-500 text-xs ml-2">— {pages} premières pages sur {total}</span>
         </div>
-        <span className="text-noir-600 text-xs">PDF</span>
+        <div className="flex items-center gap-2">
+          <span className="text-noir-600 text-xs">PDF</span>
+          {!isCloudinary && (
+            <button onClick={() => { setUseEmbed(v => !v); setLoaded(false); setError(false) }}
+              className="text-xs text-gold-500 hover:text-gold-400 underline">
+              {useEmbed ? 'Viewer externe' : 'Embed direct'}
+            </button>
+          )}
+        </div>
       </div>
       <div className="rounded-xl overflow-hidden bg-noir-900 border border-noir-700 relative" style={{ height: '460px' }}>
         {!loaded && !error && (
@@ -113,13 +127,25 @@ function PdfViewer({ url, apercuPages, nbPages }: { url: string; apercuPages?: n
           </div>
         )}
         {error ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-6 text-center">
-            <p className="text-white text-sm font-semibold">Aperçu non disponible</p>
-            <p className="text-noir-400 text-xs">Le document ne peut pas être prévisualisé dans le navigateur.</p>
-            <a href={url} target="_blank" rel="noopener noreferrer" className="btn-gold text-xs px-4 py-2">Ouvrir le PDF</a>
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-6 text-center">
+            <div className="w-14 h-14 rounded-2xl bg-gold-500/10 border border-gold-500/20 flex items-center justify-center">
+              <svg width="24" height="24" fill="none" stroke="#f59e0b" strokeWidth="1.5" viewBox="0 0 24 24">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+              </svg>
+            </div>
+            <div>
+              <p className="text-white text-sm font-semibold mb-1">Aperçu non disponible dans le navigateur</p>
+              <p className="text-noir-400 text-xs mb-4">Le document peut être ouvert dans un nouvel onglet.</p>
+            </div>
+            <div className="flex gap-2">
+              <button onClick={() => { setError(false); setLoaded(false); setUseEmbed(v => !v) }}
+                className="btn-outline text-xs px-4 py-2">Réessayer</button>
+              <a href={url} target="_blank" rel="noopener noreferrer" className="btn-gold text-xs px-4 py-2">Ouvrir le PDF</a>
+            </div>
           </div>
         ) : (
-          <iframe src={viewerUrl} className="w-full h-full" style={{ border: 'none', opacity: loaded ? 1 : 0, transition: 'opacity 0.3s' }}
+          <iframe key={viewerUrl} src={viewerUrl} className="w-full h-full"
+            style={{ border: 'none', opacity: loaded ? 1 : 0, transition: 'opacity 0.3s' }}
             title="Aperçu PDF" onLoad={() => setLoaded(true)} onError={() => setError(true)} />
         )}
       </div>
@@ -130,28 +156,53 @@ function PdfViewer({ url, apercuPages, nbPages }: { url: string; apercuPages?: n
   )
 }
 
-export default function ApercuModal({ ressource, onClose, onBuy }: ApercuModalProps) {
-  // Priorité basée sur le TYPE de la ressource
-  const isPdf    = ressource.type === 'documentation'
-  const isAudio  = ressource.type === 'audio'
-  // YouTube : utiliser youtube_url en priorité
-  const isYoutube = !isPdf && !isAudio && !!(ressource.youtube_url && (ressource.youtube_url.includes('youtube') || ressource.youtube_url.includes('youtu.be')))
-  // Vidéo directe Cloudinary
-  const isVideo  = !isPdf && !isAudio && !isYoutube && !!(
-    (ressource.apercu_url || ressource.fichier_url) &&
-    ((ressource.apercu_url || ressource.fichier_url || '')!.includes('.mp4') ||
-     (ressource.apercu_url || ressource.fichier_url || '')!.includes('/video/'))
+function VideoPlayer({ url, apercuDuree }: { url: string; apercuDuree?: number | null }) {
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const [blocked, setBlocked] = useState(false)
+  const maxTime = apercuDuree || 60
+
+  useEffect(() => {
+    const video = videoRef.current; if (!video) return
+    const handleTime = () => { if (apercuDuree && video.currentTime >= maxTime) { video.pause(); setBlocked(true) } }
+    video.addEventListener('timeupdate', handleTime)
+    return () => video.removeEventListener('timeupdate', handleTime)
+  }, [maxTime, apercuDuree])
+
+  return (
+    <div className="relative aspect-video rounded-xl overflow-hidden bg-noir-900">
+      {!blocked ? (
+        <video ref={videoRef} controls className="w-full h-full" controlsList="nodownload" onContextMenu={e => e.preventDefault()}>
+          <source src={url} />
+        </video>
+      ) : (
+        <div className="absolute inset-0 bg-noir-950/95 backdrop-blur-sm flex flex-col items-center justify-center gap-4 p-6 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-gold-500/10 border border-gold-500/30 flex items-center justify-center">
+            <svg width="28" height="28" fill="none" stroke="#f59e0b" strokeWidth="1.5" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </div>
+          <div><p className="text-white font-semibold text-lg mb-1">Aperçu terminé</p><p className="text-noir-400 text-sm">Achetez pour regarder la vidéo complète</p></div>
+        </div>
+      )}
+      {apercuDuree && !blocked && (
+        <div className="absolute bottom-3 right-3 bg-noir-950/80 backdrop-blur text-xs text-gold-400 px-2 py-1 rounded-full">Aperçu {apercuDuree}s</div>
+      )}
+    </div>
   )
+}
 
-  // Fallback : utiliser fichier_url si apercu_url est vide
-  const pdfUrl   = ressource.apercu_url || ressource.fichier_url
-  const audioUrl = ressource.apercu_url || ressource.fichier_url
+export default function ApercuModal({ ressource, onClose, onBuy }: ApercuModalProps) {
+  const type = ressource.type
+  const effectiveUrl = ressource.apercu_url || ressource.fichier_url || ''
+  const isYoutubeUrl = (u: string) => u.includes('youtube.com') || u.includes('youtu.be')
+  const youtubeUrl = ressource.youtube_url || (isYoutubeUrl(effectiveUrl) ? effectiveUrl : '')
 
-  // Miniature : image_url ou miniature YouTube auto
-  const getYtId = (url: string) => { const m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\s?]+)/); return m ? m[1] : null }
-  const ytId = ressource.youtube_url ? getYtId(ressource.youtube_url) : null
-  const thumbnail = (ressource as { image_url?: string | null }).image_url ||
-    (ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : null)
+  const showYoutube = !!youtubeUrl && (type === 'video_youtube' || type === 'formation' || isYoutubeUrl(effectiveUrl))
+  const showPdf     = type === 'documentation' && !!effectiveUrl && !isYoutubeUrl(effectiveUrl)
+  const showAudio   = type === 'audio' && !!effectiveUrl && !isYoutubeUrl(effectiveUrl)
+  const showVideo   = !showYoutube && !showPdf && !showAudio && !!effectiveUrl && (
+    effectiveUrl.includes('.mp4') || effectiveUrl.includes('.webm') ||
+    effectiveUrl.includes('/video/') || type === 'coaching_visio'
+  )
+  const hasContent = showYoutube || showPdf || showAudio || showVideo
 
   useEffect(() => {
     document.body.style.overflow = 'hidden'
@@ -168,14 +219,13 @@ export default function ApercuModal({ ressource, onClose, onBuy }: ApercuModalPr
           exit={{ opacity: 0, scale: 0.95, y: 20 }} transition={{ duration: 0.25 }}
           className="bg-noir-900 border border-noir-700 rounded-2xl w-full max-w-2xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
 
-          {/* Header */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-noir-800 shrink-0">
             <div>
               <h2 className="text-white font-semibold text-base line-clamp-1">{ressource.titre}</h2>
               <p className="text-gold-500 text-xs mt-0.5">
                 Aperçu gratuit
-                {isPdf && ressource.apercu_pages && ` — ${ressource.apercu_pages} page${ressource.apercu_pages > 1 ? 's' : ''} sur ${ressource.nb_pages || '?'}`}
-                {(isYoutube || isAudio) && ressource.apercu_duree && ` — ${ressource.apercu_duree}s`}
+                {showPdf && ressource.apercu_pages && ` — ${ressource.apercu_pages} page${ressource.apercu_pages > 1 ? 's' : ''} sur ${ressource.nb_pages || '?'}`}
+                {(showYoutube || showAudio || showVideo) && ressource.apercu_duree && ` — ${ressource.apercu_duree}s`}
               </p>
             </div>
             <button onClick={onClose} className="text-noir-400 hover:text-white p-1.5 rounded-lg hover:bg-noir-800 transition-colors">
@@ -185,28 +235,35 @@ export default function ApercuModal({ ressource, onClose, onBuy }: ApercuModalPr
             </button>
           </div>
 
-          {/* Contenu */}
           <div className="flex-1 overflow-y-auto p-5">
-            {isPdf && pdfUrl && (
-              <PdfViewer url={pdfUrl} apercuPages={ressource.apercu_pages} nbPages={ressource.nb_pages} />
-            )}
-            {isAudio && audioUrl && (
-              <AudioPlayer url={audioUrl} apercuDuree={ressource.apercu_duree} />
-            )}
-            {isYoutube && (
-              <YoutubeEmbed url={ressource.youtube_url!} apercuDuree={ressource.apercu_duree} />
-            )}
-            {isVideo && ressource.apercu_url && (
-              <div className="aspect-video rounded-xl overflow-hidden bg-noir-900">
-                <video controls className="w-full h-full" controlsList="nodownload" onContextMenu={e => e.preventDefault()}>
-                  <source src={ressource.apercu_url} />
-                </video>
+            {showYoutube && <YoutubeEmbed url={youtubeUrl} apercuDuree={ressource.apercu_duree} />}
+            {showPdf     && <PdfViewer url={effectiveUrl} apercuPages={ressource.apercu_pages} nbPages={ressource.nb_pages} />}
+            {showAudio   && <AudioPlayer url={effectiveUrl} apercuDuree={ressource.apercu_duree} />}
+            {showVideo   && <VideoPlayer url={effectiveUrl} apercuDuree={ressource.apercu_duree} />}
+            {!hasContent && (
+              <div className="flex flex-col items-center justify-center py-12 gap-4 text-center">
+                <div className="w-16 h-16 rounded-2xl bg-gold-500/10 border border-gold-500/20 flex items-center justify-center">
+                  <svg width="28" height="28" fill="none" stroke="#f59e0b" strokeWidth="1.5" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-white font-semibold mb-1">Aperçu non disponible</p>
+                  <p className="text-noir-400 text-sm">
+                    {!effectiveUrl && !youtubeUrl
+                      ? "Aucun fichier d'aperçu n'a été configuré pour cette ressource."
+                      : "Le format de ce fichier ne peut pas être prévisualisé directement."}
+                  </p>
+                </div>
+                {(effectiveUrl || youtubeUrl) && (
+                  <a href={effectiveUrl || youtubeUrl} target="_blank" rel="noopener noreferrer" className="btn-outline text-sm px-4 py-2">
+                    Ouvrir dans un nouvel onglet
+                  </a>
+                )}
               </div>
             )}
-            
           </div>
 
-          {/* Footer */}
           <div className="px-5 py-4 border-t border-noir-800 shrink-0 flex items-center justify-between gap-3">
             <div>
               <span className="text-white font-bold text-lg">{ressource.est_gratuit ? 'Gratuit' : `${ressource.prix} €`}</span>
