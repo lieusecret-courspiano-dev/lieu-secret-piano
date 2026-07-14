@@ -109,7 +109,17 @@ export default function ContactPage() {
                       <svg width="28" height="28" fill="none" stroke="#22c55e" strokeWidth="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
                     </div>
                     <h3 className="text-white font-semibold text-lg mb-2">Message envoyé !</h3>
-                    <p className="text-noir-400 text-sm">Nous vous répondrons dans les 24-48h ouvrées.</p>
+                    <p className="text-noir-400 text-sm mb-2">Nous vous répondrons dans les 24-48h ouvrées.</p>
+                    <div className="flex items-start gap-3 bg-amber-500/10 border-l-4 border-amber-500 rounded-r-xl p-3 mt-4 text-left">
+                      <svg className="shrink-0 mt-0.5" width="16" height="16" fill="none" stroke="#f59e0b" strokeWidth="2" viewBox="0 0 24 24">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                        <polyline points="22,6 12,13 2,6"/>
+                      </svg>
+                      <div>
+                        <p className="text-amber-300 text-xs font-semibold mb-0.5">Email non reçu ?</p>
+                        <p className="text-amber-400/80 text-xs leading-relaxed">Vérifiez votre dossier <strong className="text-white">Spam</strong> ou <strong className="text-white">Courrier indésirable</strong>. Nos emails proviennent de <strong className="text-white">noreply@lieusecret-courspiano.fr</strong></p>
+                      </div>
+                    </div>
                     <button onClick={() => setSent(false)} className="mt-6 text-gold-400 hover:text-gold-300 text-sm underline">
                       Envoyer un autre message
                     </button>
