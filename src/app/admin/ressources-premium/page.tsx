@@ -96,7 +96,13 @@ export default function AdminRessourcesPremiumPage() {
     } else if (form.type === 'coaching_visio') {
       setForm(f => ({ ...f, zoom_url: url }))
     } else {
-      setForm(f => ({ ...f, fichier_url: url, image_url: url, apercu_url: url }))
+      setForm(f => ({
+          ...f,
+          fichier_url: url,
+          apercu_url: url,
+          // Ne pas utiliser l'URL PDF comme image_url (pas une image)
+          image_url: (url.includes('.pdf') || url.includes('/raw/')) ? f.image_url : url,
+        }))
     }
   }
 
