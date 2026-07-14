@@ -64,7 +64,22 @@ function RessourceCard({ r, onApercu }: { r: Ressource; onApercu: (r: Ressource)
     return m ? m[1] : null
   }
   const ytId = r.youtube_url ? getYtId(r.youtube_url) : null
-  const thumbnail = r.image_url || (ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : null)
+
+  // Générer miniature PDF depuis Cloudinary (1ère page → image JPG)
+  const getPdfThumbnail = (url: string | null) => {
+    if (!url) return null
+    if (url.includes('cloudinary.com') && (url.includes('.pdf') || url.includes('/raw/'))) {
+      // Transformer: /upload/ → /upload/pg_1,f_jpg,w_800,q_auto/  et remplacer extension
+      return url
+        .replace('/upload/', '/upload/pg_1,f_jpg,w_800,q_auto/')
+        .replace(/\.pdf$/i, '.jpg')
+        .replace('/raw/upload/', '/image/upload/')
+    }
+    return null
+  }
+
+  const pdfThumb = r.type === 'documentation' ? getPdfThumbnail(r.fichier_url || r.apercu_url) : null
+  const thumbnail = r.image_url || pdfThumb || (ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : null)
 
   return (
     <div className="group bg-noir-900 border border-noir-800 rounded-2xl overflow-hidden hover:border-gold-500/30 transition-all hover:-translate-y-1 h-full flex flex-col shadow-lg hover:shadow-gold-500/10">
