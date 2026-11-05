@@ -217,54 +217,57 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Erreur lors de la création de la réservation.' }, { status: 500 })
     }
 
-    // Générer le PDF du contrat avec pdfkit
-    const now = new Date()
-    const dateSignature = now.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) +
-      ' à ' + now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
-
-    const contratBuffer = await generateContratLocationPDF({
-      locataire_nom:         body.locataire_nom,
-      locataire_email:       body.locataire_email,
-      locataire_telephone:   body.locataire_telephone || null,
-      locataire_adresse:     body.locataire_adresse || null,
-      locataire_ville:       body.locataire_ville || null,
-      article_nom:           body.article_nom,
-      accessoires_inclus:    article.accessoires_inclus || null,
-      date_debut:            body.date_debut,
-      date_fin:              body.date_fin,
-      nb_jours:              body.nb_jours || 0,
-      mode_remise:           body.mode_remise || 'retrait',
-      montant_location:      body.montant_location,
-      frais_livraison:       body.frais_livraison || 0,
-      montant_total:         body.montant_total,
-      est_acompte:           body.est_acompte || false,
-      montant_acompte:       body.montant_acompte || null,
-      moyen_paiement:        body.moyen_paiement || 'virement',
-      caution_montant:       body.caution_montant || 0,
-      caution_type:          body.caution_type || 'cheque',
-      signature_nom:         body.signature_nom || body.locataire_nom,
-      date_signature:        dateSignature,
-    })
-    const contratBase64   = contratBuffer.toString('base64')
-    const contratFilename = `contrat-location-${(body.article_nom as string).toLowerCase().replace(/\s+/g, '-')}.pdf`
-
-    // Uploader le contrat sur Cloudinary pour le rendre accessible depuis l'admin
-    let contratUrl: string | null = null
+    // Générer le PDF du contrat avec pdfkit (non bloquant)
+    let contratBase64: string | null = null
+    let contratFilename: string = `contrat-location-${(body.article_nom as string).toLowerCase().replace(/\s+/g, '-')}.pdf`
     try {
-      const { uploadToCloudinary } = await import('@/lib/cloudinary')
-      const uploadResult = await uploadToCloudinary(contratBuffer, {
-        folder: `location-contrats/${reservation.id}`,
-        resource_type: 'raw',
-        public_id: `contrat-${reservation.id}`,
+      const now = new Date()
+      const dateSignature = now.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) +
+        ' à ' + now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+
+      const contratBuffer = await generateContratLocationPDF({
+        locataire_nom:         body.locataire_nom,
+        locataire_email:       body.locataire_email,
+        locataire_telephone:   body.locataire_telephone || null,
+        locataire_adresse:     body.locataire_adresse || null,
+        locataire_ville:       body.locataire_ville || null,
+        article_nom:           body.article_nom,
+        accessoires_inclus:    article.accessoires_inclus || null,
+        date_debut:            body.date_debut,
+        date_fin:              body.date_fin,
+        nb_jours:              body.nb_jours || 0,
+        mode_remise:           body.mode_remise || 'retrait',
+        montant_location:      body.montant_location,
+        frais_livraison:       body.frais_livraison || 0,
+        montant_total:         body.montant_total,
+        est_acompte:           body.est_acompte || false,
+        montant_acompte:       body.montant_acompte || null,
+        moyen_paiement:        body.moyen_paiement || 'virement',
+        caution_montant:       body.caution_montant || 0,
+        caution_type:          body.caution_type || 'cheque',
+        signature_nom:         body.signature_nom || body.locataire_nom,
+        date_signature:        dateSignature,
       })
-      contratUrl = uploadResult.url
-      // Mettre à jour la réservation avec l'URL du contrat
-      await supabaseAdmin
-        .from('location_reservations')
-        .update({ contrat_genere: true, contrat_url: contratUrl })
-        .eq('id', reservation.id)
-    } catch (e) {
-      console.error('Erreur upload contrat Cloudinary:', e)
+      contratBase64 = contratBuffer.toString('base64')
+
+      // Uploader sur Cloudinary
+      try {
+        const { uploadToCloudinary } = await import('@/lib/cloudinary')
+        const uploadResult = await uploadToCloudinary(contratBuffer, {
+          folder: `location-contrats/${reservation.id}`,
+          resource_type: 'raw',
+          public_id: `contrat-${reservation.id}`,
+        })
+        await supabaseAdmin
+          .from('location_reservations')
+          .update({ contrat_genere: true, contrat_url: uploadResult.url })
+          .eq('id', reservation.id)
+      } catch (e) {
+        console.error('Erreur upload contrat Cloudinary:', e)
+      }
+    } catch (pdfErr) {
+      console.error('Erreur génération PDF contrat:', pdfErr)
+      // La réservation continue même sans PDF
     }
 
     const cautionLabel: Record<string, string> = {
@@ -343,20 +346,20 @@ export async function POST(req: NextRequest) {
         to:   body.locataire_email,
         subject: `Votre contrat de location — ${body.article_nom}`,
         html: clientHtml,
-        attachments: [{
+        ...(contratBase64 ? [{
           filename: contratFilename,
           content:  contratBase64,
-        }],
+        }] : []),
       }),
       resend.emails.send({
         from: FROM,
         to:   ADMIN_EMAIL,
         subject: `[Location] Nouvelle demande — ${body.article_nom}`,
         html: adminHtml,
-        attachments: [{
+        ...(contratBase64 ? [{
           filename: contratFilename,
           content:  contratBase64,
-        }],
+        }] : []),
       }),
     ]).catch(console.error)
 
