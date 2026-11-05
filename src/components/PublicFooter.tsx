@@ -16,6 +16,7 @@ const FOOTER_LINKS = {
     { href: '/tarifs', label: 'Tarifs' },
     { href: '/essai', label: "Cours d'essai gratuit" },
     { href: '/blog', label: 'Blog' },
+    { href: '/location', label: 'Location' },
   ],
   'Espace': [
     { href: '/espace-eleve/login', label: 'Espace élève' },
