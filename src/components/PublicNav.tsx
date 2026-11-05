@@ -140,9 +140,9 @@ export default function PublicNav({ settings }: { settings?: Settings }) {
                 className="text-xs text-noir-400 hover:text-white transition-colors px-3 py-2 rounded-xl hover:bg-noir-800 whitespace-nowrap">
                 Connexion
               </Link>
-              <Link href="/reservation"
+              <Link href="/location"
                 className="btn-gold text-xs px-4 py-2 shadow-lg shadow-gold-500/20 whitespace-nowrap">
-                Réserver
+                Location
               </Link>
             </div>
 
@@ -209,8 +209,8 @@ export default function PublicNav({ settings }: { settings?: Settings }) {
                   <Link href="/espace-eleve/login" className="text-sm text-noir-400 hover:text-white transition-colors">
                     Connexion
                   </Link>
-                  <Link href="/reservation" className="btn-gold text-sm px-4 py-2 flex-1 text-center">
-                    Réserver
+                  <Link href="/location" className="btn-gold text-sm px-4 py-2 flex-1 text-center">
+                    Location
                   </Link>
                 </div>
               </nav>
