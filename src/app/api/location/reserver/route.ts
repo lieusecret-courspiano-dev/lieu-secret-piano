@@ -1,5 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
+import { Resend } from 'resend'
+
+const resend    = new Resend(process.env.RESEND_API_KEY!)
+const FROM      = 'Lieu Secret <noreply@lieusecret-courspiano.fr>'
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'lieusecret-courspiano@outlook.fr'
+const BASE_URL  = 'https://www.lieusecret-courspiano.fr'
+
+function fDate(d: string) {
+  return new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
+}
+
+function fMontant(n: number) {
+  return n.toFixed(2).replace('.', ',') + ' €'
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -69,55 +83,98 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (resaErr || !reservation) {
+      console.error('Erreur création réservation:', resaErr)
       return NextResponse.json({ error: 'Erreur lors de la création de la réservation.' }, { status: 500 })
     }
 
-    // Envoyer un email de notification à l'admin
-    try {
-      const { sendEmail } = await import('@/lib/email')
-      await sendEmail({
-        to: 'lieusecret-courspiano@outlook.fr',
-        subject: `[Location] Nouvelle demande — ${body.article_nom}`,
-        html: `
-          <h2>Nouvelle demande de location</h2>
-          <p><strong>Article :</strong> ${body.article_nom}</p>
-          <p><strong>Locataire :</strong> ${body.locataire_nom} (${body.locataire_email})</p>
-          <p><strong>Période :</strong> du ${body.date_debut} au ${body.date_fin} (${body.nb_jours} jour(s))</p>
-          <p><strong>Montant total :</strong> ${body.montant_total} €</p>
-          <p><strong>Paiement :</strong> ${body.moyen_paiement}</p>
-          <p><strong>Remise :</strong> ${body.mode_remise}</p>
-          <p><a href="https://www.lieusecret-courspiano.fr/admin/location/${reservation.id}">Voir la réservation →</a></p>
-        `,
-      })
-    } catch { /* Email non bloquant */ }
+    const cautionLabel: Record<string, string> = {
+      cheque:      'Chèque remis à la livraison',
+      virement:    'Virement bancaire',
+      especes:     'Espèces',
+      stripe_hold: 'Empreinte carte (Stripe)',
+    }
 
-    // Envoyer un email de confirmation au client
-    try {
-      const { sendEmail } = await import('@/lib/email')
-      const montantDu = body.est_acompte ? body.montant_acompte : body.montant_total
-      await sendEmail({
-        to: body.locataire_email,
-        subject: `Votre demande de location — ${body.article_nom}`,
-        html: `
-          <h2>Demande de location reçue</h2>
-          <p>Bonjour ${body.locataire_nom},</p>
-          <p>Votre demande de location a bien été reçue. Voici le récapitulatif :</p>
-          <ul>
-            <li><strong>Article :</strong> ${body.article_nom}</li>
-            <li><strong>Période :</strong> du ${new Date(body.date_debut).toLocaleDateString('fr-FR')} au ${new Date(body.date_fin).toLocaleDateString('fr-FR')}</li>
-            <li><strong>Durée :</strong> ${body.nb_jours} jour(s)</li>
-            <li><strong>Montant total :</strong> ${body.montant_total} €</li>
-            ${body.est_acompte ? `<li><strong>Acompte à régler (50%) :</strong> ${body.montant_acompte} €</li>` : ''}
-            <li><strong>Caution :</strong> ${body.caution_montant} € (${body.caution_type === 'cheque' ? 'chèque à remettre lors de la remise du matériel' : body.caution_type})</li>
-          </ul>
+    // Email de notification à l'admin
+    resend.emails.send({
+      from: FROM,
+      to:   ADMIN_EMAIL,
+      subject: `[Location] Nouvelle demande — ${body.article_nom}`,
+      html: `
+        <div style="font-family:Arial;background:#1a1a2e;padding:32px;color:#f0f0f0;max-width:600px;margin:0 auto;border-radius:12px;">
+          <div style="text-align:center;margin-bottom:24px;">
+            <div style="font-size:22px;color:#f59e0b;letter-spacing:4px;">LIEU SECRET</div>
+            <div style="font-size:11px;color:#7070a0;margin-top:4px;letter-spacing:2px;">LOCATION DE MATÉRIEL</div>
+          </div>
+          <h2 style="color:#f59e0b;margin:0 0 16px;">Nouvelle demande de location</h2>
+          <table style="width:100%;border-collapse:collapse;background:#252540;border-radius:8px;overflow:hidden;">
+            <tr><td style="padding:8px 12px;color:#a0a0c0;font-size:13px;border-bottom:1px solid #3a3a5c;">Article</td><td style="padding:8px 12px;color:#f0f0f0;font-size:13px;border-bottom:1px solid #3a3a5c;">${body.article_nom}</td></tr>
+            <tr><td style="padding:8px 12px;color:#a0a0c0;font-size:13px;border-bottom:1px solid #3a3a5c;">Locataire</td><td style="padding:8px 12px;color:#f0f0f0;font-size:13px;border-bottom:1px solid #3a3a5c;">${body.locataire_nom} — ${body.locataire_email}</td></tr>
+            <tr><td style="padding:8px 12px;color:#a0a0c0;font-size:13px;border-bottom:1px solid #3a3a5c;">Période</td><td style="padding:8px 12px;color:#f0f0f0;font-size:13px;border-bottom:1px solid #3a3a5c;">${fDate(body.date_debut)} → ${fDate(body.date_fin)} (${body.nb_jours} jour(s))</td></tr>
+            <tr><td style="padding:8px 12px;color:#a0a0c0;font-size:13px;border-bottom:1px solid #3a3a5c;">Montant total</td><td style="padding:8px 12px;color:#f59e0b;font-size:13px;font-weight:bold;border-bottom:1px solid #3a3a5c;">${fMontant(body.montant_total)}</td></tr>
+            <tr><td style="padding:8px 12px;color:#a0a0c0;font-size:13px;border-bottom:1px solid #3a3a5c;">Paiement</td><td style="padding:8px 12px;color:#f0f0f0;font-size:13px;border-bottom:1px solid #3a3a5c;">${body.moyen_paiement}</td></tr>
+            <tr><td style="padding:8px 12px;color:#a0a0c0;font-size:13px;border-bottom:1px solid #3a3a5c;">Remise</td><td style="padding:8px 12px;color:#f0f0f0;font-size:13px;border-bottom:1px solid #3a3a5c;">${body.mode_remise === 'livraison' ? 'Livraison' : 'Retrait sur place'}</td></tr>
+            <tr><td style="padding:8px 12px;color:#a0a0c0;font-size:13px;">Caution</td><td style="padding:8px 12px;color:#f0f0f0;font-size:13px;">${fMontant(body.caution_montant)} — ${cautionLabel[body.caution_type] || body.caution_type}</td></tr>
+          </table>
+          <div style="text-align:center;margin:24px 0;">
+            <a href="${BASE_URL}/admin/location/${reservation.id}" style="background:#f59e0b;color:#1a1a2e;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;">
+              Voir la réservation →
+            </a>
+          </div>
+        </div>
+      `,
+    }).catch(console.error)
+
+    // Email de confirmation au client
+    resend.emails.send({
+      from:    FROM,
+      to:      body.locataire_email,
+      subject: `Votre demande de location — ${body.article_nom}`,
+      html: `
+        <div style="font-family:Arial;background:#1a1a2e;padding:32px;color:#f0f0f0;max-width:600px;margin:0 auto;border-radius:12px;">
+          <div style="text-align:center;margin-bottom:24px;">
+            <div style="font-size:22px;color:#f59e0b;letter-spacing:4px;">LIEU SECRET</div>
+            <div style="font-size:11px;color:#7070a0;margin-top:4px;letter-spacing:2px;">ÉCOLE DE PIANO EN LIGNE</div>
+          </div>
+          <h2 style="color:#f59e0b;margin:0 0 16px;">Demande de location reçue !</h2>
+          <p style="color:#d0d0e8;font-size:14px;line-height:1.7;">Bonjour ${body.locataire_nom},</p>
+          <p style="color:#d0d0e8;font-size:14px;line-height:1.7;">
+            Votre demande de location a bien été reçue. Nous vous contacterons rapidement pour confirmer votre réservation.
+          </p>
+          <div style="background:#252540;border:1px solid #3a3a5c;border-radius:8px;padding:16px;margin:20px 0;">
+            <p style="color:#a0a0c0;font-size:12px;margin:0 0 12px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;">Récapitulatif</p>
+            <table style="width:100%;border-collapse:collapse;">
+              <tr><td style="padding:6px 0;color:#a0a0c0;font-size:13px;">Article</td><td style="padding:6px 0;color:#f0f0f0;font-size:13px;text-align:right;">${body.article_nom}</td></tr>
+              <tr><td style="padding:6px 0;color:#a0a0c0;font-size:13px;">Période</td><td style="padding:6px 0;color:#f0f0f0;font-size:13px;text-align:right;">${fDate(body.date_debut)} → ${fDate(body.date_fin)}</td></tr>
+              <tr><td style="padding:6px 0;color:#a0a0c0;font-size:13px;">Durée</td><td style="padding:6px 0;color:#f0f0f0;font-size:13px;text-align:right;">${body.nb_jours} jour(s)</td></tr>
+              <tr><td style="padding:6px 0;color:#a0a0c0;font-size:13px;">Montant total</td><td style="padding:6px 0;color:#f59e0b;font-size:13px;font-weight:bold;text-align:right;">${fMontant(body.montant_total)}</td></tr>
+              ${body.est_acompte ? `<tr><td style="padding:6px 0;color:#a0a0c0;font-size:13px;">Acompte (50%)</td><td style="padding:6px 0;color:#fbbf24;font-size:13px;text-align:right;">${fMontant(body.montant_acompte)}</td></tr>` : ''}
+              <tr><td style="padding:6px 0;color:#a0a0c0;font-size:13px;">Caution</td><td style="padding:6px 0;color:#f0f0f0;font-size:13px;text-align:right;">${fMontant(body.caution_montant)}</td></tr>
+              <tr><td style="padding:6px 0;color:#a0a0c0;font-size:13px;">Mode de remise</td><td style="padding:6px 0;color:#f0f0f0;font-size:13px;text-align:right;">${body.mode_remise === 'livraison' ? 'Livraison à domicile' : 'Retrait à Saint-Étienne'}</td></tr>
+            </table>
+          </div>
           ${body.moyen_paiement === 'virement' ? `
-            <p><strong>Paiement par virement :</strong> Vous recevrez les coordonnées bancaires dans un second email après validation de votre demande.</p>
+            <div style="background:#2a2010;border:1px solid #f59e0b;border-radius:8px;padding:16px;margin:16px 0;">
+              <p style="color:#f59e0b;font-size:13px;font-weight:bold;margin:0 0 6px;">Paiement par virement</p>
+              <p style="color:#d0b060;font-size:13px;margin:0;">
+                Vous recevrez les coordonnées bancaires dans un second email après validation de votre demande.
+              </p>
+            </div>
           ` : ''}
-          <p>Nous vous contacterons rapidement pour confirmer votre réservation.</p>
-          <p>Cordialement,<br/>Lieu Secret — École de Piano</p>
-        `,
-      })
-    } catch { /* Email non bloquant */ }
+          <p style="color:#a0a0c0;font-size:13px;line-height:1.6;">
+            En cas de question, contactez-nous à
+            <a href="mailto:${ADMIN_EMAIL}" style="color:#f59e0b;text-decoration:none;">${ADMIN_EMAIL}</a>
+          </p>
+          <div style="text-align:center;margin:24px 0;">
+            <a href="${BASE_URL}/location" style="background:#f59e0b;color:#1a1a2e;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;">
+              Voir le catalogue
+            </a>
+          </div>
+          <p style="color:#505080;font-size:12px;text-align:center;margin-top:24px;">
+            Vérifiez votre dossier Spam si vous ne recevez pas de réponse.
+          </p>
+        </div>
+      `,
+    }).catch(console.error)
 
     return NextResponse.json(reservation)
   } catch (e: unknown) {
