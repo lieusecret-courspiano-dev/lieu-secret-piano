@@ -6,6 +6,7 @@ import { motion } from 'framer-motion'
 import PublicNav from '@/components/PublicNav'
 import PublicFooter from '@/components/PublicFooter'
 import { Package, Upload, X, ChevronLeft, AlertCircle } from 'lucide-react'
+import { calculMontantLocation, detailCalcul, nbJours, type DureeType } from '@/lib/location-calcul'
 
 interface Article {
   id: string
@@ -32,28 +33,10 @@ interface Zone {
   sur_devis: boolean
 }
 
-type DureeType = 'jours' | 'weekend' | 'semaine' | 'mois'
 type ModeRemise = 'retrait' | 'livraison'
 type MoyenPaiement = 'stripe' | 'paypal' | 'virement'
 
 function f(n: number) { return n.toFixed(2).replace('.', ',') + ' €' }
-
-function nbJours(debut: string, fin: string): number {
-  if (!debut || !fin) return 0
-  const d1 = new Date(debut), d2 = new Date(fin)
-  return Math.max(1, Math.ceil((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24)) + 1)
-}
-
-function calculMontant(article: Article, dureeType: DureeType, dateDebut: string, dateFin: string): number {
-  const nb = nbJours(dateDebut, dateFin)
-  switch (dureeType) {
-    case 'jours':   return (article.prix_jour || 0) * nb
-    case 'weekend': return article.prix_weekend || 0
-    case 'semaine': return article.prix_semaine || 0
-    case 'mois':    return article.prix_mois || 0
-    default:        return 0
-  }
-}
 
 const STORAGE_KEY = 'location_reservation_form'
 
@@ -152,7 +135,8 @@ export default function LocationReserverPage() {
 
   // Calculs
   const nb = nbJours(dateDebut, dateFin)
-  const montantLocation = article ? calculMontant(article, dureeType, dateDebut, dateFin) : 0
+  const montantLocation = article ? calculMontantLocation(article, dureeType, dateDebut, dateFin) : 0
+  const detail = article && dateDebut && dateFin ? detailCalcul(article, dureeType, dateDebut, dateFin) : null
   const zoneSelectionnee = zones.find(z => z.id === zoneId)
   const fraisLivraison = modeRemise === 'livraison' && zoneSelectionnee && !zoneSelectionnee.sur_devis
     ? (zoneSelectionnee.tarif || 0) : 0
@@ -437,13 +421,21 @@ export default function LocationReserverPage() {
                             className="input w-full" />
                         </div>
                       </div>
-                      {dateDebut && dateFin && (
-                        <div className="bg-noir-800 rounded-xl p-3 text-sm text-noir-300">
-                          Durée : <span className="text-white font-medium">{nb} jour{nb > 1 ? 's' : ''}</span>
-                          {estAcompte && (
-                            <span className="ml-2 text-amber-400 text-xs">
-                              (≥ 15 jours → acompte de 50% requis)
+                      {dateDebut && dateFin && detail && (
+                        <div className="bg-noir-800 rounded-xl p-3 text-sm text-noir-300 space-y-1">
+                          <div>
+                            Durée : <span className="text-white font-medium">{nb} jour{nb > 1 ? 's' : ''}</span>
+                          </div>
+                          <div>
+                            Calcul : <span className="text-gold-400 font-medium">
+                              {detail.quantite} × {f(detail.prixUnitaire)} = {f(montantLocation)}
                             </span>
+                            <span className="text-noir-500 ml-1">({detail.label})</span>
+                          </div>
+                          {estAcompte && (
+                            <div className="text-amber-400 text-xs">
+                              ≥ 15 jours → acompte de 50% requis ({f(montantLocation * 0.5 + fraisLivraison * 0.5)})
+                            </div>
                           )}
                         </div>
                       )}
