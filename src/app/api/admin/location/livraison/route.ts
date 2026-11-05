@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { validateAdminSession } from '@/lib/auth'
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase'
 
 async function checkAdmin() {
   const ok = await validateAdminSession()
@@ -13,7 +13,7 @@ export async function GET() {
   const err = await checkAdmin()
   if (err) return err
 
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from('location_zones_livraison')
     .select('*')
     .order('position', { ascending: true })
@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json()
 
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from('location_zones_livraison')
     .insert({
       nom: body.nom,
@@ -62,7 +62,7 @@ export async function PATCH(req: NextRequest) {
     updates.tarif = null
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from('location_zones_livraison')
     .update(updates)
     .eq('id', id)
@@ -82,7 +82,7 @@ export async function DELETE(req: NextRequest) {
   if (!id) return NextResponse.json({ error: 'ID manquant' }, { status: 400 })
 
   // Vérifier qu'aucune réservation n'utilise cette zone
-  const { data: reservations } = await supabase
+  const { data: reservations } = await supabaseAdmin
     .from('location_reservations')
     .select('id')
     .eq('zone_livraison_id', id)
@@ -94,7 +94,7 @@ export async function DELETE(req: NextRequest) {
     }, { status: 400 })
   }
 
-  const { error } = await supabase
+  const { error } = await supabaseAdmin
     .from('location_zones_livraison')
     .delete()
     .eq('id', id)
