@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase'
 
 // GET — liste les articles publiés et disponibles (côté public)
 export async function GET() {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from('location_articles')
     .select('id, nom, slug, description_courte, photos, prix_jour, prix_weekend, prix_semaine, prix_mois, caution, categorie, accessoires_inclus, disponible, stock')
     .eq('publie', true)
