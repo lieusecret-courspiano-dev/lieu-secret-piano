@@ -92,7 +92,7 @@ export default function LocationDetailPage() {
     <div className="min-h-screen bg-noir-950 text-noir-100">
       <PublicNav />
 
-      <div className="pt-28 pb-24 px-4">
+      <div className="pt-24 pb-16 px-4">
         <div className="max-w-6xl mx-auto">
 
           {/* Fil d'Ariane */}
@@ -160,7 +160,7 @@ export default function LocationDetailPage() {
                 )}
 
                 {/* Infos pratiques */}
-                <div className="grid grid-cols-3 gap-3 mt-4">
+                <div className="grid grid-cols-3 gap-2 mt-4">
                   {[
                     { icon: <Shield size={16} className="text-gold-400" />, label: 'Caution', value: f(article.caution) },
                     { icon: <MapPin size={16} className="text-gold-400" />, label: 'Retrait', value: 'Saint-Étienne' },
@@ -182,7 +182,7 @@ export default function LocationDetailPage() {
                 {/* En-tête */}
                 <div>
                   <span className="text-gold-500 text-xs font-semibold uppercase tracking-widest capitalize">{article.categorie}</span>
-                  <h1 className="font-serif text-3xl md:text-4xl text-white mt-2 mb-3">{article.nom}</h1>
+                  <h1 className="font-serif text-2xl sm:text-3xl md:text-4xl text-white mt-2 mb-3">{article.nom}</h1>
                   {article.description_courte && (
                     <p className="text-noir-300 text-base leading-relaxed">{article.description_courte}</p>
                   )}
