@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { validateAdminSession } from '@/lib/auth'
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase'
 
 async function checkAdmin() {
   const ok = await validateAdminSession()
@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const statut = searchParams.get('statut')
 
-  let query = supabase
+  let query = supabaseAdmin
     .from('location_reservations')
     .select('*')
     .order('created_at', { ascending: false })
@@ -38,7 +38,7 @@ export async function PATCH(req: NextRequest) {
 
   if (!id) return NextResponse.json({ error: 'ID manquant' }, { status: 400 })
 
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from('location_reservations')
     .update(updates)
     .eq('id', id)
