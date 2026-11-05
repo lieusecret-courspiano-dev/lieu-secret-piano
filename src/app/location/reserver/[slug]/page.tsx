@@ -58,6 +58,7 @@ export default function LocationReserverPage() {
   const [dateDebut, setDateDebut] = useState('')
   const [dateFin, setDateFin] = useState('')
   const [dureeType, setDureeType] = useState<DureeType>('jours')
+  const [quantite, setQuantite] = useState<number>(1)
   const [modeRemise, setModeRemise] = useState<ModeRemise>('retrait')
   const [adresseLivraison, setAdresseLivraison] = useState('')
   const [zoneId, setZoneId] = useState('')
@@ -99,6 +100,7 @@ export default function LocationReserverPage() {
         if (d.dateDebut) setDateDebut(d.dateDebut)
         if (d.dateFin) setDateFin(d.dateFin)
         if (d.dureeType) setDureeType(d.dureeType)
+        if (d.quantite) setQuantite(d.quantite)
         if (d.modeRemise) setModeRemise(d.modeRemise)
         if (d.adresseLivraison) setAdresseLivraison(d.adresseLivraison)
         if (d.zoneId) setZoneId(d.zoneId)
@@ -114,7 +116,7 @@ export default function LocationReserverPage() {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
         nom, email, telephone, adresse, codePostalVille,
-        dateDebut, dateFin, dureeType, modeRemise,
+        dateDebut, dateFin, dureeType, quantite, modeRemise,
         adresseLivraison, zoneId, moyenPaiement, noteClient, cautionType,
       }))
     } catch {}
@@ -133,6 +135,31 @@ export default function LocationReserverPage() {
     }).catch(() => setLoading(false))
   }, [slug, router])
 
+  // Calcul automatique de dateFin selon dureeType et quantite
+  function calcDateFin(debut: string, type: DureeType, qty: number): string {
+    if (!debut) return ''
+    const d = new Date(debut)
+    if (type === 'jours') {
+      d.setDate(d.getDate() + qty - 1)
+    } else if (type === 'weekend') {
+      // Trouver le prochain samedi si pas déjà samedi
+      while (d.getDay() !== 6) d.setDate(d.getDate() + 1)
+      // Ajouter (qty-1) semaines + 1 jour (dimanche)
+      d.setDate(d.getDate() + (qty - 1) * 7 + 1)
+    } else if (type === 'mois') {
+      d.setMonth(d.getMonth() + qty)
+      d.setDate(d.getDate() - 1)
+    }
+    return d.toISOString().split('T')[0]
+  }
+
+  // Filtre les dates selon le type de durée
+  function isDateAllowed(dateStr: string, type: DureeType): boolean {
+    if (type !== 'weekend') return true
+    const d = new Date(dateStr)
+    return d.getDay() === 6 // Uniquement samedi pour le début d'un week-end
+  }
+
   // Calculs
   const nb = nbJours(dateDebut, dateFin)
   const montantLocation = article ? calculMontantLocation(article, dureeType, dateDebut, dateFin) : 0
@@ -149,7 +176,6 @@ export default function LocationReserverPage() {
   const durees = [
     { key: 'jours' as DureeType, label: 'Jours', available: !!article?.prix_jour },
     { key: 'weekend' as DureeType, label: 'Week-end', available: !!article?.prix_weekend },
-    { key: 'semaine' as DureeType, label: 'Semaine', available: !!article?.prix_semaine },
     { key: 'mois' as DureeType, label: 'Mois', available: !!article?.prix_mois },
   ].filter(d => d.available)
 
@@ -396,7 +422,12 @@ export default function LocationReserverPage() {
                         <label className="label mb-2 block">Type de durée *</label>
                         <div className="flex flex-wrap gap-2">
                           {durees.map(d => (
-                            <button key={d.key} type="button" onClick={() => setDureeType(d.key)}
+                            <button key={d.key} type="button" onClick={() => {
+                              setDureeType(d.key)
+                              setQuantite(1)
+                              setDateDebut('')
+                              setDateFin('')
+                            }}
                               className={`px-4 py-2 rounded-xl border text-sm font-medium transition-all ${
                                 dureeType === d.key
                                   ? 'bg-gold-500/10 border-gold-500/30 text-gold-400'
@@ -407,21 +438,78 @@ export default function LocationReserverPage() {
                           ))}
                         </div>
                       </div>
+
+                      {/* Quantité pour week-end et mois */}
+                      {dureeType !== 'jours' && (
+                        <div>
+                          <label className="label mb-2 block">
+                            Nombre de {dureeType === 'weekend' ? 'week-ends' : 'mois'} *
+                          </label>
+                          <div className="flex items-center gap-3">
+                            <button type="button"
+                              onClick={() => {
+                                const q = Math.max(1, quantite - 1)
+                                setQuantite(q)
+                                if (dateDebut) setDateFin(calcDateFin(dateDebut, dureeType, q))
+                              }}
+                              className="w-10 h-10 rounded-xl border border-noir-700 text-white hover:border-gold-500/50 flex items-center justify-center text-xl font-bold transition-all">
+                              −
+                            </button>
+                            <span className="text-white font-bold text-xl w-8 text-center">{quantite}</span>
+                            <button type="button"
+                              onClick={() => {
+                                const q = quantite + 1
+                                setQuantite(q)
+                                if (dateDebut) setDateFin(calcDateFin(dateDebut, dureeType, q))
+                              }}
+                              className="w-10 h-10 rounded-xl border border-noir-700 text-white hover:border-gold-500/50 flex items-center justify-center text-xl font-bold transition-all">
+                              +
+                            </button>
+                            <span className="text-noir-400 text-sm">
+                              {dureeType === 'weekend'
+                                ? `= ${quantite * 2} jour${quantite * 2 > 1 ? 's' : ''}`
+                                : `≈ ${quantite * 30} jours`}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Dates */}
                       <div className="grid sm:grid-cols-2 gap-4">
                         <div>
-                          <label className="label mb-1.5 block">Date de début *</label>
+                          <label className="label mb-1.5 block">
+                            {dureeType === 'weekend' ? 'Samedi de début *' : 'Date de début *'}
+                          </label>
+                          {dureeType === 'weekend' && (
+                            <p className="text-noir-500 text-xs mb-1">Sélectionnez un samedi uniquement</p>
+                          )}
                           <input type="date" value={dateDebut} min={today}
-                            onChange={e => { setDateDebut(e.target.value); if (dateFin < e.target.value) setDateFin(e.target.value) }}
+                            onChange={e => {
+                              const d = e.target.value
+                              if (dureeType === 'weekend') {
+                                const day = new Date(d + 'T12:00:00').getDay()
+                                if (day !== 6) {
+                                  alert('Pour un week-end, veuillez sélectionner un samedi.')
+                                  return
+                                }
+                              }
+                              setDateDebut(d)
+                              setDateFin(calcDateFin(d, dureeType, quantite))
+                            }}
                             className="input w-full" />
                         </div>
                         <div>
-                          <label className="label mb-1.5 block">Date de fin *</label>
-                          <input type="date" value={dateFin} min={dateDebut || today}
-                            onChange={e => setDateFin(e.target.value)}
-                            className="input w-full" />
+                          <label className="label mb-1.5 block">Date de fin</label>
+                          <input type="date" value={dateFin}
+                            readOnly={dureeType !== 'jours'}
+                            onChange={e => { if (dureeType === 'jours') setDateFin(e.target.value) }}
+                            className={`input w-full ${dureeType !== 'jours' ? 'opacity-60 cursor-not-allowed' : ''}`} />
+                          {dureeType !== 'jours' && (
+                            <p className="text-noir-600 text-xs mt-1">Calculée automatiquement</p>
+                          )}
                         </div>
                       </div>
-                      {dateDebut && dateFin && detail && (
+                                            {dateDebut && dateFin && detail && (
                         <div className="bg-noir-800 rounded-xl p-3 text-sm text-noir-300 space-y-1">
                           <div>
                             Durée : <span className="text-white font-medium">{nb} jour{nb > 1 ? 's' : ''}</span>
@@ -640,7 +728,7 @@ export default function LocationReserverPage() {
                           <span className="text-xs">JPG, PNG ou PDF — max 10 Mo</span>
                         </button>
                       )}
-                      <input ref={fileIdentiteRef} type="file" accept="image/*,.pdf" className="hidden"
+                      <input ref={fileIdentiteRef} type="file" accept="image/jpeg,image/png,image/webp,image/heic,.pdf" className="hidden"
                         onChange={e => { if (e.target.files?.[0]) setDocIdentite(e.target.files[0]) }} />
                     </div>
 
@@ -664,7 +752,7 @@ export default function LocationReserverPage() {
                           <span className="text-xs">JPG, PNG ou PDF — max 10 Mo</span>
                         </button>
                       )}
-                      <input ref={fileDomicileRef} type="file" accept="image/*,.pdf" className="hidden"
+                      <input ref={fileDomicileRef} type="file" accept="image/jpeg,image/png,image/webp,image/heic,.pdf" className="hidden"
                         onChange={e => { if (e.target.files?.[0]) setDocDomicile(e.target.files[0]) }} />
                     </div>
 
@@ -688,7 +776,7 @@ export default function LocationReserverPage() {
                         className="w-full border border-dashed border-noir-800 hover:border-noir-600 rounded-xl p-4 flex items-center justify-center gap-2 text-noir-600 hover:text-noir-400 transition-colors text-sm">
                         <Upload size={16} /> Ajouter un document
                       </button>
-                      <input ref={fileAutresRef} type="file" accept="image/*,.pdf" className="hidden"
+                      <input ref={fileAutresRef} type="file" accept="image/jpeg,image/png,image/webp,image/heic,.pdf" className="hidden"
                         onChange={e => { if (e.target.files?.[0]) setDocsAutres(prev => [...prev, e.target.files![0]]) }} />
                     </div>
                   </div>
