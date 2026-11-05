@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { Resend } from 'resend'
-import { generatePdfFromHtml } from '@/lib/pdf-generator'
+import { generateContratLocationPDF } from '@/lib/location-pdf'
 
 const resend      = new Resend(process.env.RESEND_API_KEY!)
 const FROM        = 'Lieu Secret <noreply@lieusecret-courspiano.fr>'
@@ -217,14 +217,36 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Erreur lors de la création de la réservation.' }, { status: 500 })
     }
 
-    // Générer le PDF du contrat
-    const contratHTML = genContratHTML(body, article)
-    const { buffer: contratBuffer, isHtml } = await generatePdfFromHtml(contratHTML, {
-      marginTop: '15mm', marginBottom: '15mm', marginLeft: '15mm', marginRight: '15mm',
+    // Générer le PDF du contrat avec pdfkit
+    const now = new Date()
+    const dateSignature = now.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) +
+      ' à ' + now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+
+    const contratBuffer = await generateContratLocationPDF({
+      locataire_nom:         body.locataire_nom,
+      locataire_email:       body.locataire_email,
+      locataire_telephone:   body.locataire_telephone || null,
+      locataire_adresse:     body.locataire_adresse || null,
+      locataire_ville:       body.locataire_ville || null,
+      article_nom:           body.article_nom,
+      accessoires_inclus:    article.accessoires_inclus || null,
+      date_debut:            body.date_debut,
+      date_fin:              body.date_fin,
+      nb_jours:              body.nb_jours || 0,
+      mode_remise:           body.mode_remise || 'retrait',
+      montant_location:      body.montant_location,
+      frais_livraison:       body.frais_livraison || 0,
+      montant_total:         body.montant_total,
+      est_acompte:           body.est_acompte || false,
+      montant_acompte:       body.montant_acompte || null,
+      moyen_paiement:        body.moyen_paiement || 'virement',
+      caution_montant:       body.caution_montant || 0,
+      caution_type:          body.caution_type || 'cheque',
+      signature_nom:         body.signature_nom || body.locataire_nom,
+      date_signature:        dateSignature,
     })
-    const contratBase64   = Buffer.from(contratBuffer).toString('base64')
-    const contratFilename = `contrat-location-${article.nom.toLowerCase().replace(/\s+/g, '-')}.${isHtml ? 'html' : 'pdf'}`
-    const contratMime     = isHtml ? 'text/html' : 'application/pdf'
+    const contratBase64   = contratBuffer.toString('base64')
+    const contratFilename = `contrat-location-${(body.article_nom as string).toLowerCase().replace(/\s+/g, '-')}.pdf`
 
     const cautionLabel: Record<string, string> = {
       cheque: 'Chèque remis à la livraison', virement: 'Virement bancaire',
