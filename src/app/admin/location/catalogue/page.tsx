@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
-import { Plus, Pencil, Trash2, Eye, EyeOff, Package, Upload, X } from 'lucide-react'
+import { Plus, Pencil, Trash2, Eye, EyeOff, Package, Upload, X, Link } from 'lucide-react'
 
 interface Article {
   id: string
@@ -32,6 +32,7 @@ const EMPTY_FORM = {
   prix_semaine: '', prix_mois: '', caution: '', accessoires_inclus: '',
   disponible: true, stock: '1', categorie: 'instrument', position: '0', publie: false,
 }
+const MAX_PHOTOS = 10
 
 function slugify(str: string) {
   return str.toLowerCase()
@@ -48,6 +49,8 @@ export default function AdminLocationCataloguePage() {
   const [photos, setPhotos] = useState<string[]>([])
   const [saving, setSaving] = useState(false)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
+  const [urlInput, setUrlInput] = useState('')
+  const [showUrlInput, setShowUrlInput] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => { loadArticles() }, [])
@@ -64,6 +67,8 @@ export default function AdminLocationCataloguePage() {
     setForm({ ...EMPTY_FORM })
     setPhotos([])
     setShowForm(true)
+    setShowUrlInput(false)
+    setUrlInput('')
   }
 
   function openEdit(a: Article) {
@@ -80,19 +85,47 @@ export default function AdminLocationCataloguePage() {
     })
     setPhotos(a.photos || [])
     setShowForm(true)
+    setShowUrlInput(false)
+    setUrlInput('')
   }
 
   async function uploadPhoto(file: File) {
+    if (photos.length >= MAX_PHOTOS) {
+      alert(`Maximum ${MAX_PHOTOS} photos autorisées.`)
+      return
+    }
     setUploadingPhoto(true)
     try {
       const fd = new FormData()
       fd.append('file', file)
-      fd.append('folder', 'location')
-      const res = await fetch('/api/admin/upload', { method: 'POST', body: fd })
+      const res = await fetch('/api/admin/location/upload', { method: 'POST', body: fd })
       const data = await res.json()
-      if (data.url) setPhotos(prev => [...prev, data.url])
-    } catch { alert('Erreur lors de l\'upload de la photo') }
+      if (data.url) {
+        setPhotos(prev => [...prev, data.url])
+      } else {
+        alert(data.error || 'Erreur lors de l\'upload')
+      }
+    } catch {
+      alert('Erreur lors de l\'upload de la photo')
+    }
     setUploadingPhoto(false)
+    if (fileRef.current) fileRef.current.value = ''
+  }
+
+  function addUrlPhoto() {
+    const url = urlInput.trim()
+    if (!url) return
+    if (photos.length >= MAX_PHOTOS) {
+      alert(`Maximum ${MAX_PHOTOS} photos autorisées.`)
+      return
+    }
+    if (!url.startsWith('http')) {
+      alert('Veuillez saisir une URL valide commençant par http:// ou https://')
+      return
+    }
+    setPhotos(prev => [...prev, url])
+    setUrlInput('')
+    setShowUrlInput(false)
   }
 
   async function handleSave(e: React.FormEvent) {
@@ -141,7 +174,7 @@ export default function AdminLocationCataloguePage() {
     setArticles(prev => prev.map(x => x.id === a.id ? { ...x, publie: !x.publie } : x))
   }
 
-  function f(val: number | null) {
+  function fPrice(val: number | null) {
     if (val === null) return '—'
     return val.toFixed(2).replace('.', ',') + ' €'
   }
@@ -170,6 +203,7 @@ export default function AdminLocationCataloguePage() {
       {/* Formulaire */}
       {showForm && (
         <form onSubmit={handleSave} className="space-y-5 max-w-4xl">
+
           {/* Infos générales */}
           <div className="card">
             <h2 className="text-white font-semibold mb-4">
@@ -199,19 +233,19 @@ export default function AdminLocationCataloguePage() {
                   </select>
                 </div>
                 <div>
-                  <label className="label mb-1.5 block">Stock (nb d'exemplaires)</label>
+                  <label className="label mb-1.5 block">Stock</label>
                   <input type="number" min="0" value={form.stock}
                     onChange={e => setForm(f => ({ ...f, stock: e.target.value }))} className="input w-full" />
                 </div>
                 <div>
-                  <label className="label mb-1.5 block">Position d'affichage</label>
+                  <label className="label mb-1.5 block">Position</label>
                   <input type="number" min="0" value={form.position}
                     onChange={e => setForm(f => ({ ...f, position: e.target.value }))} className="input w-full" />
                 </div>
               </div>
 
               <div>
-                <label className="label mb-1.5 block">Description courte (affichée dans la liste)</label>
+                <label className="label mb-1.5 block">Description courte</label>
                 <input value={form.description_courte}
                   onChange={e => setForm(f => ({ ...f, description_courte: e.target.value }))}
                   className="input w-full" placeholder="Résumé en une phrase..." />
@@ -221,7 +255,7 @@ export default function AdminLocationCataloguePage() {
                 <label className="label mb-1.5 block">Description complète</label>
                 <textarea value={form.description}
                   onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-                  className="input w-full h-28 resize-none" placeholder="Description détaillée de l'article..." />
+                  className="input w-full h-28 resize-none" placeholder="Description détaillée..." />
               </div>
 
               <div className="grid sm:grid-cols-2 gap-4">
@@ -278,34 +312,93 @@ export default function AdminLocationCataloguePage() {
 
           {/* Photos */}
           <div className="card">
-            <h2 className="text-white font-semibold mb-4">Photos</h2>
-            <div className="flex flex-wrap gap-3 mb-3">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-white font-semibold">Photos</h2>
+                <p className="text-noir-500 text-xs mt-0.5">
+                  {photos.length}/{MAX_PHOTOS} photos — La première sera l'image principale
+                </p>
+              </div>
+            </div>
+
+            {/* Grille de photos */}
+            <div className="flex flex-wrap gap-3 mb-4">
               {photos.map((url, i) => (
-                <div key={i} className="relative w-24 h-24 rounded-xl overflow-hidden border border-noir-700">
+                <div key={i} className="relative w-24 h-24 rounded-xl overflow-hidden border border-noir-700 group">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={url} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
-                  <button type="button" onClick={() => setPhotos(prev => prev.filter((_, j) => j !== i))}
-                    className="absolute top-1 right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
-                    <X size={10} className="text-white" />
-                  </button>
+                  <img src={url} alt={`Photo ${i + 1}`} className="w-full h-full object-cover"
+                    onError={e => { (e.target as HTMLImageElement).src = 'https://via.placeholder.com/96x96?text=?' }} />
+                  <div className="absolute inset-0 bg-noir-950/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                    {i > 0 && (
+                      <button type="button" onClick={() => {
+                        const newPhotos = [...photos]
+                        ;[newPhotos[i - 1], newPhotos[i]] = [newPhotos[i], newPhotos[i - 1]]
+                        setPhotos(newPhotos)
+                      }} className="w-6 h-6 bg-noir-800 rounded-full flex items-center justify-center text-white text-xs" title="Déplacer à gauche">←</button>
+                    )}
+                    <button type="button" onClick={() => setPhotos(prev => prev.filter((_, j) => j !== i))}
+                      className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
+                      <X size={10} className="text-white" />
+                    </button>
+                  </div>
+                  {i === 0 && (
+                    <div className="absolute bottom-0 left-0 right-0 bg-gold-500/80 text-noir-950 text-[9px] text-center font-bold py-0.5">
+                      PRINCIPALE
+                    </div>
+                  )}
                 </div>
               ))}
-              <button type="button" onClick={() => fileRef.current?.click()}
-                disabled={uploadingPhoto}
-                className="w-24 h-24 rounded-xl border-2 border-dashed border-noir-700 hover:border-gold-500/50 flex flex-col items-center justify-center gap-1 text-noir-500 hover:text-gold-400 transition-colors">
-                {uploadingPhoto ? (
-                  <div className="w-5 h-5 border-2 border-gold-500 border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <>
-                    <Upload size={18} />
-                    <span className="text-[10px]">Ajouter</span>
-                  </>
-                )}
-              </button>
+
+              {/* Boutons d'ajout */}
+              {photos.length < MAX_PHOTOS && (
+                <div className="flex flex-col gap-2">
+                  {/* Upload fichier */}
+                  <button type="button" onClick={() => fileRef.current?.click()}
+                    disabled={uploadingPhoto}
+                    className="w-24 h-11 rounded-xl border-2 border-dashed border-noir-700 hover:border-gold-500/50 flex items-center justify-center gap-1 text-noir-500 hover:text-gold-400 transition-colors text-xs">
+                    {uploadingPhoto ? (
+                      <div className="w-4 h-4 border-2 border-gold-500 border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <><Upload size={14} /> Upload</>
+                    )}
+                  </button>
+                  {/* Ajouter par URL */}
+                  <button type="button" onClick={() => setShowUrlInput(!showUrlInput)}
+                    className="w-24 h-11 rounded-xl border-2 border-dashed border-noir-700 hover:border-blue-500/50 flex items-center justify-center gap-1 text-noir-500 hover:text-blue-400 transition-colors text-xs">
+                    <Link size={14} /> URL
+                  </button>
+                </div>
+              )}
             </div>
+
+            {/* Champ URL */}
+            {showUrlInput && (
+              <div className="flex gap-2 mb-3">
+                <input
+                  value={urlInput}
+                  onChange={e => setUrlInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addUrlPhoto() } }}
+                  className="input flex-1 text-sm"
+                  placeholder="https://res.cloudinary.com/... ou https://supabase.co/storage/..."
+                />
+                <button type="button" onClick={addUrlPhoto}
+                  className="btn-gold text-sm px-4 py-2 shrink-0">
+                  Ajouter
+                </button>
+                <button type="button" onClick={() => { setShowUrlInput(false); setUrlInput('') }}
+                  className="btn-outline text-sm px-3 py-2 shrink-0">
+                  <X size={14} />
+                </button>
+              </div>
+            )}
+
             <input ref={fileRef} type="file" accept="image/*" className="hidden"
               onChange={e => { if (e.target.files?.[0]) uploadPhoto(e.target.files[0]) }} />
-            <p className="text-noir-600 text-xs">La première photo sera utilisée comme image principale.</p>
+
+            <p className="text-noir-600 text-xs">
+              Vous pouvez uploader une image ou coller un lien Cloudinary / Supabase Storage / autre URL publique.
+              Survolez une photo pour la supprimer ou changer l'ordre.
+            </p>
           </div>
 
           {/* Statut */}
@@ -373,11 +466,11 @@ export default function AdminLocationCataloguePage() {
             {articles.map(a => (
               <div key={a.id} className="card flex items-start justify-between gap-4 flex-wrap">
                 <div className="flex items-start gap-4 flex-1 min-w-0">
-                  {/* Photo */}
                   <div className="w-16 h-16 rounded-xl bg-noir-800 border border-noir-700 overflow-hidden shrink-0 flex items-center justify-center">
                     {a.photos?.[0] ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={a.photos[0]} alt={a.nom} className="w-full h-full object-cover" />
+                      <img src={a.photos[0]} alt={a.nom} className="w-full h-full object-cover"
+                        onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
                     ) : (
                       <Package size={20} className="text-noir-600" />
                     )}
@@ -396,30 +489,30 @@ export default function AdminLocationCataloguePage() {
                       </span>
                       <span className="text-xs text-gold-500 bg-gold-500/10 px-2 py-0.5 rounded-full capitalize">{a.categorie}</span>
                       <span className="text-xs text-noir-500">Stock : {a.stock}</span>
+                      <span className="text-xs text-noir-600">{a.photos?.length || 0} photo(s)</span>
                     </div>
                     <h3 className="text-white font-semibold truncate">{a.nom}</h3>
                     {a.description_courte && (
                       <p className="text-noir-400 text-sm mt-0.5 truncate">{a.description_courte}</p>
                     )}
                     <div className="flex flex-wrap gap-3 mt-2 text-xs text-noir-500">
-                      {a.prix_jour && <span>Jour : <span className="text-white">{f(a.prix_jour)}</span></span>}
-                      {a.prix_weekend && <span>Week-end : <span className="text-white">{f(a.prix_weekend)}</span></span>}
-                      {a.prix_semaine && <span>Semaine : <span className="text-white">{f(a.prix_semaine)}</span></span>}
-                      {a.prix_mois && <span>Mois : <span className="text-white">{f(a.prix_mois)}</span></span>}
-                      <span>Caution : <span className="text-gold-400">{f(a.caution)}</span></span>
+                      {a.prix_jour && <span>Jour : <span className="text-white">{fPrice(a.prix_jour)}</span></span>}
+                      {a.prix_weekend && <span>W-E : <span className="text-white">{fPrice(a.prix_weekend)}</span></span>}
+                      {a.prix_semaine && <span>Sem. : <span className="text-white">{fPrice(a.prix_semaine)}</span></span>}
+                      {a.prix_mois && <span>Mois : <span className="text-white">{fPrice(a.prix_mois)}</span></span>}
+                      <span>Caution : <span className="text-gold-400">{fPrice(a.caution)}</span></span>
                     </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
                   <button onClick={() => togglePublish(a)}
-                    className={`p-1.5 rounded transition-colors ${a.publie ? 'text-green-400 hover:text-noir-400' : 'text-noir-600 hover:text-green-400'}`}
-                    title={a.publie ? 'Dépublier' : 'Publier'}>
+                    className={`p-1.5 rounded transition-colors ${a.publie ? 'text-green-400 hover:text-noir-400' : 'text-noir-600 hover:text-green-400'}`}>
                     {a.publie ? <Eye size={14} /> : <EyeOff size={14} />}
                   </button>
-                  <button onClick={() => openEdit(a)} className="text-noir-600 hover:text-gold-400 p-1.5 rounded transition-colors" title="Modifier">
+                  <button onClick={() => openEdit(a)} className="text-noir-600 hover:text-gold-400 p-1.5 rounded transition-colors">
                     <Pencil size={14} />
                   </button>
-                  <button onClick={() => handleDelete(a.id)} className="text-noir-600 hover:text-red-400 p-1.5 rounded transition-colors" title="Supprimer">
+                  <button onClick={() => handleDelete(a.id)} className="text-noir-600 hover:text-red-400 p-1.5 rounded transition-colors">
                     <Trash2 size={14} />
                   </button>
                 </div>
