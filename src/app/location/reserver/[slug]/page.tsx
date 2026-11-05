@@ -18,6 +18,7 @@ interface Article {
   prix_mois: number | null
   caution: number
   accessoires_inclus: string | null
+  categorie: string
   disponible: boolean
   stock: number
 }
