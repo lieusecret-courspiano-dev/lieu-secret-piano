@@ -69,7 +69,7 @@ export default function LocationPage() {
         <div className="relative max-w-3xl mx-auto">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
             <span className="text-gold-500 text-xs font-semibold uppercase tracking-widest">Location</span>
-            <h1 className="font-serif text-5xl md:text-6xl text-white mt-4 mb-6">
+            <h1 className="font-serif text-3xl sm:text-5xl md:text-6xl text-white mt-4 mb-6">
               Louez votre <span className="text-gold-400">matériel musical</span>
             </h1>
             <p className="text-noir-300 text-lg leading-relaxed max-w-2xl mx-auto">
@@ -84,7 +84,7 @@ export default function LocationPage() {
       <section className="pb-12 px-4">
         <div className="max-w-5xl mx-auto">
           <FadeUp>
-            <div className="grid sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {[
                 {
                   icon: <svg width="20" height="20" fill="none" stroke="#f59e0b" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>,
@@ -118,7 +118,7 @@ export default function LocationPage() {
       </section>
 
       {/* Catalogue */}
-      <section className="py-12 px-4 pb-24">
+      <section className="py-8 px-4 pb-16">
         <div className="max-w-6xl mx-auto">
           <FadeUp className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
             <div>
