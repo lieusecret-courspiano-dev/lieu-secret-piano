@@ -11,6 +11,7 @@ interface Article {
   id: string
   nom: string
   slug: string
+  categorie: string
   photos: string[]
   prix_jour: number | null
   prix_weekend: number | null
@@ -18,7 +19,6 @@ interface Article {
   prix_mois: number | null
   caution: number
   accessoires_inclus: string | null
-  categorie: string
   disponible: boolean
   stock: number
 }
@@ -32,7 +32,7 @@ interface Zone {
   sur_devis: boolean
 }
 
-type DureeType = 'jours' | 'weekend' | 'semaine' | 'mois' | 'libre'
+type DureeType = 'jours' | 'weekend' | 'semaine' | 'mois'
 type ModeRemise = 'retrait' | 'livraison'
 type MoyenPaiement = 'stripe' | 'paypal' | 'virement'
 
@@ -51,10 +51,11 @@ function calculMontant(article: Article, dureeType: DureeType, dateDebut: string
     case 'weekend': return article.prix_weekend || 0
     case 'semaine': return article.prix_semaine || 0
     case 'mois':    return article.prix_mois || 0
-    case 'libre':   return (article.prix_jour || 0) * nb
     default:        return 0
   }
 }
+
+const STORAGE_KEY = 'location_reservation_form'
 
 export default function LocationReserverPage() {
   const { slug } = useParams<{ slug: string }>()
@@ -63,18 +64,17 @@ export default function LocationReserverPage() {
   const [article, setArticle] = useState<Article | null>(null)
   const [zones, setZones] = useState<Zone[]>([])
   const [loading, setLoading] = useState(true)
-  const [step, setStep] = useState(1) // 1: infos, 2: docs, 3: contrat, 4: paiement
+  const [step, setStep] = useState(1)
 
-  // Formulaire
+  // Formulaire — persisté dans localStorage
   const [nom, setNom] = useState('')
   const [email, setEmail] = useState('')
   const [telephone, setTelephone] = useState('')
   const [adresse, setAdresse] = useState('')
-  const [ville, setVille] = useState('')
-  const [codePostal, setCodePostal] = useState('')
+  const [codePostalVille, setCodePostalVille] = useState('')
   const [dateDebut, setDateDebut] = useState('')
   const [dateFin, setDateFin] = useState('')
-  const [dureeType, setDureeType] = useState<DureeType>('semaine')
+  const [dureeType, setDureeType] = useState<DureeType>('jours')
   const [modeRemise, setModeRemise] = useState<ModeRemise>('retrait')
   const [adresseLivraison, setAdresseLivraison] = useState('')
   const [zoneId, setZoneId] = useState('')
@@ -98,9 +98,45 @@ export default function LocationReserverPage() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
-  const [reservationId, setReservationId] = useState('')
+  const [moyenPaiementFinal, setMoyenPaiementFinal] = useState<MoyenPaiement>('stripe')
 
   const today = new Date().toISOString().split('T')[0]
+
+  // Charger depuis localStorage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY)
+      if (saved) {
+        const d = JSON.parse(saved)
+        if (d.nom) setNom(d.nom)
+        if (d.email) setEmail(d.email)
+        if (d.telephone) setTelephone(d.telephone)
+        if (d.adresse) setAdresse(d.adresse)
+        if (d.codePostalVille) setCodePostalVille(d.codePostalVille)
+        if (d.dateDebut) setDateDebut(d.dateDebut)
+        if (d.dateFin) setDateFin(d.dateFin)
+        if (d.dureeType) setDureeType(d.dureeType)
+        if (d.modeRemise) setModeRemise(d.modeRemise)
+        if (d.adresseLivraison) setAdresseLivraison(d.adresseLivraison)
+        if (d.zoneId) setZoneId(d.zoneId)
+        if (d.moyenPaiement) setMoyenPaiement(d.moyenPaiement)
+        if (d.noteClient) setNoteClient(d.noteClient)
+        if (d.cautionType) setCautionType(d.cautionType)
+      }
+    } catch {}
+  }, [])
+
+  // Sauvegarder dans localStorage à chaque changement
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        nom, email, telephone, adresse, codePostalVille,
+        dateDebut, dateFin, dureeType, modeRemise,
+        adresseLivraison, zoneId, moyenPaiement, noteClient, cautionType,
+      }))
+    } catch {}
+  }, [nom, email, telephone, adresse, codePostalVille, dateDebut, dateFin,
+      dureeType, modeRemise, adresseLivraison, zoneId, moyenPaiement, noteClient, cautionType])
 
   useEffect(() => {
     Promise.all([
@@ -114,7 +150,7 @@ export default function LocationReserverPage() {
     }).catch(() => setLoading(false))
   }, [slug, router])
 
-  // Calculs automatiques
+  // Calculs
   const nb = nbJours(dateDebut, dateFin)
   const montantLocation = article ? calculMontant(article, dureeType, dateDebut, dateFin) : 0
   const zoneSelectionnee = zones.find(z => z.id === zoneId)
@@ -131,14 +167,12 @@ export default function LocationReserverPage() {
     { key: 'weekend' as DureeType, label: 'Week-end', available: !!article?.prix_weekend },
     { key: 'semaine' as DureeType, label: 'Semaine', available: !!article?.prix_semaine },
     { key: 'mois' as DureeType, label: 'Mois', available: !!article?.prix_mois },
-    { key: 'libre' as DureeType, label: 'Durée libre', available: !!article?.prix_jour },
   ].filter(d => d.available)
 
   async function handleSubmit() {
     setSubmitting(true)
     setError('')
     try {
-      // 1. Créer la réservation
       const resResa = await fetch('/api/location/reserver', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -150,8 +184,8 @@ export default function LocationReserverPage() {
           locataire_email: email,
           locataire_telephone: telephone || null,
           locataire_adresse: adresse || null,
-          locataire_ville: ville || null,
-          locataire_code_postal: codePostal || null,
+          locataire_ville: codePostalVille || null,
+          locataire_code_postal: null,
           date_debut: dateDebut,
           date_fin: dateFin,
           duree_type: dureeType,
@@ -176,9 +210,8 @@ export default function LocationReserverPage() {
       const resa = await resResa.json()
       if (!resResa.ok) throw new Error(resa.error || 'Erreur lors de la réservation')
       const id = resa.id
-      setReservationId(id)
 
-      // 2. Upload des documents
+      // Upload documents
       const uploadDoc = async (file: File, type: string) => {
         const fd = new FormData()
         fd.append('file', file)
@@ -188,9 +221,13 @@ export default function LocationReserverPage() {
       }
       if (docIdentite) await uploadDoc(docIdentite, 'identite')
       if (docDomicile) await uploadDoc(docDomicile, 'domicile')
-      for (const f of docsAutres) await uploadDoc(f, 'autre')
+      for (const file of docsAutres) await uploadDoc(file, 'autre')
 
-      // 3. Redirection selon moyen de paiement
+      // Nettoyer localStorage
+      localStorage.removeItem(STORAGE_KEY)
+
+      setMoyenPaiementFinal(moyenPaiement)
+
       if (moyenPaiement === 'stripe') {
         const resStripe = await fetch('/api/location/stripe', {
           method: 'POST',
@@ -213,7 +250,6 @@ export default function LocationReserverPage() {
         throw new Error(paypal.error || 'Erreur PayPal')
       }
 
-      // Virement → confirmation directe
       setSuccess(true)
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Une erreur est survenue. Veuillez réessayer.')
@@ -229,32 +265,59 @@ export default function LocationReserverPage() {
 
   if (!article) return null
 
+  // Page de remerciement
   if (success) return (
     <div className="min-h-screen bg-noir-950 text-noir-100">
       <PublicNav />
-      <div className="flex flex-col items-center justify-center min-h-[70vh] text-center px-4">
-        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
-          <div className="w-20 h-20 rounded-2xl bg-green-500/10 border border-green-500/30 flex items-center justify-center mx-auto mb-6">
-            <svg width="36" height="36" fill="none" stroke="#22c55e" strokeWidth="2" viewBox="0 0 24 24">
+      <div className="flex flex-col items-center justify-center min-h-[80vh] text-center px-4">
+        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="max-w-lg">
+          <div className="w-24 h-24 rounded-3xl bg-green-500/10 border border-green-500/30 flex items-center justify-center mx-auto mb-8">
+            <svg width="44" height="44" fill="none" stroke="#22c55e" strokeWidth="2" viewBox="0 0 24 24">
               <polyline points="20 6 9 17 4 12"/>
             </svg>
           </div>
-          <h1 className="font-serif text-4xl text-white mb-4">Demande envoyée !</h1>
-          <p className="text-noir-300 text-lg mb-2 max-w-md">
-            Votre demande de location a bien été reçue. Vous allez recevoir un email de confirmation.
+          <span className="text-gold-500 text-xs font-semibold uppercase tracking-widest">Merci !</span>
+          <h1 className="font-serif text-4xl text-white mt-3 mb-4">Demande envoyée avec succès</h1>
+          <p className="text-noir-300 text-base leading-relaxed mb-6">
+            Votre demande de location pour <strong className="text-white">{article.nom}</strong> a bien été reçue.
+            Un email de confirmation avec votre contrat de location vous a été envoyé.
           </p>
-          {moyenPaiement === 'virement' && (
-            <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 mt-4 mb-6 max-w-md text-left">
-              <p className="text-amber-300 text-sm font-semibold mb-1">Paiement par virement</p>
-              <p className="text-amber-400/80 text-sm">
-                Les coordonnées bancaires vous seront communiquées par email. Votre réservation sera confirmée
-                dès réception du virement.
+
+          {moyenPaiementFinal === 'virement' && (
+            <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-5 mb-6 text-left">
+              <p className="text-amber-300 font-semibold mb-2">Paiement par virement bancaire</p>
+              <p className="text-amber-400/80 text-sm leading-relaxed">
+                Les coordonnées bancaires (IBAN) vous ont été envoyées par email.
+                Votre réservation sera confirmée dès réception du virement.
               </p>
             </div>
           )}
-          <Link href="/location" className="btn-gold px-8 py-3 inline-block mt-4">
-            Retour au catalogue
-          </Link>
+
+          <div className="bg-noir-900 border border-noir-800 rounded-2xl p-5 mb-8 text-left">
+            <p className="text-white font-semibold mb-3">Prochaines étapes</p>
+            <ul className="space-y-2">
+              {[
+                'Vérifiez votre boîte email (et le dossier Spam)',
+                'Votre contrat de location est joint à l\'email de confirmation',
+                moyenPaiementFinal === 'virement' ? 'Effectuez le virement avec l\'IBAN reçu par email' : 'Votre paiement a été traité',
+                'Nous vous contacterons pour organiser la remise du matériel',
+              ].map((item, i) => (
+                <li key={i} className="flex items-start gap-2 text-sm text-noir-300">
+                  <span className="text-gold-500 font-bold shrink-0">{i + 1}.</span>
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link href="/location" className="btn-gold px-8 py-3">
+              Retour au catalogue
+            </Link>
+            <Link href="/contact" className="border border-noir-700 hover:border-gold-500/50 text-noir-300 hover:text-white px-8 py-3 rounded-2xl transition-all text-sm">
+              Nous contacter
+            </Link>
+          </div>
         </motion.div>
       </div>
       <PublicFooter />
@@ -307,7 +370,7 @@ export default function LocationReserverPage() {
               {/* ÉTAPE 1 — Informations */}
               {step === 1 && (
                 <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-5">
-                  {/* Identité */}
+                  {/* Coordonnées */}
                   <div className="card">
                     <h2 className="text-white font-semibold mb-4">Vos coordonnées</h2>
                     <div className="space-y-4">
@@ -315,35 +378,28 @@ export default function LocationReserverPage() {
                         <div>
                           <label className="label mb-1.5 block">Nom complet *</label>
                           <input value={nom} onChange={e => setNom(e.target.value)}
-                            className="input w-full" placeholder="Prénom Nom" required />
+                            className="input w-full" placeholder="Prénom Nom" />
                         </div>
                         <div>
                           <label className="label mb-1.5 block">Email *</label>
                           <input type="email" value={email} onChange={e => setEmail(e.target.value)}
-                            className="input w-full" placeholder="vous@exemple.com" required />
-                        </div>
-                      </div>
-                      <div className="grid sm:grid-cols-2 gap-4">
-                        <div>
-                          <label className="label mb-1.5 block">Téléphone</label>
-                          <input type="tel" value={telephone} onChange={e => setTelephone(e.target.value)}
-                            className="input w-full" placeholder="06 00 00 00 00" />
-                        </div>
-                        <div>
-                          <label className="label mb-1.5 block">Code postal</label>
-                          <input value={codePostal} onChange={e => setCodePostal(e.target.value)}
-                            className="input w-full" placeholder="42000" />
+                            className="input w-full" placeholder="vous@exemple.com" />
                         </div>
                       </div>
                       <div>
-                        <label className="label mb-1.5 block">Adresse complète</label>
+                        <label className="label mb-1.5 block">Téléphone</label>
+                        <input type="tel" value={telephone} onChange={e => setTelephone(e.target.value)}
+                          className="input w-full" placeholder="06 00 00 00 00" />
+                      </div>
+                      <div>
+                        <label className="label mb-1.5 block">Adresse</label>
                         <input value={adresse} onChange={e => setAdresse(e.target.value)}
                           className="input w-full" placeholder="Numéro et nom de rue" />
                       </div>
                       <div>
-                        <label className="label mb-1.5 block">Ville</label>
-                        <input value={ville} onChange={e => setVille(e.target.value)}
-                          className="input w-full" placeholder="Saint-Étienne" />
+                        <label className="label mb-1.5 block">Code postal et ville</label>
+                        <input value={codePostalVille} onChange={e => setCodePostalVille(e.target.value)}
+                          className="input w-full" placeholder="42000 Saint-Étienne" />
                       </div>
                     </div>
                   </div>
@@ -352,7 +408,6 @@ export default function LocationReserverPage() {
                   <div className="card">
                     <h2 className="text-white font-semibold mb-4">Période de location</h2>
                     <div className="space-y-4">
-                      {/* Type de durée */}
                       <div>
                         <label className="label mb-2 block">Type de durée *</label>
                         <div className="flex flex-wrap gap-2">
@@ -373,13 +428,13 @@ export default function LocationReserverPage() {
                           <label className="label mb-1.5 block">Date de début *</label>
                           <input type="date" value={dateDebut} min={today}
                             onChange={e => { setDateDebut(e.target.value); if (dateFin < e.target.value) setDateFin(e.target.value) }}
-                            className="input w-full" required />
+                            className="input w-full" />
                         </div>
                         <div>
                           <label className="label mb-1.5 block">Date de fin *</label>
                           <input type="date" value={dateFin} min={dateDebut || today}
                             onChange={e => setDateFin(e.target.value)}
-                            className="input w-full" required />
+                            className="input w-full" />
                         </div>
                       </div>
                       {dateDebut && dateFin && (
@@ -414,7 +469,6 @@ export default function LocationReserverPage() {
                         </button>
                       ))}
                     </div>
-
                     {modeRemise === 'livraison' && (
                       <div className="space-y-3">
                         <div>
@@ -449,25 +503,71 @@ export default function LocationReserverPage() {
                       Montant : <span className="text-gold-400 font-semibold">{f(article.caution)}</span>
                       {' '}— restituée dans les 5 jours ouvrés après retour du matériel en bon état.
                     </p>
-                    <div>
-                      <label className="label mb-2 block">Mode de caution *</label>
-                      <div className="flex flex-wrap gap-2">
-                        {[
-                          { v: 'cheque', l: 'Chèque (remis à la livraison)' },
-                          { v: 'virement', l: 'Virement bancaire' },
-                          { v: 'especes', l: 'Espèces' },
-                          { v: 'stripe_hold', l: 'Empreinte carte (Stripe)' },
-                        ].map(x => (
-                          <button key={x.v} type="button" onClick={() => setCautionType(x.v)}
-                            className={`px-3 py-2 rounded-xl border text-xs font-medium transition-all ${
-                              cautionType === x.v
-                                ? 'bg-gold-500/10 border-gold-500/30 text-gold-400'
-                                : 'border-noir-700 text-noir-400 hover:text-white'
-                            }`}>
-                            {x.l}
-                          </button>
-                        ))}
-                      </div>
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        { v: 'cheque', l: 'Chèque (remis à la livraison)' },
+                        { v: 'virement', l: 'Virement bancaire' },
+                        { v: 'especes', l: 'Espèces' },
+                        { v: 'stripe_hold', l: 'Empreinte carte (Stripe)' },
+                      ].map(x => (
+                        <button key={x.v} type="button" onClick={() => setCautionType(x.v)}
+                          className={`px-3 py-2 rounded-xl border text-xs font-medium transition-all ${
+                            cautionType === x.v
+                              ? 'bg-gold-500/10 border-gold-500/30 text-gold-400'
+                              : 'border-noir-700 text-noir-400 hover:text-white'
+                          }`}>
+                          {x.l}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Moyen de paiement */}
+                  <div className="card">
+                    <h2 className="text-white font-semibold mb-4">Moyen de paiement</h2>
+                    <div className="space-y-3">
+                      {[
+                        {
+                          v: 'stripe' as MoyenPaiement,
+                          l: 'Carte bancaire',
+                          sub: 'Paiement sécurisé via Stripe',
+                          icon: <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>,
+                        },
+                        {
+                          v: 'paypal' as MoyenPaiement,
+                          l: 'PayPal',
+                          sub: 'Paiement via votre compte PayPal',
+                          icon: <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106z"/></svg>,
+                        },
+                        {
+                          v: 'virement' as MoyenPaiement,
+                          l: 'Virement bancaire',
+                          sub: 'IBAN envoyé par email après confirmation',
+                          icon: <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>,
+                        },
+                      ].map(x => (
+                        <button key={x.v} type="button" onClick={() => setMoyenPaiement(x.v)}
+                          className={`w-full flex items-center gap-4 p-4 rounded-xl border text-left transition-all ${
+                            moyenPaiement === x.v
+                              ? 'bg-gold-500/10 border-gold-500/30'
+                              : 'border-noir-700 hover:border-noir-600'
+                          }`}>
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                            moyenPaiement === x.v ? 'bg-gold-500/20 text-gold-400' : 'bg-noir-800 text-noir-400'
+                          }`}>
+                            {x.icon}
+                          </div>
+                          <div className="flex-1">
+                            <div className={`font-medium text-sm ${moyenPaiement === x.v ? 'text-gold-400' : 'text-white'}`}>{x.l}</div>
+                            <div className="text-noir-500 text-xs">{x.sub}</div>
+                          </div>
+                          {moyenPaiement === x.v && (
+                            <div className="w-5 h-5 rounded-full bg-gold-500 flex items-center justify-center shrink-0">
+                              <svg width="10" height="10" fill="none" stroke="#1a1a2e" strokeWidth="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                            </div>
+                          )}
+                        </button>
+                      ))}
                     </div>
                   </div>
 
@@ -479,20 +579,25 @@ export default function LocationReserverPage() {
                       placeholder="Questions, précisions sur votre projet musical, horaires préférés pour la remise..." />
                   </div>
 
-                  <button
-                    onClick={() => {
-                      if (!nom || !email || !dateDebut || !dateFin) {
-                        setError('Veuillez remplir tous les champs obligatoires.')
-                        return
-                      }
-                      if (modeRemise === 'livraison' && !adresseLivraison) {
-                        setError('Veuillez saisir votre adresse de livraison.')
-                        return
-                      }
-                      setError('')
-                      setStep(2)
-                    }}
-                    className="btn-gold w-full py-3">
+                  {error && step === 1 && (
+                    <div className="flex items-start gap-3 bg-red-500/10 border border-red-500/20 rounded-xl p-4">
+                      <AlertCircle size={16} className="text-red-400 shrink-0 mt-0.5" />
+                      <p className="text-red-400 text-sm">{error}</p>
+                    </div>
+                  )}
+
+                  <button onClick={() => {
+                    if (!nom || !email || !dateDebut || !dateFin) {
+                      setError('Veuillez remplir tous les champs obligatoires (nom, email, dates).')
+                      return
+                    }
+                    if (modeRemise === 'livraison' && !adresseLivraison) {
+                      setError('Veuillez saisir votre adresse de livraison.')
+                      return
+                    }
+                    setError('')
+                    setStep(2)
+                  }} className="btn-gold w-full py-3">
                     Continuer →
                   </button>
                 </motion.div>
@@ -508,7 +613,7 @@ export default function LocationReserverPage() {
                       Vos fichiers sont stockés de manière sécurisée et utilisés uniquement dans le cadre de ce contrat.
                     </p>
 
-                    {/* CNI / Passeport — obligatoire */}
+                    {/* CNI obligatoire */}
                     <div className="mb-5">
                       <label className="label mb-2 block">
                         Pièce d'identité <span className="text-red-400">*</span>
@@ -518,9 +623,7 @@ export default function LocationReserverPage() {
                         <div className="flex items-center gap-3 bg-green-500/10 border border-green-500/20 rounded-xl p-3">
                           <svg width="16" height="16" fill="none" stroke="#22c55e" strokeWidth="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
                           <span className="text-green-400 text-sm flex-1 truncate">{docIdentite.name}</span>
-                          <button onClick={() => setDocIdentite(null)} className="text-noir-500 hover:text-red-400">
-                            <X size={14} />
-                          </button>
+                          <button onClick={() => setDocIdentite(null)} className="text-noir-500 hover:text-red-400"><X size={14} /></button>
                         </div>
                       ) : (
                         <button onClick={() => fileIdentiteRef.current?.click()}
@@ -534,7 +637,7 @@ export default function LocationReserverPage() {
                         onChange={e => { if (e.target.files?.[0]) setDocIdentite(e.target.files[0]) }} />
                     </div>
 
-                    {/* Justificatif de domicile — obligatoire */}
+                    {/* Justificatif domicile obligatoire */}
                     <div className="mb-5">
                       <label className="label mb-2 block">
                         Justificatif de domicile <span className="text-red-400">*</span>
@@ -544,9 +647,7 @@ export default function LocationReserverPage() {
                         <div className="flex items-center gap-3 bg-green-500/10 border border-green-500/20 rounded-xl p-3">
                           <svg width="16" height="16" fill="none" stroke="#22c55e" strokeWidth="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
                           <span className="text-green-400 text-sm flex-1 truncate">{docDomicile.name}</span>
-                          <button onClick={() => setDocDomicile(null)} className="text-noir-500 hover:text-red-400">
-                            <X size={14} />
-                          </button>
+                          <button onClick={() => setDocDomicile(null)} className="text-noir-500 hover:text-red-400"><X size={14} /></button>
                         </div>
                       ) : (
                         <button onClick={() => fileDomicileRef.current?.click()}
@@ -560,21 +661,18 @@ export default function LocationReserverPage() {
                         onChange={e => { if (e.target.files?.[0]) setDocDomicile(e.target.files[0]) }} />
                     </div>
 
-                    {/* Autres documents — optionnel */}
+                    {/* Autres documents */}
                     <div>
                       <label className="label mb-2 block">
-                        Autres documents
-                        <span className="text-noir-500 font-normal ml-1">(optionnel)</span>
+                        Autres documents <span className="text-noir-500 font-normal">(optionnel)</span>
                       </label>
                       {docsAutres.length > 0 && (
                         <div className="space-y-2 mb-3">
-                          {docsAutres.map((f, i) => (
+                          {docsAutres.map((file, i) => (
                             <div key={i} className="flex items-center gap-3 bg-noir-800 border border-noir-700 rounded-xl p-3">
-                              <span className="text-noir-300 text-sm flex-1 truncate">{f.name}</span>
+                              <span className="text-noir-300 text-sm flex-1 truncate">{file.name}</span>
                               <button onClick={() => setDocsAutres(prev => prev.filter((_, j) => j !== i))}
-                                className="text-noir-500 hover:text-red-400">
-                                <X size={14} />
-                              </button>
+                                className="text-noir-500 hover:text-red-400"><X size={14} /></button>
                             </div>
                           ))}
                         </div>
@@ -588,18 +686,23 @@ export default function LocationReserverPage() {
                     </div>
                   </div>
 
+                  {error && step === 2 && (
+                    <div className="flex items-start gap-3 bg-red-500/10 border border-red-500/20 rounded-xl p-4">
+                      <AlertCircle size={16} className="text-red-400 shrink-0 mt-0.5" />
+                      <p className="text-red-400 text-sm">{error}</p>
+                    </div>
+                  )}
+
                   <div className="flex gap-3">
                     <button onClick={() => setStep(1)} className="btn-outline flex-1 py-3">← Retour</button>
-                    <button
-                      onClick={() => {
-                        if (!docIdentite || !docDomicile) {
-                          setError('Veuillez fournir votre pièce d\'identité et votre justificatif de domicile.')
-                          return
-                        }
-                        setError('')
-                        setStep(3)
-                      }}
-                      className="btn-gold flex-1 py-3">
+                    <button onClick={() => {
+                      if (!docIdentite || !docDomicile) {
+                        setError('Veuillez fournir votre pièce d\'identité et votre justificatif de domicile.')
+                        return
+                      }
+                      setError('')
+                      setStep(3)
+                    }} className="btn-gold flex-1 py-3">
                       Continuer →
                     </button>
                   </div>
@@ -612,7 +715,7 @@ export default function LocationReserverPage() {
                   <div className="card">
                     <h2 className="text-white font-semibold mb-4">Contrat de location</h2>
 
-                    {/* Aperçu du contrat */}
+                    {/* Aperçu contrat */}
                     <div className="bg-noir-800 border border-noir-700 rounded-xl p-5 mb-5 text-sm text-noir-300 leading-relaxed max-h-80 overflow-y-auto space-y-3">
                       <p className="text-white font-semibold text-center text-base">CONTRAT PROFESSIONNEL DE LOCATION DE MATÉRIEL MUSICAL</p>
 
@@ -623,7 +726,7 @@ export default function LocationReserverPage() {
                         <p><strong className="text-white">Locataire :</strong> {nom}</p>
                         <p><strong className="text-white">Email :</strong> {email}</p>
                         {telephone && <p><strong className="text-white">Téléphone :</strong> {telephone}</p>}
-                        {adresse && <p><strong className="text-white">Adresse :</strong> {adresse}, {codePostal} {ville}</p>}
+                        {adresse && <p><strong className="text-white">Adresse :</strong> {adresse}, {codePostalVille}</p>}
                       </div>
 
                       <div>
@@ -679,9 +782,7 @@ export default function LocationReserverPage() {
                     {/* Signature */}
                     <div className="space-y-4">
                       <div>
-                        <label className="label mb-1.5 block">
-                          Signature — Saisissez votre nom complet *
-                        </label>
+                        <label className="label mb-1.5 block">Signature — Saisissez votre nom complet *</label>
                         <input value={signatureNom} onChange={e => setSignatureNom(e.target.value)}
                           className="input w-full" placeholder="Prénom Nom (valeur de signature)" />
                         <p className="text-noir-600 text-xs mt-1">
@@ -701,76 +802,70 @@ export default function LocationReserverPage() {
                     </div>
                   </div>
 
+                  {error && step === 3 && (
+                    <div className="flex items-start gap-3 bg-red-500/10 border border-red-500/20 rounded-xl p-4">
+                      <AlertCircle size={16} className="text-red-400 shrink-0 mt-0.5" />
+                      <p className="text-red-400 text-sm">{error}</p>
+                    </div>
+                  )}
+
                   <div className="flex gap-3">
                     <button onClick={() => setStep(2)} className="btn-outline flex-1 py-3">← Retour</button>
                     <button
                       onClick={() => {
-                        if (!contratLu || !signatureNom.trim()) {
-                          setError('Veuillez lire le contrat, saisir votre nom et cocher la case d\'acceptation.')
+                        if (!contratLu) {
+                          setError('Veuillez cocher la case "J\'ai lu et j\'accepte" pour continuer.')
+                          return
+                        }
+                        if (!signatureNom.trim()) {
+                          setError('Veuillez saisir votre nom complet pour signer le contrat.')
                           return
                         }
                         setError('')
                         setStep(4)
                       }}
-                      className="btn-gold flex-1 py-3">
-                      Continuer →
+                      disabled={!contratLu}
+                      className={`flex-1 py-3 rounded-2xl font-semibold text-sm transition-all ${
+                        contratLu
+                          ? 'btn-gold'
+                          : 'bg-noir-800 text-noir-600 cursor-not-allowed border border-noir-700'
+                      }`}>
+                      {contratLu ? 'Continuer →' : 'Acceptez le contrat pour continuer'}
                     </button>
                   </div>
                 </motion.div>
               )}
 
-              {/* ÉTAPE 4 — Paiement */}
+              {/* ÉTAPE 4 — Confirmation & paiement */}
               {step === 4 && (
                 <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-5">
                   <div className="card">
-                    <h2 className="text-white font-semibold mb-4">Moyen de paiement</h2>
-                    <div className="space-y-3">
+                    <h2 className="text-white font-semibold mb-4">Confirmation de votre réservation</h2>
+                    <div className="space-y-2 text-sm">
                       {[
-                        {
-                          v: 'stripe' as MoyenPaiement,
-                          l: 'Carte bancaire',
-                          sub: 'Paiement sécurisé via Stripe',
-                          icon: <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>,
-                        },
-                        {
-                          v: 'paypal' as MoyenPaiement,
-                          l: 'PayPal',
-                          sub: 'Paiement via votre compte PayPal',
-                          icon: <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c-.013.076-.026.175-.041.254-.59 3.025-2.566 6.082-8.558 6.082H9.825l-1.43 9.083h3.44l.943-5.985h2.19c4.56 0 7.353-2.498 8.254-7.893z"/></svg>,
-                        },
-                        {
-                          v: 'virement' as MoyenPaiement,
-                          l: 'Virement bancaire',
-                          sub: 'Coordonnées bancaires envoyées par email',
-                          icon: <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>,
-                        },
-                      ].map(x => (
-                        <button key={x.v} type="button" onClick={() => setMoyenPaiement(x.v)}
-                          className={`w-full flex items-center gap-4 p-4 rounded-xl border text-left transition-all ${
-                            moyenPaiement === x.v
-                              ? 'bg-gold-500/10 border-gold-500/30'
-                              : 'border-noir-700 hover:border-noir-600'
-                          }`}>
-                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                            moyenPaiement === x.v ? 'bg-gold-500/20 text-gold-400' : 'bg-noir-800 text-noir-400'
-                          }`}>
-                            {x.icon}
-                          </div>
-                          <div>
-                            <div className={`font-medium text-sm ${moyenPaiement === x.v ? 'text-gold-400' : 'text-white'}`}>{x.l}</div>
-                            <div className="text-noir-500 text-xs">{x.sub}</div>
-                          </div>
-                          {moyenPaiement === x.v && (
-                            <div className="ml-auto w-5 h-5 rounded-full bg-gold-500 flex items-center justify-center shrink-0">
-                              <svg width="10" height="10" fill="none" stroke="#1a1a2e" strokeWidth="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-                            </div>
-                          )}
-                        </button>
+                        { label: 'Article', value: article.nom },
+                        { label: 'Période', value: `${new Date(dateDebut).toLocaleDateString('fr-FR')} → ${new Date(dateFin).toLocaleDateString('fr-FR')}` },
+                        { label: 'Durée', value: `${nb} jour${nb > 1 ? 's' : ''}` },
+                        { label: 'Mode de remise', value: modeRemise === 'livraison' ? 'Livraison à domicile' : 'Retrait à Saint-Étienne' },
+                        { label: 'Paiement', value: moyenPaiement === 'stripe' ? 'Carte bancaire (Stripe)' : moyenPaiement === 'paypal' ? 'PayPal' : 'Virement bancaire' },
+                        { label: 'Caution', value: `${f(article.caution)} — ${cautionType === 'cheque' ? 'Chèque' : cautionType === 'virement' ? 'Virement' : cautionType === 'especes' ? 'Espèces' : 'Empreinte carte'}` },
+                      ].map((item, i) => (
+                        <div key={i} className="flex justify-between py-1.5 border-b border-noir-800">
+                          <span className="text-noir-400">{item.label}</span>
+                          <span className="text-white font-medium text-right">{item.value}</span>
+                        </div>
                       ))}
+                      <div className="flex justify-between py-2">
+                        <span className="text-white font-semibold">Montant à payer</span>
+                        <span className="text-gold-400 font-bold text-lg">{f(montantDu)}</span>
+                      </div>
+                      {estAcompte && (
+                        <p className="text-amber-400 text-xs">* Acompte de 50% — solde de {f(montantTotal - montantDu)} à régler à la remise du matériel.</p>
+                      )}
                     </div>
                   </div>
 
-                  {error && (
+                  {error && step === 4 && (
                     <div className="flex items-start gap-3 bg-red-500/10 border border-red-500/20 rounded-xl p-4">
                       <AlertCircle size={16} className="text-red-400 shrink-0 mt-0.5" />
                       <p className="text-red-400 text-sm">{error}</p>
@@ -780,27 +875,20 @@ export default function LocationReserverPage() {
                   <div className="flex gap-3">
                     <button onClick={() => setStep(3)} className="btn-outline flex-1 py-3">← Retour</button>
                     <button onClick={handleSubmit} disabled={submitting} className="btn-gold flex-1 py-3">
-                      {submitting ? 'Traitement en cours...' : moyenPaiement === 'virement' ? 'Confirmer la réservation' : 'Procéder au paiement →'}
+                      {submitting ? 'Traitement en cours...'
+                        : moyenPaiement === 'virement' ? 'Confirmer la réservation'
+                        : 'Procéder au paiement →'}
                     </button>
                   </div>
                 </motion.div>
               )}
-
-              {/* Erreur globale */}
-              {error && step !== 4 && (
-                <div className="flex items-start gap-3 bg-red-500/10 border border-red-500/20 rounded-xl p-4">
-                  <AlertCircle size={16} className="text-red-400 shrink-0 mt-0.5" />
-                  <p className="text-red-400 text-sm">{error}</p>
-                </div>
-              )}
             </div>
 
-            {/* Récapitulatif */}
+            {/* Récapitulatif sticky en bas */}
             <div className="lg:col-span-1">
-              <div className="card sticky top-24">
+              <div className="card lg:sticky lg:top-auto lg:bottom-8">
                 <h3 className="text-white font-semibold mb-4">Récapitulatif</h3>
 
-                {/* Article */}
                 <div className="flex items-center gap-3 mb-4 pb-4 border-b border-noir-800">
                   <div className="w-14 h-14 rounded-xl bg-noir-800 overflow-hidden shrink-0">
                     {article.photos?.[0] ? (
@@ -818,7 +906,6 @@ export default function LocationReserverPage() {
                   </div>
                 </div>
 
-                {/* Détails */}
                 <div className="space-y-2 text-sm mb-4">
                   {dateDebut && dateFin && (
                     <div className="flex justify-between">
@@ -880,7 +967,6 @@ export default function LocationReserverPage() {
 
                 <p className="text-noir-600 text-xs mt-4 leading-relaxed">
                   La caution n'est pas incluse dans le montant à payer en ligne.
-                  Elle sera remise séparément selon le mode choisi.
                 </p>
               </div>
             </div>
