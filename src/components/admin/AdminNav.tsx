@@ -6,7 +6,8 @@ import { usePathname, useRouter } from 'next/navigation'
 import {
   Calendar, Users, Star, MessageSquare, Settings, LogOut,
   LayoutDashboard, ClipboardList, Image, Gift, Mail, BookOpen,
-  TrendingUp, CheckSquare, Music, Mic, HelpCircle, Library
+  TrendingUp, CheckSquare, Music, Mic, HelpCircle, Library,
+  Package, Truck
 } from 'lucide-react'
 import { GlobalSearch } from '@/components/admin/ui/SearchBar'
 
@@ -24,6 +25,14 @@ const NAV_GROUPS = [
       { href: '/admin/reservations',   label: 'Réservations & Essais', icon: Users        },
       { href: '/admin/evenements',     label: 'Événements',            icon: Star         },
       { href: '/admin/packs',          label: 'Packs & Bons cadeaux',  icon: Gift         },
+    ],
+  },
+  {
+    label: 'Location',
+    items: [
+      { href: '/admin/location',            label: 'Réservations',   icon: Package },
+      { href: '/admin/location/catalogue',  label: 'Catalogue',      icon: Music   },
+      { href: '/admin/location/livraison',  label: 'Zones livraison', icon: Truck  },
     ],
   },
   {
@@ -83,7 +92,6 @@ export default function AdminNav() {
 
   async function handleLogout() {
     await fetch('/api/auth/logout', { method: 'POST' })
-    // Forcer un rechargement complet pour vider le cache Next.js
     window.location.href = '/admin/login'
   }
 
@@ -147,8 +155,8 @@ export default function AdminNav() {
           {[
             { href: '/admin',              label: 'Accueil',    icon: LayoutDashboard },
             { href: '/admin/reservations', label: 'Réserv.',    icon: Calendar        },
+            { href: '/admin/location',     label: 'Location',   icon: Package         },
             { href: '/admin/eleves',       label: 'Élèves',     icon: Users           },
-            { href: '/admin/packs',        label: 'Packs',      icon: BookOpen        },
             { href: '/admin/parametres',   label: 'Config.',    icon: Settings        },
           ].map(({ href, label, icon: Icon }) => {
             const active = pathname === href || (href !== '/admin' && pathname.startsWith(href))
