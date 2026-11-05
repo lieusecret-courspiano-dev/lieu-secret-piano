@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase'
 
 // GET — liste les zones de livraison actives (côté public)
 export async function GET() {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from('location_zones_livraison')
     .select('id, nom, distance_min, distance_max, tarif, sur_devis')
     .eq('actif', true)
