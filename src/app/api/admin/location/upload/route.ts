@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { validateAdminSession } from '@/lib/auth'
-import { uploadToCloudinary } from '@/lib/cloudinary'
+import { cloudinary } from '@/lib/cloudinary'
 
 export async function POST(req: NextRequest) {
   const isAdmin = await validateAdminSession()
@@ -23,13 +23,21 @@ export async function POST(req: NextRequest) {
     const arrayBuffer = await file.arrayBuffer()
     const buffer = Buffer.from(arrayBuffer)
 
-    const result = await uploadToCloudinary(buffer, {
-      folder: 'lieu-secret/location',
-      resource_type: 'image',
-      public_id: `article-${Date.now()}`,
+    const result = await new Promise<{ secure_url: string }>((resolve, reject) => {
+      cloudinary.uploader.upload_stream(
+        {
+          folder: 'lieu-secret/location',
+          resource_type: 'image',
+          public_id: `article-${Date.now()}`,
+        },
+        (error, result) => {
+          if (error || !result) reject(error || new Error('Upload failed'))
+          else resolve(result as { secure_url: string })
+        }
+      ).end(buffer)
     })
 
-    return NextResponse.json({ url: result.url })
+    return NextResponse.json({ url: result.secure_url })
   } catch (err: unknown) {
     console.error('Upload error:', err)
     return NextResponse.json({ error: 'Erreur lors de l\'upload' }, { status: 500 })
