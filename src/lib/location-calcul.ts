@@ -10,7 +10,7 @@
  *  - 1 mois (30j) à 500€ = 500€ | 45j à 500€ = 1000€ (2 mois)
  */
 
-export type DureeType = 'jours' | 'weekend' | 'semaine' | 'mois'
+export type DureeType = 'jours' | 'weekend' | 'mois'
 
 export interface PrixArticle {
   prix_jour: number | null
@@ -85,9 +85,6 @@ export function calculMontantLocation(
     case 'weekend':
       return (article.prix_weekend || 0) * countWeekends(dateDebut, dateFin)
 
-    case 'semaine':
-      return (article.prix_semaine || 0) * nbSemaines(dateDebut, dateFin)
-
     case 'mois':
       return (article.prix_mois || 0) * nbMois(dateDebut, dateFin)
 
@@ -115,10 +112,6 @@ export function detailCalcul(
     case 'weekend': {
       const q = countWeekends(dateDebut, dateFin)
       return { quantite: q, prixUnitaire: article.prix_weekend || 0, label: `${q} week-end${q > 1 ? 's' : ''}` }
-    }
-    case 'semaine': {
-      const q = nbSemaines(dateDebut, dateFin)
-      return { quantite: q, prixUnitaire: article.prix_semaine || 0, label: `${q} semaine${q > 1 ? 's' : ''}` }
     }
     case 'mois': {
       const q = nbMois(dateDebut, dateFin)
