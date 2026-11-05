@@ -138,13 +138,11 @@ export default function LocationReserverPage() {
   // Calcul automatique de dateFin selon dureeType et quantite
   function calcDateFin(debut: string, type: DureeType, qty: number): string {
     if (!debut) return ''
-    const d = new Date(debut)
+    const d = new Date(debut + 'T12:00:00')
     if (type === 'jours') {
       d.setDate(d.getDate() + qty - 1)
     } else if (type === 'weekend') {
-      // Trouver le prochain samedi si pas déjà samedi
-      while (d.getDay() !== 6) d.setDate(d.getDate() + 1)
-      // Ajouter (qty-1) semaines + 1 jour (dimanche)
+      // Samedi de début + (qty-1) semaines + 1 jour = dimanche final
       d.setDate(d.getDate() + (qty - 1) * 7 + 1)
     } else if (type === 'mois') {
       d.setMonth(d.getMonth() + qty)
@@ -338,7 +336,7 @@ export default function LocationReserverPage() {
     <div className="min-h-screen bg-noir-950 text-noir-100">
       <PublicNav />
 
-      <div className="pt-28 pb-24 px-4">
+      <div className="pt-24 pb-16 px-4">
         <div className="max-w-4xl mx-auto">
 
           {/* En-tête */}
@@ -346,7 +344,7 @@ export default function LocationReserverPage() {
             <Link href={`/location/${slug}`} className="text-noir-500 hover:text-gold-400 transition-colors text-sm inline-flex items-center gap-1 mb-4">
               <ChevronLeft size={14} /> Retour à l'article
             </Link>
-            <h1 className="font-serif text-3xl text-white">Réserver — <span className="text-gold-400">{article.nom}</span></h1>
+            <h1 className="font-serif text-xl sm:text-3xl text-white">Réserver — <span className="text-gold-400">{article.nom}</span></h1>
           </div>
 
           {/* Indicateur d'étapes */}
@@ -373,7 +371,7 @@ export default function LocationReserverPage() {
             ))}
           </div>
 
-          <div className="grid lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Formulaire */}
             <div className="lg:col-span-2 space-y-5">
 
@@ -467,7 +465,7 @@ export default function LocationReserverPage() {
                             </button>
                             <span className="text-noir-400 text-sm">
                               {dureeType === 'weekend'
-                                ? `= ${quantite * 2} jour${quantite * 2 > 1 ? 's' : ''}`
+                                ? `= ${quantite * 2} jours (sam. + dim.)`
                                 : `≈ ${quantite * 30} jours`}
                             </span>
                           </div>
@@ -489,7 +487,7 @@ export default function LocationReserverPage() {
                               if (dureeType === 'weekend') {
                                 const day = new Date(d + 'T12:00:00').getDay()
                                 if (day !== 6) {
-                                  alert('Pour un week-end, veuillez sélectionner un samedi.')
+                                  alert('Pour une location week-end, veuillez sélectionner un samedi (la fin sera automatiquement fixée au dimanche).')
                                   return
                                 }
                               }
@@ -533,10 +531,10 @@ export default function LocationReserverPage() {
                   {/* Mode de remise */}
                   <div className="card">
                     <h2 className="text-white font-semibold mb-4">Mode de remise</h2>
-                    <div className="flex gap-3 mb-4">
+                    <div className="flex flex-col sm:flex-row gap-3 mb-4">
                       {[
-                        { v: 'retrait' as ModeRemise, l: '📍 Retrait à Saint-Étienne', sub: 'Gratuit' },
-                        { v: 'livraison' as ModeRemise, l: '🚗 Livraison à domicile', sub: 'Selon zone' },
+                        { v: 'retrait' as ModeRemise, l: 'Retrait à Saint-Étienne', sub: 'Gratuit' },
+                        { v: 'livraison' as ModeRemise, l: 'Livraison à domicile', sub: 'Selon zone' },
                       ].map(x => (
                         <button key={x.v} type="button" onClick={() => setModeRemise(x.v)}
                           className={`flex-1 py-3 px-4 rounded-xl border text-sm font-medium transition-all text-left ${
@@ -981,7 +979,7 @@ export default function LocationReserverPage() {
 
             {/* Récapitulatif sticky en bas */}
             <div className="lg:col-span-1">
-              <div className="card lg:sticky lg:top-24">
+              <div className="card lg:sticky lg:top-24 order-first lg:order-last">
                 <h3 className="text-white font-semibold mb-4">Récapitulatif</h3>
 
                 <div className="flex items-center gap-3 mb-4 pb-4 border-b border-noir-800">
