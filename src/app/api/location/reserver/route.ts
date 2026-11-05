@@ -248,6 +248,25 @@ export async function POST(req: NextRequest) {
     const contratBase64   = contratBuffer.toString('base64')
     const contratFilename = `contrat-location-${(body.article_nom as string).toLowerCase().replace(/\s+/g, '-')}.pdf`
 
+    // Uploader le contrat sur Cloudinary pour le rendre accessible depuis l'admin
+    let contratUrl: string | null = null
+    try {
+      const { uploadToCloudinary } = await import('@/lib/cloudinary')
+      const uploadResult = await uploadToCloudinary(contratBuffer, {
+        folder: `location-contrats/${reservation.id}`,
+        resource_type: 'raw',
+        public_id: `contrat-${reservation.id}`,
+      })
+      contratUrl = uploadResult.url
+      // Mettre à jour la réservation avec l'URL du contrat
+      await supabaseAdmin
+        .from('location_reservations')
+        .update({ contrat_genere: true, contrat_url: contratUrl })
+        .eq('id', reservation.id)
+    } catch (e) {
+      console.error('Erreur upload contrat Cloudinary:', e)
+    }
+
     const cautionLabel: Record<string, string> = {
       cheque: 'Chèque remis à la livraison', virement: 'Virement bancaire',
       especes: 'Espèces', stripe_hold: 'Empreinte carte (Stripe)',
@@ -334,6 +353,10 @@ export async function POST(req: NextRequest) {
         to:   ADMIN_EMAIL,
         subject: `[Location] Nouvelle demande — ${body.article_nom}`,
         html: adminHtml,
+        attachments: [{
+          filename: contratFilename,
+          content:  contratBase64,
+        }],
       }),
     ]).catch(console.error)
 
