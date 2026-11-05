@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { validateAdminSession } from '@/lib/auth'
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase'
 
 async function checkAdmin() {
   const ok = await validateAdminSession()
@@ -13,7 +13,7 @@ export async function GET() {
   const err = await checkAdmin()
   if (err) return err
 
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from('location_articles')
     .select('*')
     .order('position', { ascending: true })
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
   const body = await req.json()
 
   // Vérifier que le slug est unique
-  const { data: existing } = await supabase
+  const { data: existing } = await supabaseAdmin
     .from('location_articles')
     .select('id')
     .eq('slug', body.slug)
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Ce slug est déjà utilisé. Veuillez en choisir un autre.' }, { status: 400 })
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from('location_articles')
     .insert({
       nom: body.nom,
@@ -82,7 +82,7 @@ export async function PATCH(req: NextRequest) {
 
   // Si le slug change, vérifier l'unicité
   if (updates.slug) {
-    const { data: existing } = await supabase
+    const { data: existing } = await supabaseAdmin
       .from('location_articles')
       .select('id')
       .eq('slug', updates.slug)
@@ -94,7 +94,7 @@ export async function PATCH(req: NextRequest) {
     }
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from('location_articles')
     .update(updates)
     .eq('id', id)
@@ -114,7 +114,7 @@ export async function DELETE(req: NextRequest) {
   if (!id) return NextResponse.json({ error: 'ID manquant' }, { status: 400 })
 
   // Vérifier qu'il n'y a pas de réservations actives
-  const { data: reservations } = await supabase
+  const { data: reservations } = await supabaseAdmin
     .from('location_reservations')
     .select('id')
     .eq('article_id', id)
@@ -126,7 +126,7 @@ export async function DELETE(req: NextRequest) {
     }, { status: 400 })
   }
 
-  const { error } = await supabase
+  const { error } = await supabaseAdmin
     .from('location_articles')
     .delete()
     .eq('id', id)
