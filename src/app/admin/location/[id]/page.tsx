@@ -36,6 +36,8 @@ interface Reservation {
   caution_restituee: boolean
   moyen_paiement: string | null
   paiement_statut: string
+  contrat_genere: boolean
+  contrat_url: string | null
   contrat_signe: boolean
   contrat_signe_le: string | null
   signature_nom: string | null
@@ -313,6 +315,18 @@ export default function AdminLocationDetailPage() {
                 </div>
               )}
             </div>
+
+            {/* Bouton téléchargement contrat */}
+            {resa.contrat_url ? (
+              <a href={resa.contrat_url} target="_blank" rel="noopener noreferrer"
+                className="mt-4 flex items-center gap-2 btn-gold text-sm py-2 px-4 w-fit">
+                <FileText size={14} /> Télécharger le contrat PDF
+              </a>
+            ) : (
+              <p className="mt-3 text-noir-600 text-xs">
+                {resa.contrat_genere ? 'Contrat généré — URL non disponible' : 'Contrat non encore généré'}
+              </p>
+            )}
           </div>
 
           {/* Documents */}
