@@ -473,6 +473,19 @@ export default function LocationReserverPage() {
                       <div className="space-y-3">
                         <div>
                           <label className="label mb-1.5 block">Adresse de livraison *</label>
+                          <label className="flex items-center gap-2 mb-2 cursor-pointer">
+                            <input type="checkbox"
+                              className="w-4 h-4 accent-amber-500"
+                              onChange={e => {
+                                if (e.target.checked && adresse) {
+                                  setAdresseLivraison(adresse + (codePostalVille ? ', ' + codePostalVille : ''))
+                                } else {
+                                  setAdresseLivraison('')
+                                }
+                              }}
+                            />
+                            <span className="text-noir-400 text-xs">Identique à l'adresse de facturation</span>
+                          </label>
                           <input value={adresseLivraison} onChange={e => setAdresseLivraison(e.target.value)}
                             className="input w-full" placeholder="Adresse complète de livraison" />
                         </div>
@@ -561,11 +574,13 @@ export default function LocationReserverPage() {
                             <div className={`font-medium text-sm ${moyenPaiement === x.v ? 'text-gold-400' : 'text-white'}`}>{x.l}</div>
                             <div className="text-noir-500 text-xs">{x.sub}</div>
                           </div>
-                          {moyenPaiement === x.v && (
-                            <div className="w-5 h-5 rounded-full bg-gold-500 flex items-center justify-center shrink-0">
+                          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
+                            moyenPaiement === x.v ? 'bg-gold-500 border-gold-500' : 'border-noir-700 bg-transparent'
+                          }`}>
+                            {moyenPaiement === x.v && (
                               <svg width="10" height="10" fill="none" stroke="#1a1a2e" strokeWidth="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-                            </div>
-                          )}
+                            )}
+                          </div>
                         </button>
                       ))}
                     </div>
@@ -886,7 +901,7 @@ export default function LocationReserverPage() {
 
             {/* Récapitulatif sticky en bas */}
             <div className="lg:col-span-1">
-              <div className="card lg:sticky lg:top-auto lg:bottom-8">
+              <div className="card lg:sticky lg:top-24">
                 <h3 className="text-white font-semibold mb-4">Récapitulatif</h3>
 
                 <div className="flex items-center gap-3 mb-4 pb-4 border-b border-noir-800">
