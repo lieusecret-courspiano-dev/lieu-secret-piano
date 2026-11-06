@@ -108,6 +108,21 @@ export async function GET(req: NextRequest) {
       return dateRef >= fromDate && dateRef <= toDate
     })
 
+    // Revenus de location (paiements complets uniquement)
+    let locationResaAll: { montant_total: number; moyen_paiement: string | null; paiement_statut: string; created_at: string }[] = []
+    try {
+      const { data: locData } = await supabaseAdmin
+        .from('location_reservations')
+        .select('montant_total, moyen_paiement, paiement_statut, created_at')
+        .eq('paiement_statut', 'complet')
+      locationResaAll = locData || []
+    } catch { locationResaAll = [] }
+
+    const locationResa = locationResaAll.filter(r => {
+      const dateRef = r.created_at?.substring(0, 10)
+      return dateRef >= fromDate && dateRef <= toDate
+    })
+
     // Élèves actifs
     const { count: elevesActifs } = await supabaseAdmin
       .from('eleves').select('*', { count: 'exact', head: true }).eq('is_active', true)
@@ -124,13 +139,15 @@ export async function GET(req: NextRequest) {
     const revenusCB       = (cbResa || []).reduce((s, r) => s + (r.amount || 0), 0)
     const revenusSupports = (supportsAchats || []).reduce((s, x) => s + (x.montant || 0), 0)
     const revenusRessources = (ressourcesPremium || []).reduce((s: number, x: any) => s + (x.montant || 0), 0)
-    const revenusTotal    = revenusPacks + revenusGifts + revenusEvents + revenusCB + revenusSupports + revenusRessources
+    const revenusLocation = locationResa.reduce((s, r) => s + (r.montant_total || 0), 0)
+    const revenusTotal    = revenusPacks + revenusGifts + revenusEvents + revenusCB + revenusSupports + revenusRessources + revenusLocation
 
     // Par mode de paiement
     const revenusVirement = [
       ...(packs || []).filter(p => p.payment_method === 'virement'),
       ...(giftCards || []).filter(g => g.payment_method === 'virement'),
     ].reduce((s, x) => s + (x.montant || 0), 0)
+      + locationResa.filter(r => r.moyen_paiement === 'virement').reduce((s, r) => s + (r.montant_total || 0), 0)
 
     // Stripe uniquement
     const revenusStripe = revenusCB
@@ -138,6 +155,7 @@ export async function GET(req: NextRequest) {
       + (giftCards || []).filter(g => g.payment_method === 'stripe').reduce((s, g) => s + (g.montant || 0), 0)
       + (eventResa || []).filter(r => r.payment_method === 'stripe').reduce((s, r) => s + (r.amount || 0), 0)
       + (supportsAchats || []).filter(s => s.payment_method === 'stripe').reduce((s, x) => s + (x.montant || 0), 0)
+      + locationResa.filter(r => r.moyen_paiement === 'stripe').reduce((s, r) => s + (r.montant_total || 0), 0)
 
     // PayPal uniquement
     const revenusPayPal = (cbResa || []).filter(r => r.payment_method === 'paypal').reduce((s, r) => s + (r.amount || 0), 0)
@@ -145,6 +163,7 @@ export async function GET(req: NextRequest) {
       + (giftCards || []).filter(g => g.payment_method === 'paypal').reduce((s, g) => s + (g.montant || 0), 0)
       + (eventResa || []).filter(r => r.payment_method === 'paypal').reduce((s, r) => s + (r.amount || 0), 0)
       + (supportsAchats || []).filter(s => s.payment_method === 'paypal').reduce((s, x) => s + (x.montant || 0), 0)
+      + locationResa.filter(r => r.moyen_paiement === 'paypal').reduce((s, r) => s + (r.montant_total || 0), 0)
 
     const revenusCarte = revenusStripe + revenusPayPal
 
@@ -170,12 +189,14 @@ export async function GET(req: NextRequest) {
       const mSupports = (supportsAchats || []).filter(s => s.created_at?.startsWith(month))
       const mRessources = (ressourcesPremium || []).filter((r: any) => r.created_at?.startsWith(month))
       const mCours    = (reservations || []).filter(r => r.created_at?.startsWith(month) && r.status === 'confirmed' && r.type === 'cours')
+      const mLocation = locationResa.filter(r => r.created_at?.startsWith(month))
       const revenus = mPacks.reduce((s, p) => s + (p.montant || 0), 0)
                     + mGifts.reduce((s, g) => s + (g.montant || 0), 0)
                     + mEvents.reduce((s, r) => s + (r.amount || 0), 0)
                     + mCB.reduce((s, r) => s + (r.amount || 0), 0)
                     + mSupports.reduce((s, x) => s + (x.montant || 0), 0)
                     + mRessources.reduce((s: number, x: any) => s + (x.montant || 0), 0)
+                    + mLocation.reduce((s, r) => s + (r.montant_total || 0), 0)
       return {
         month, label: DateTime.fromFormat(month, 'yyyy-MM').setLocale('fr').toFormat('MMM yy'),
         revenus: Math.round(revenus * 100) / 100,
@@ -198,6 +219,7 @@ export async function GET(req: NextRequest) {
         cb_direct: Math.round(revenusCB * 100) / 100,
         supports: Math.round(revenusSupports * 100) / 100,
         ressources: Math.round(revenusRessources * 100) / 100,
+        location: Math.round(revenusLocation * 100) / 100,
         par_stripe: Math.round(revenusStripe * 100) / 100,
         par_paypal: Math.round(revenusPayPal * 100) / 100,
         par_carte: Math.round(revenusCarte * 100) / 100,
