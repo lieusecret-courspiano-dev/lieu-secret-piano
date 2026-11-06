@@ -30,6 +30,18 @@ const withPWA = require('next-pwa')({
       handler: 'NetworkFirst',
       options: { cacheName: 'metronome-page', expiration: { maxEntries: 1, maxAgeSeconds: 7 * 24 * 60 * 60 } },
     },
+    // Pages location — toujours depuis le réseau (données dynamiques)
+    {
+      urlPattern: /^\/location(\/.*)?(\?.*)?$/i,
+      handler: 'NetworkOnly',
+      options: { cacheName: 'location-pages' },
+    },
+    // API location — jamais en cache
+    {
+      urlPattern: /^\/api\/location(\/.*)?(\?.*)?$/i,
+      handler: 'NetworkOnly',
+      options: { cacheName: 'location-api' },
+    },
   ],
 })
 
