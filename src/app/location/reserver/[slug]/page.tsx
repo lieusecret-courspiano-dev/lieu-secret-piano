@@ -179,6 +179,13 @@ export default function LocationReserverPage() {
     ? quantite * 30
     : nb
   const estAcompte = dureeReelle >= 15
+
+  // Label durée pour affichage
+  const dureeLabel = dureeType === 'weekend'
+    ? `${quantite * 2} jours (${quantite} week-end${quantite > 1 ? 's' : ''})`
+    : dureeType === 'mois'
+    ? `${quantite} mois`
+    : `${nb} jour${nb > 1 ? 's' : ''}`
   const montantAcompte = estAcompte ? montantTotal * 0.5 : null
   const montantDu = estAcompte ? montantAcompte! : montantTotal
 
@@ -648,7 +655,7 @@ export default function LocationReserverPage() {
                                 ? `${quantite * 2} jour${quantite * 2 > 1 ? 's' : ''} (${quantite} week-end${quantite > 1 ? 's' : ''})`
                                 : dureeType === 'mois'
                                 ? `${quantite} mois`
-                                : `${nb} jour${nb > 1 ? 's' : ''}`}
+                                : dureeLabel}
                             </span>
                           </div>
                           <div>
@@ -1121,7 +1128,7 @@ export default function LocationReserverPage() {
                       {[
                         { label: 'Article', value: article.nom },
                         { label: 'Période', value: `${new Date(dateDebut).toLocaleDateString('fr-FR')} → ${new Date(dateFin).toLocaleDateString('fr-FR')}` },
-                        { label: 'Durée', value: `${nb} jour${nb > 1 ? 's' : ''}` },
+                        { label: 'Durée', value: dureeLabel },
                         { label: 'Mode de remise', value: modeRemise === 'livraison' ? 'Livraison à domicile' : 'Retrait à Saint-Étienne' },
                         { label: 'Paiement', value: moyenPaiement === 'stripe' ? 'Carte bancaire (Stripe)' : moyenPaiement === 'paypal' ? 'PayPal' : 'Virement bancaire' },
                         { label: 'Caution', value: `${f(article.caution)} — ${cautionType === 'cheque' ? 'Chèque' : cautionType === 'virement' ? 'Virement' : cautionType === 'especes' ? 'Espèces' : 'Empreinte carte'}` },
@@ -1195,7 +1202,7 @@ export default function LocationReserverPage() {
                   {nb > 0 && (
                     <div className="flex justify-between">
                       <span className="text-noir-400">Durée</span>
-                      <span className="text-white">{nb} jour{nb > 1 ? 's' : ''}</span>
+                      <span className="text-white">{dureeLabel}</span>
                     </div>
                   )}
                   <div className="flex justify-between">
