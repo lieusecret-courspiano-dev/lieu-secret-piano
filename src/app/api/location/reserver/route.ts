@@ -213,8 +213,9 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (resaErr || !reservation) {
-      console.error('Erreur création réservation:', resaErr)
-      return NextResponse.json({ error: 'Erreur lors de la création de la réservation.' }, { status: 500 })
+      console.error('Erreur création réservation:', JSON.stringify(resaErr))
+      const errMsg = resaErr?.message || resaErr?.details || resaErr?.hint || 'Erreur lors de la création de la réservation.'
+      return NextResponse.json({ error: errMsg }, { status: 500 })
     }
 
     // Retourner immédiatement la réservation pour ne pas bloquer le paiement
