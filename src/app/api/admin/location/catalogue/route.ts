@@ -100,12 +100,16 @@ export async function PATCH(req: NextRequest) {
     }
   }
 
+  console.log('PATCH article:', id, 'updates:', JSON.stringify(updates))
+
   const { data, error } = await supabaseAdmin
     .from('location_articles')
     .update(updates)
     .eq('id', id)
     .select()
     .single()
+
+  console.log('PATCH result:', JSON.stringify({ data, error }))
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
