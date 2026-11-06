@@ -162,21 +162,25 @@ export default function AdminLocationCataloguePage() {
 
   async function handleDelete(id: string) {
     if (!confirm('Supprimer cet article ? Cette action est irréversible.')) return
-    const res = await fetch('/api/admin/location/catalogue', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id }),
-      cache: 'no-store',
-    })
-    if (!res.ok) {
-      const d = await res.json().catch(() => ({}))
-      alert(d.error || 'Erreur lors de la suppression')
-      return
+    try {
+      const res = await fetch('/api/admin/location/catalogue', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        alert(data.error || 'Erreur lors de la suppression')
+        return
+      }
+      // Supprimer du state local immédiatement
+      setArticles(prev => prev.filter(a => a.id !== id))
+      // Recharger depuis l'API après 1 seconde
+      setTimeout(() => loadArticles(), 1000)
+    } catch (err) {
+      alert('Erreur réseau lors de la suppression')
+      console.error(err)
     }
-    // Mettre à jour le state local immédiatement
-    setArticles(prev => prev.filter(a => a.id !== id))
-    // Puis recharger depuis l'API pour confirmer
-    setTimeout(() => loadArticles(), 500)
   }
 
   async function togglePublish(a: Article) {
