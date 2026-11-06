@@ -63,6 +63,8 @@ export default function LocationReserverPage() {
   const [modeRemise, setModeRemise] = useState<ModeRemise>('retrait')
   const [adresseLivraison, setAdresseLivraison] = useState('')
   const [zoneId, setZoneId] = useState('')
+  const [detectingZone, setDetectingZone] = useState(false)
+  const [zoneDetectee, setZoneDetectee] = useState<string | null>(null)
   const [moyenPaiement, setMoyenPaiement] = useState<MoyenPaiement>('stripe')
   const [noteClient, setNoteClient] = useState('')
   const [cautionType, setCautionType] = useState('cheque')
@@ -177,6 +179,53 @@ export default function LocationReserverPage() {
     { key: 'weekend' as DureeType, label: 'Week-end', available: !!article?.prix_weekend },
     { key: 'mois' as DureeType, label: 'Mois', available: !!article?.prix_mois },
   ].filter(d => d.available)
+
+  // Détection automatique de zone via Nominatim (OpenStreetMap)
+  async function detecterZoneParAdresse(adresseComplete: string) {
+    if (!adresseComplete || zones.length === 0) return
+    setDetectingZone(true)
+    setZoneDetectee(null)
+    try {
+      const query = encodeURIComponent(adresseComplete + ', France')
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1`,
+        { headers: { 'User-Agent': 'LieuSecret-Piano/1.0' } }
+      )
+      const data = await res.json()
+      if (!data?.[0]) { setDetectingZone(false); return }
+
+      const lat2 = parseFloat(data[0].lat)
+      const lon2 = parseFloat(data[0].lon)
+
+      // Coordonnées de Saint-Étienne centre
+      const lat1 = 45.4397, lon1 = 4.3872
+
+      // Calcul distance Haversine en km
+      const R = 6371
+      const dLat = (lat2 - lat1) * Math.PI / 180
+      const dLon = (lon2 - lon1) * Math.PI / 180
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLon/2) * Math.sin(dLon/2)
+      const distance = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
+
+      // Trouver la zone correspondante
+      const zone = zones.find(z =>
+        distance >= z.distance_min &&
+        (z.distance_max === null || distance <= z.distance_max)
+      )
+
+      if (zone) {
+        setZoneId(zone.id)
+        setZoneDetectee(`${zone.nom} (${Math.round(distance)} km de Saint-Étienne)`)
+      } else {
+        setZoneDetectee(`Distance : ${Math.round(distance)} km — sélectionnez manuellement`)
+      }
+    } catch (e) {
+      console.error('Erreur détection GPS:', e)
+    }
+    setDetectingZone(false)
+  }
 
   async function handleSubmit() {
     setSubmitting(true)
@@ -621,58 +670,63 @@ export default function LocationReserverPage() {
                           <input value={adresseLivraison} onChange={e => setAdresseLivraison(e.target.value)}
                             className="input w-full" placeholder="Adresse complète de livraison" />
                         </div>
-                        {/* Détection automatique de zone selon code postal */}
+                        {/* Zone de livraison avec détection GPS */}
                         <div>
                           <label className="label mb-1.5 block">Zone de livraison</label>
-                          {codePostalVille ? (
-                            <div className="space-y-2">
-                              {/* Détection automatique */}
-                              {(() => {
-                                const cp = codePostalVille.trim().split(/[\s,]+/)[0]
-                                const stEtienne = cp.startsWith('42') && (
-                                  cp === '42000' || cp === '42100' || cp === '42230' ||
-                                  cp === '42270' || cp === '42340' || cp === '42400'
-                                )
-                                const proche = cp.startsWith('42') && !stEtienne
-                                const autoZone = stEtienne
-                                  ? zones.find(z => z.distance_min === 0 && (z.distance_max || 99) <= 15)
-                                  : proche
-                                  ? zones.find(z => z.distance_min === 15 && (z.distance_max || 99) <= 30)
-                                  : null
-                                if (autoZone && !zoneId) {
-                                  setTimeout(() => setZoneId(autoZone.id), 0)
-                                }
-                                return null
-                              })()}
-                              <select value={zoneId} onChange={e => setZoneId(e.target.value)} className="input w-full">
-                                <option value="">Sélectionnez votre zone...</option>
-                                {zones.map(z => (
-                                  <option key={z.id} value={z.id}>
-                                    {z.nom} — {z.sur_devis ? 'Sur devis' : z.tarif === 0 ? 'Gratuit' : f(z.tarif!)}
-                                  </option>
-                                ))}
-                              </select>
-                              {zoneId && (
-                                <p className="text-green-400 text-xs">
-                                  Zone détectée automatiquement selon votre code postal.
-                                </p>
+                          <div className="space-y-2">
+                            {/* Bouton détection GPS */}
+                            <button
+                              type="button"
+                              disabled={detectingZone || !adresseLivraison}
+                              onClick={() => {
+                                const adresseComplete = adresseLivraison + (codePostalVille ? ', ' + codePostalVille : '')
+                                detecterZoneParAdresse(adresseComplete)
+                              }}
+                              className={`w-full flex items-center justify-center gap-2 py-2 rounded-xl border text-sm transition-all ${
+                                detectingZone
+                                  ? 'border-gold-500/30 text-gold-400 bg-gold-500/10'
+                                  : adresseLivraison
+                                  ? 'border-blue-500/30 text-blue-400 bg-blue-500/10 hover:bg-blue-500/20'
+                                  : 'border-noir-700 text-noir-600 cursor-not-allowed'
+                              }`}>
+                              {detectingZone ? (
+                                <>
+                                  <div className="w-4 h-4 border-2 border-gold-500 border-t-transparent rounded-full animate-spin" />
+                                  Calcul de la distance...
+                                </>
+                              ) : (
+                                <>
+                                  <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+                                    <circle cx="12" cy="9" r="2.5"/>
+                                  </svg>
+                                  Détecter ma zone automatiquement
+                                </>
                               )}
-                            </div>
-                          ) : (
-                            <div>
-                              <select value={zoneId} onChange={e => setZoneId(e.target.value)} className="input w-full">
-                                <option value="">Sélectionnez votre zone...</option>
-                                {zones.map(z => (
-                                  <option key={z.id} value={z.id}>
-                                    {z.nom} — {z.sur_devis ? 'Sur devis' : z.tarif === 0 ? 'Gratuit' : f(z.tarif!)}
-                                  </option>
-                                ))}
-                              </select>
-                              <p className="text-noir-600 text-xs mt-1">
-                                Renseignez votre code postal ci-dessus pour une détection automatique.
+                            </button>
+
+                            {/* Résultat détection */}
+                            {zoneDetectee && (
+                              <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-2.5 text-xs text-green-400">
+                                Zone détectée : {zoneDetectee}
+                              </div>
+                            )}
+
+                            {/* Sélecteur manuel */}
+                            <select value={zoneId} onChange={e => { setZoneId(e.target.value); setZoneDetectee(null) }} className="input w-full">
+                              <option value="">Sélectionnez votre zone...</option>
+                              {zones.map(z => (
+                                <option key={z.id} value={z.id}>
+                                  {z.nom} — {z.sur_devis ? 'Sur devis' : z.tarif === 0 ? 'Gratuit' : f(z.tarif!)}
+                                </option>
+                              ))}
+                            </select>
+                            {!adresseLivraison && (
+                              <p className="text-noir-600 text-xs">
+                                Saisissez votre adresse de livraison pour activer la détection automatique.
                               </p>
-                            </div>
-                          )}
+                            )}
+                          </div>
                         </div>
                         {zoneSelectionnee?.sur_devis && (
                           <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 text-sm text-amber-300">
