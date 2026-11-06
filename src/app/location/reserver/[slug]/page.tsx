@@ -579,7 +579,7 @@ export default function LocationReserverPage() {
                                     const d = e.target.value
                                     const day = new Date(d + 'T12:00:00').getDay()
                                     if (day !== 6) {
-                                      alert('Veuillez sélectionner un samedi.')
+                                      alert("Veuillez sélectionner un samedi.")
                                       return
                                     }
                                     const newSamedis = [...samedisSelectionnes]
@@ -625,7 +625,7 @@ export default function LocationReserverPage() {
                                 if (dureeType === 'weekend') {
                                   const day = new Date(d + 'T12:00:00').getDay()
                                   if (day !== 6) {
-                                    alert('Pour une location week-end, veuillez sélectionner un samedi.')
+                                    alert("Pour une location week-end, veuillez sélectionner un samedi.")
                                     return
                                   }
                                   setSamedisSelectionnes([d])
