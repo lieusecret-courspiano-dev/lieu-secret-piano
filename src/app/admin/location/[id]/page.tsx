@@ -5,7 +5,7 @@ import Link from 'next/link'
 import {
   ChevronLeft, FileText, User, Calendar, Package,
   Truck, CreditCard, Shield, CheckCircle, XCircle,
-  Clock, AlertTriangle, ExternalLink
+  Clock, AlertTriangle, ExternalLink, ClipboardList, Plus, Trash2
 } from 'lucide-react'
 
 interface Reservation {
@@ -51,6 +51,17 @@ interface Reservation {
   created_at: string
 }
 
+interface EtatLieux {
+  id: string
+  type: 'remise' | 'retour'
+  elements: { nom: string; etat_remise: string; etat_retour: string; observations: string }[]
+  observations: string | null
+  signe_loueur: boolean
+  signe_locataire: boolean
+  signature_locataire: string | null
+  date_signature: string | null
+}
+
 interface Document {
   id: string
   type: string
@@ -92,6 +103,18 @@ export default function AdminLocationDetailPage() {
 
   const [resa, setResa] = useState<Reservation | null>(null)
   const [docs, setDocs] = useState<Document[]>([])
+  const [etatsLieux, setEtatsLieux] = useState<EtatLieux[]>([])
+  const [showEtatLieux, setShowEtatLieux] = useState(false)
+  const [typeEtat, setTypeEtat] = useState<'remise' | 'retour'>('remise')
+  const [elementsEtat, setElementsEtat] = useState([
+    { nom: 'Instrument', etat_remise: '', etat_retour: '', observations: '' },
+    { nom: 'Housse', etat_remise: '', etat_retour: '', observations: '' },
+    { nom: 'Pédale', etat_remise: '', etat_retour: '', observations: '' },
+    { nom: 'Alimentation', etat_remise: '', etat_retour: '', observations: '' },
+    { nom: 'Câble', etat_remise: '', etat_retour: '', observations: '' },
+  ])
+  const [obsEtat, setObsEtat] = useState('')
+  const [savingEtat, setSavingEtat] = useState(false)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [noteAdmin, setNoteAdmin] = useState('')
@@ -109,7 +132,8 @@ export default function AdminLocationDetailPage() {
     Promise.all([
       fetch(`/api/admin/location/${id}`).then(r => r.json()),
       fetch(`/api/admin/location/${id}/documents`).then(r => r.json()),
-    ]).then(([r, d]) => {
+      fetch(`/api/admin/location/${id}/etat-lieux`).then(r => r.json()).catch(() => []),
+    ]).then(([r, d, el]) => {
       if (r?.error) { router.push('/admin/location'); return }
       setResa(r)
       setNoteAdmin(r.note_admin || '')
@@ -119,9 +143,30 @@ export default function AdminLocationDetailPage() {
       setDateRetour(r.date_retour_effective ? r.date_retour_effective.split('T')[0] : '')
       setCautionRestituee(r.caution_restituee || false)
       setDocs(Array.isArray(d) ? d : [])
+      setEtatsLieux(Array.isArray(el) ? el : [])
       setLoading(false)
     }).catch(() => setLoading(false))
   }, [id, router])
+
+  async function saveEtatLieux() {
+    setSavingEtat(true)
+    try {
+      const res = await fetch(`/api/admin/location/${id}/etat-lieux`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: typeEtat, elements: elementsEtat, observations: obsEtat }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setEtatsLieux(prev => {
+          const filtered = prev.filter(e => e.type !== typeEtat)
+          return [...filtered, data]
+        })
+        setShowEtatLieux(false)
+      }
+    } catch { alert("Erreur lors de la sauvegarde de l'état des lieux") }
+    setSavingEtat(false)
+  }
 
   async function handleSendMessage() {
     if (!msgSujet.trim() || !msgTexte.trim()) return
@@ -397,6 +442,150 @@ export default function AdminLocationDetailPage() {
                     </div>
                   </div>
                 ))}
+              </div>
+            )}
+          </div>
+
+          {/* État des lieux */}
+          <div className="card">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <ClipboardList size={16} className="text-gold-400" />
+                <h2 className="text-white font-semibold">État des lieux</h2>
+              </div>
+              <button onClick={() => setShowEtatLieux(!showEtatLieux)}
+                className="btn-outline text-xs flex items-center gap-1 py-1.5 px-3">
+                <Plus size={12} /> Nouveau
+              </button>
+            </div>
+
+            {/* États des lieux existants */}
+            {etatsLieux.length > 0 ? (
+              <div className="space-y-3 mb-4">
+                {etatsLieux.map(el => (
+                  <div key={el.id} className="bg-noir-800 rounded-xl p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${
+                        el.type === 'remise'
+                          ? 'text-blue-400 border-blue-500/30 bg-blue-500/10'
+                          : 'text-green-400 border-green-500/30 bg-green-500/10'
+                      }`}>
+                        {el.type === 'remise' ? 'État à la remise' : 'État au retour'}
+                      </span>
+                      <div className="flex gap-2 text-xs">
+                        {el.signe_loueur && <span className="text-green-400">✓ Loueur</span>}
+                        {el.signe_locataire && <span className="text-green-400">✓ Locataire</span>}
+                      </div>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-xs">
+                        <thead>
+                          <tr className="text-noir-500">
+                            <th className="text-left py-1 pr-3">Élément</th>
+                            <th className="text-left py-1 pr-3">État remise</th>
+                            <th className="text-left py-1 pr-3">État retour</th>
+                            <th className="text-left py-1">Observations</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {(el.elements || []).map((elem, i) => (
+                            <tr key={i} className="border-t border-noir-700">
+                              <td className="py-1.5 pr-3 text-white font-medium">{elem.nom}</td>
+                              <td className="py-1.5 pr-3 text-noir-300">{elem.etat_remise || '—'}</td>
+                              <td className="py-1.5 pr-3 text-noir-300">{elem.etat_retour || '—'}</td>
+                              <td className="py-1.5 text-noir-400">{elem.observations || '—'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    {el.observations && (
+                      <p className="text-noir-400 text-xs mt-2 italic">Obs. générales : {el.observations}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-noir-500 text-sm mb-4">Aucun état des lieux enregistré.</p>
+            )}
+
+            {/* Formulaire nouvel état des lieux */}
+            {showEtatLieux && (
+              <div className="bg-noir-800 rounded-xl p-4 space-y-4">
+                <div className="flex gap-2">
+                  {(['remise', 'retour'] as const).map(t => (
+                    <button key={t} type="button" onClick={() => setTypeEtat(t)}
+                      className={`flex-1 py-2 rounded-xl border text-sm font-medium transition-all ${
+                        typeEtat === t ? 'bg-gold-500/10 border-gold-500/30 text-gold-400' : 'border-noir-700 text-noir-400'
+                      }`}>
+                      {t === 'remise' ? 'À la remise' : 'Au retour'}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="text-noir-500">
+                        <th className="text-left py-1 pr-2 w-24">Élément</th>
+                        <th className="text-left py-1 pr-2">État remise</th>
+                        <th className="text-left py-1 pr-2">État retour</th>
+                        <th className="text-left py-1">Observations</th>
+                        <th className="w-6"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {elementsEtat.map((elem, i) => (
+                        <tr key={i} className="border-t border-noir-700">
+                          <td className="py-1.5 pr-2">
+                            <input value={elem.nom}
+                              onChange={e => setElementsEtat(prev => prev.map((el, j) => j === i ? { ...el, nom: e.target.value } : el))}
+                              className="input w-full text-xs py-1" />
+                          </td>
+                          <td className="py-1.5 pr-2">
+                            <input value={elem.etat_remise}
+                              onChange={e => setElementsEtat(prev => prev.map((el, j) => j === i ? { ...el, etat_remise: e.target.value } : el))}
+                              className="input w-full text-xs py-1" placeholder="Bon état..." />
+                          </td>
+                          <td className="py-1.5 pr-2">
+                            <input value={elem.etat_retour}
+                              onChange={e => setElementsEtat(prev => prev.map((el, j) => j === i ? { ...el, etat_retour: e.target.value } : el))}
+                              className="input w-full text-xs py-1" placeholder="Bon état..." />
+                          </td>
+                          <td className="py-1.5 pr-2">
+                            <input value={elem.observations}
+                              onChange={e => setElementsEtat(prev => prev.map((el, j) => j === i ? { ...el, observations: e.target.value } : el))}
+                              className="input w-full text-xs py-1" placeholder="RAS..." />
+                          </td>
+                          <td className="py-1.5">
+                            <button onClick={() => setElementsEtat(prev => prev.filter((_, j) => j !== i))}
+                              className="text-noir-600 hover:text-red-400 transition-colors">
+                              <Trash2 size={12} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <button onClick={() => setElementsEtat(prev => [...prev, { nom: '', etat_remise: '', etat_retour: '', observations: '' }])}
+                  className="text-gold-400 hover:text-gold-300 text-xs flex items-center gap-1 transition-colors">
+                  <Plus size={12} /> Ajouter un élément
+                </button>
+
+                <div>
+                  <label className="label mb-1.5 block text-xs">Observations générales</label>
+                  <textarea value={obsEtat} onChange={e => setObsEtat(e.target.value)}
+                    className="input w-full h-16 resize-none text-xs" placeholder="Observations générales..." />
+                </div>
+
+                <div className="flex gap-2">
+                  <button onClick={() => setShowEtatLieux(false)} className="btn-outline text-xs py-2 flex-1">Annuler</button>
+                  <button onClick={saveEtatLieux} disabled={savingEtat} className="btn-gold text-xs py-2 flex-1">
+                    {savingEtat ? 'Sauvegarde...' : 'Enregistrer'}
+                  </button>
+                </div>
               </div>
             )}
           </div>
