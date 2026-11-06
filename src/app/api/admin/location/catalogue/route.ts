@@ -140,12 +140,18 @@ export async function DELETE(req: NextRequest) {
     }, { status: 400 })
   }
 
-  const { error } = await supabaseAdmin
+  const { error, data } = await supabaseAdmin
     .from('location_articles')
     .delete()
     .eq('id', id)
+    .select()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) {
+    console.error('Erreur suppression article:', JSON.stringify(error))
+    return NextResponse.json({ error: error.message || 'Erreur lors de la suppression' }, { status: 500 })
+  }
+
+  console.log('Article supprimé:', id, 'data:', JSON.stringify(data))
 
   // Invalider le cache Next.js pour la page publique
   try {
@@ -154,5 +160,5 @@ export async function DELETE(req: NextRequest) {
     revalidatePath('/location/[slug]', 'page')
   } catch {}
 
-  return NextResponse.json({ success: true })
+  return NextResponse.json({ success: true, deleted: id })
 }
