@@ -669,7 +669,7 @@ export default function LocationReserverPage() {
                         { v: 'retrait' as ModeRemise, l: 'Retrait à Saint-Étienne', sub: 'Gratuit' },
                         { v: 'livraison' as ModeRemise, l: 'Livraison à domicile', sub: 'Selon zone' },
                       ].map(x => (
-                        <button key={x.v} type="button" onClick={() => setModeRemise(x.v)}
+                        <button key={x.v} type="button" onClick={() => { setModeRemise(x.v); if (x.v === 'retrait') { setZoneId(''); setZoneDetectee(null); } }}}
                           className={`flex-1 py-3 px-4 rounded-xl border text-sm font-medium transition-all text-left ${
                             modeRemise === x.v
                               ? 'bg-gold-500/10 border-gold-500/30 text-gold-400'
