@@ -109,7 +109,7 @@ export default function LocationReserverPage() {
         if (d.quantite) setQuantite(d.quantite)
         if (d.modeRemise) setModeRemise(d.modeRemise)
         if (d.adresseLivraison) setAdresseLivraison(d.adresseLivraison)
-        if (d.zoneId) setZoneId(d.zoneId)
+        // Ne pas restaurer zoneId depuis localStorage (UUID peut être périmé)
         if (d.moyenPaiement) setMoyenPaiement(d.moyenPaiement)
         if (d.noteClient) setNoteClient(d.noteClient)
         if (d.cautionType) setCautionType(d.cautionType)
@@ -123,7 +123,7 @@ export default function LocationReserverPage() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
         nom, email, telephone, adresse, codePostalVille,
         dateDebut, dateFin, dureeType, quantite, modeRemise,
-        adresseLivraison, zoneId, moyenPaiement, noteClient, cautionType,
+        adresseLivraison, moyenPaiement, noteClient, cautionType,
       }))
     } catch {}
   }, [nom, email, telephone, adresse, codePostalVille, dateDebut, dateFin,
