@@ -104,6 +104,14 @@ export async function PATCH(req: NextRequest) {
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  // Invalider le cache Next.js
+  try {
+    const { revalidatePath } = await import('next/cache')
+    revalidatePath('/location')
+    revalidatePath('/location/[slug]', 'page')
+  } catch {}
+
   return NextResponse.json(data)
 }
 
@@ -134,5 +142,13 @@ export async function DELETE(req: NextRequest) {
     .eq('id', id)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  // Invalider le cache Next.js pour la page publique
+  try {
+    const { revalidatePath } = await import('next/cache')
+    revalidatePath('/location')
+    revalidatePath('/location/[slug]', 'page')
+  } catch {}
+
   return NextResponse.json({ success: true })
 }
