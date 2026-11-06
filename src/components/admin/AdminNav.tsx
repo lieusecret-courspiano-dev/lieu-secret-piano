@@ -118,7 +118,10 @@ export default function AdminNav() {
               <p className="text-[10px] font-bold text-noir-700 uppercase tracking-widest px-3 mb-1">{group.label}</p>
               <div className="space-y-0.5">
                 {group.items.map(({ href, label, icon: Icon }) => {
-                  const active = pathname === href || (href !== '/admin' && pathname.startsWith(href))
+                  // Pour /admin/location, ne pas activer si on est sur un sous-chemin
+                  const active = pathname === href ||
+                    (href !== '/admin' && href !== '/admin/location' && pathname.startsWith(href)) ||
+                    (href === '/admin/location' && pathname === '/admin/location')
                   return (
                     <Link key={href} href={href} prefetch={true}
                       className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all ${
