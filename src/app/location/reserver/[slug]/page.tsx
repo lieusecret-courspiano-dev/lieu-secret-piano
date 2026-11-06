@@ -172,7 +172,13 @@ export default function LocationReserverPage() {
   const fraisLivraison = modeRemise === 'livraison' && zoneSelectionnee && !zoneSelectionnee.sur_devis
     ? (zoneSelectionnee.tarif || 0) : 0
   const montantTotal = montantLocation + fraisLivraison
-  const estAcompte = nb >= 15
+  // Durée réelle selon le type (pas les jours entre les deux dates extrêmes)
+  const dureeReelle = dureeType === 'weekend'
+    ? quantite * 2
+    : dureeType === 'mois'
+    ? quantite * 30
+    : nb
+  const estAcompte = dureeReelle >= 15
   const montantAcompte = estAcompte ? montantTotal * 0.5 : null
   const montantDu = estAcompte ? montantAcompte! : montantTotal
 
@@ -653,7 +659,7 @@ export default function LocationReserverPage() {
                           </div>
                           {estAcompte && (
                             <div className="text-amber-400 text-xs">
-                              ≥ 15 jours → acompte de 50% requis ({f(montantLocation * 0.5 + fraisLivraison * 0.5)})
+                              ≥ 15 jours → acompte de 50% requis ({f((montantTotal) * 0.5)})
                             </div>
                           )}
                         </div>
