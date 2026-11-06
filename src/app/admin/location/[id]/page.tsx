@@ -95,6 +95,10 @@ export default function AdminLocationDetailPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [noteAdmin, setNoteAdmin] = useState('')
+  const [msgSujet, setMsgSujet] = useState('')
+  const [msgTexte, setMsgTexte] = useState('')
+  const [sendingMsg, setSendingMsg] = useState(false)
+  const [msgSent, setMsgSent] = useState(false)
   const [statut, setStatut] = useState('')
   const [paiementStatut, setPaiementStatut] = useState('')
   const [dateRemise, setDateRemise] = useState('')
@@ -118,6 +122,23 @@ export default function AdminLocationDetailPage() {
       setLoading(false)
     }).catch(() => setLoading(false))
   }, [id, router])
+
+  async function handleSendMessage() {
+    if (!msgSujet.trim() || !msgTexte.trim()) return
+    setSendingMsg(true)
+    try {
+      await fetch(`/api/admin/location/${id}/message`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sujet: msgSujet, message: msgTexte }),
+      })
+      setMsgSent(true)
+      setMsgSujet('')
+      setMsgTexte('')
+      setTimeout(() => setMsgSent(false), 4000)
+    } catch { alert('Erreur lors de l'envoi') }
+    setSendingMsg(false)
+  }
 
   async function handleSave() {
     setSaving(true)
@@ -449,6 +470,37 @@ export default function AdminLocationDetailPage() {
             className="btn-gold w-full py-3">
             {saving ? 'Enregistrement...' : 'Enregistrer les modifications'}
           </button>
+
+          {/* Messagerie admin → client */}
+          <div className="card">
+            <h2 className="text-white font-semibold mb-3">Écrire au client</h2>
+            {msgSent && (
+              <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-3 mb-3 text-green-400 text-sm">
+                Message envoyé avec succès !
+              </div>
+            )}
+            <div className="space-y-3">
+              <div>
+                <label className="label mb-1.5 block text-xs">Sujet *</label>
+                <input value={msgSujet} onChange={e => setMsgSujet(e.target.value)}
+                  className="input w-full text-sm"
+                  placeholder="Ex : Confirmation de votre réservation" />
+              </div>
+              <div>
+                <label className="label mb-1.5 block text-xs">Message *</label>
+                <textarea value={msgTexte} onChange={e => setMsgTexte(e.target.value)}
+                  className="input w-full h-28 resize-none text-sm"
+                  placeholder="Votre message au client..." />
+              </div>
+              <button onClick={handleSendMessage} disabled={sendingMsg || !msgSujet || !msgTexte}
+                className="btn-gold w-full py-2.5 text-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                {sendingMsg ? 'Envoi...' : 'Envoyer le message'}
+              </button>
+              <p className="text-noir-600 text-xs">
+                L'email sera envoyé à {resa?.locataire_email}
+              </p>
+            </div>
+          </div>
 
           {/* Infos rapides */}
           <div className="card text-xs space-y-2 text-noir-500">
