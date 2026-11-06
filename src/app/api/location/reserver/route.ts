@@ -217,14 +217,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Erreur lors de la création de la réservation.' }, { status: 500 })
     }
 
-    // Générer le PDF du contrat avec pdfkit (non bloquant)
-    let contratBase64: string | null = null
-    let contratFilename: string = `contrat-location-${(body.article_nom as string).toLowerCase().replace(/\s+/g, '-')}.pdf`
-    try {
-      const now = new Date()
-      const dateSignature = now.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) +
-        ' à ' + now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+    // Générer le contrat HTML (fallback fiable si PDF échoue)
+    const now = new Date()
+    const dateSignature = now.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) +
+      ' à ' + now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
 
+    // Essayer de générer le PDF, sinon envoyer le HTML
+    let contratBase64: string | null = null
+    let contratFilename = `contrat-location-${(body.article_nom as string).toLowerCase().replace(/\s+/g, '-')}.pdf`
+    let contratMime = 'application/pdf'
+
+    try {
       const contratBuffer = await generateContratLocationPDF({
         locataire_nom:         body.locataire_nom,
         locataire_email:       body.locataire_email,
@@ -250,7 +253,7 @@ export async function POST(req: NextRequest) {
       })
       contratBase64 = contratBuffer.toString('base64')
 
-      // Uploader sur Cloudinary
+      // Upload sur Cloudinary
       try {
         const { uploadToCloudinary } = await import('@/lib/cloudinary')
         const uploadResult = await uploadToCloudinary(contratBuffer, {
@@ -262,15 +265,24 @@ export async function POST(req: NextRequest) {
           .from('location_reservations')
           .update({ contrat_genere: true, contrat_url: uploadResult.url })
           .eq('id', reservation.id)
-      } catch (e) {
-        console.error('Erreur upload contrat Cloudinary:', e)
+      } catch (uploadErr) {
+        console.error('Erreur upload contrat Cloudinary:', uploadErr)
       }
     } catch (pdfErr) {
-      console.error('Erreur génération PDF contrat:', pdfErr)
-      // La réservation continue même sans PDF
+      console.error('Erreur génération PDF (pdfkit):', pdfErr)
+      // Fallback : générer un contrat HTML simple
+      try {
+        const htmlContrat = genContratHTML(body, article)
+        contratBase64 = Buffer.from(htmlContrat).toString('base64')
+        contratFilename = `contrat-location-${(body.article_nom as string).toLowerCase().replace(/\s+/g, '-')}.html`
+        contratMime = 'text/html'
+        console.log('Contrat HTML généré en fallback')
+      } catch (htmlErr) {
+        console.error('Erreur génération HTML contrat:', htmlErr)
+      }
     }
 
-    const cautionLabel: Record<string, string> = {
+        const cautionLabel: Record<string, string> = {
       cheque: 'Chèque remis à la livraison', virement: 'Virement bancaire',
       especes: 'Espèces', stripe_hold: 'Empreinte carte (Stripe)',
     }
