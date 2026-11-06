@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
@@ -62,6 +62,9 @@ export default function LocationReserverPage() {
   const [samedisSelectionnes, setSamedisSelectionnes] = useState<string[]>([])
   const [modeRemise, setModeRemise] = useState<ModeRemise>('retrait')
   const [adresseLivraison, setAdresseLivraison] = useState('')
+  const [adresseSuggestions, setAdresseSuggestions] = useState<{display_name: string; lat: string; lon: string}[]>([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const adresseDebounceRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
   const [zoneId, setZoneId] = useState('')
   const [detectingZone, setDetectingZone] = useState(false)
   const [zoneDetectee, setZoneDetectee] = useState<string | null>(null)
@@ -128,8 +131,8 @@ export default function LocationReserverPage() {
 
   useEffect(() => {
     Promise.all([
-      fetch(`/api/location/${slug}`).then(r => r.json()),
-      fetch('/api/location/zones').then(r => r.json()),
+      fetch(`/api/location/${slug}?t=${Date.now()}`, { cache: 'no-store' }).then(r => r.json()),
+      fetch(`/api/location/zones?t=${Date.now()}`, { cache: 'no-store' }).then(r => r.json()),
     ]).then(([art, z]) => {
       if (art?.error) { router.push('/location'); return }
       setArticle(art)
@@ -163,8 +166,8 @@ export default function LocationReserverPage() {
 
   // Calculs
   const nb = nbJours(dateDebut, dateFin)
-  const montantLocation = article ? calculMontantLocation(article, dureeType, dateDebut, dateFin) : 0
-  const detail = article && dateDebut && dateFin ? detailCalcul(article, dureeType, dateDebut, dateFin) : null
+  const montantLocation = article ? calculMontantLocation(article, dureeType, dateDebut, dateFin, quantite) : 0
+  const detail = article && dateDebut && dateFin ? detailCalcul(article, dureeType, dateDebut, dateFin, quantite) : null
   const zoneSelectionnee = zones.find(z => z.id === zoneId)
   const fraisLivraison = modeRemise === 'livraison' && zoneSelectionnee && !zoneSelectionnee.sur_devis
     ? (zoneSelectionnee.tarif || 0) : 0
@@ -179,6 +182,23 @@ export default function LocationReserverPage() {
     { key: 'weekend' as DureeType, label: 'Week-end', available: !!article?.prix_weekend },
     { key: 'mois' as DureeType, label: 'Mois', available: !!article?.prix_mois },
   ].filter(d => d.available)
+
+  // Autocomplétion adresse via Nominatim
+  function rechercherAdresse(query: string) {
+    if (adresseDebounceRef.current) clearTimeout(adresseDebounceRef.current)
+    if (query.length < 4) { setAdresseSuggestions([]); return }
+    adresseDebounceRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + ', France')}&format=json&limit=5&addressdetails=1`,
+          { headers: { 'User-Agent': 'LieuSecret-Piano/1.0' } }
+        )
+        const data = await res.json()
+        setAdresseSuggestions(data || [])
+        setShowSuggestions(true)
+      } catch {}
+    }, 400)
+  }
 
   // Détection automatique de zone via Nominatim (OpenStreetMap)
   async function detecterZoneParAdresse(adresseComplete: string) {
@@ -667,8 +687,36 @@ export default function LocationReserverPage() {
                             />
                             <span className="text-noir-400 text-xs">Identique à l'adresse de facturation</span>
                           </label>
-                          <input value={adresseLivraison} onChange={e => setAdresseLivraison(e.target.value)}
-                            className="input w-full" placeholder="Adresse complète de livraison" />
+                          <div className="relative">
+                            <input
+                              value={adresseLivraison}
+                              onChange={e => {
+                                setAdresseLivraison(e.target.value)
+                                rechercherAdresse(e.target.value)
+                              }}
+                              onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                              onFocus={() => adresseSuggestions.length > 0 && setShowSuggestions(true)}
+                              className="input w-full"
+                              placeholder="Commencez à taper votre adresse..."
+                              autoComplete="off"
+                            />
+                            {showSuggestions && adresseSuggestions.length > 0 && (
+                              <div className="absolute z-50 w-full mt-1 bg-noir-900 border border-noir-700 rounded-xl shadow-xl overflow-hidden">
+                                {adresseSuggestions.map((s, i) => (
+                                  <button key={i} type="button"
+                                    onClick={() => {
+                                      const parts = s.display_name.split(',')
+                                      setAdresseLivraison(parts.slice(0, 3).join(',').trim())
+                                      setShowSuggestions(false)
+                                      detecterZoneParAdresse(s.display_name)
+                                    }}
+                                    className="w-full text-left px-4 py-2.5 text-sm text-noir-200 hover:bg-noir-800 hover:text-white transition-colors border-b border-noir-800 last:border-0">
+                                    {s.display_name}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                         </div>
                         {/* Zone de livraison avec détection GPS */}
                         <div>
