@@ -150,8 +150,10 @@ export default function AdminLocationCataloguePage() {
         method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
       })
       if (!res.ok) { const d = await res.json(); throw new Error(d.error || 'Erreur') }
+      // Recharger avec cache désactivé
       await loadArticles()
       setShowForm(false)
+      setPhotos([])
     } catch (err: unknown) {
       alert(err instanceof Error ? err.message : 'Erreur lors de la sauvegarde')
     }
@@ -160,18 +162,33 @@ export default function AdminLocationCataloguePage() {
 
   async function handleDelete(id: string) {
     if (!confirm('Supprimer cet article ? Cette action est irréversible.')) return
-    await fetch('/api/admin/location/catalogue', {
-      method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }),
+    const res = await fetch('/api/admin/location/catalogue', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+      cache: 'no-store',
     })
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}))
+      alert(d.error || 'Erreur lors de la suppression')
+      return
+    }
+    // Mettre à jour le state local immédiatement
     setArticles(prev => prev.filter(a => a.id !== id))
+    // Puis recharger depuis l'API pour confirmer
+    setTimeout(() => loadArticles(), 500)
   }
 
   async function togglePublish(a: Article) {
-    await fetch('/api/admin/location/catalogue', {
-      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+    const res = await fetch('/api/admin/location/catalogue', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: a.id, publie: !a.publie }),
+      cache: 'no-store',
     })
-    setArticles(prev => prev.map(x => x.id === a.id ? { ...x, publie: !x.publie } : x))
+    if (res.ok) {
+      setArticles(prev => prev.map(x => x.id === a.id ? { ...x, publie: !x.publie } : x))
+    }
   }
 
   function fPrice(val: number | null) {
