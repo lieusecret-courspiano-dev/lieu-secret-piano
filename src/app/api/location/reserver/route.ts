@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { Resend } from 'resend'
-import { generateContratLocationPDF } from '@/lib/location-pdf'
+
+export const dynamic = 'force-dynamic'
 
 const resend      = new Resend(process.env.RESEND_API_KEY!)
 const FROM        = 'Lieu Secret <noreply@lieusecret-courspiano.fr>'
@@ -11,125 +12,125 @@ const BASE_URL    = 'https://www.lieusecret-courspiano.fr'
 function fDate(d: string) {
   return new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
 }
+
 function fMontant(n: number) {
   return n.toFixed(2).replace('.', ',') + ' €'
 }
 
-function genContratHTML(body: Record<string, unknown>, article: { nom: string; accessoires_inclus?: string }) {
+function genContratHTML(
+  body: Record<string, unknown>,
+  article: { nom: string; accessoires_inclus?: string | null },
+  iban: string,
+  nomBenef: string
+): string {
   const cautionLabel: Record<string, string> = {
-    cheque: 'Chèque non encaissé', virement: 'Virement bancaire',
-    especes: 'Espèces', stripe_hold: 'Empreinte carte (Stripe)',
+    cheque: 'Chèque non encaissé',
+    virement: 'Virement bancaire',
+    especes: 'Espèces',
+    stripe_hold: 'Empreinte carte (Stripe)',
   }
   const paiementLabel: Record<string, string> = {
-    stripe: 'Carte bancaire (Stripe)', paypal: 'PayPal', virement: 'Virement bancaire',
+    stripe: 'Carte bancaire (Stripe)',
+    paypal: 'PayPal',
+    virement: 'Virement bancaire',
   }
   const now = new Date()
-  const dateSignature = now.toLocaleDateString('fr-FR')
+  const dateSignature = now.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
   const heureSignature = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
 
   return `<!DOCTYPE html>
 <html lang="fr">
-<head>
-<meta charset="UTF-8"/>
+<head><meta charset="UTF-8"/>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: Georgia, serif; color: #1a1a1a; background: #fff; font-size: 12px; line-height: 1.6; }
-  .page { max-width: 700px; margin: 0 auto; padding: 40px 48px; }
-  .header { text-align: center; border-bottom: 2px solid #f59e0b; padding-bottom: 20px; margin-bottom: 28px; }
-  .logo { font-size: 20px; color: #f59e0b; letter-spacing: 4px; font-weight: bold; }
-  .logo-sub { font-size: 10px; color: #888; letter-spacing: 2px; margin-top: 4px; }
-  h1 { font-size: 15px; margin: 14px 0 4px; color: #1a1a1a; }
-  .subtitle { font-size: 10px; color: #888; }
-  h2 { font-size: 12px; color: #c47f00; border-bottom: 1px solid #eee; padding-bottom: 4px; margin: 20px 0 10px; text-transform: uppercase; letter-spacing: 1px; }
-  table.info { width: 100%; border-collapse: collapse; margin-bottom: 4px; }
-  table.info td { padding: 3px 6px; font-size: 11px; }
-  table.info td:first-child { color: #666; width: 180px; }
-  p.clause { font-size: 11px; color: #333; margin-bottom: 10px; }
-  .signature-block { border-top: 2px solid #f59e0b; padding-top: 20px; margin-top: 28px; }
-  table.sig { width: 100%; border-collapse: collapse; }
-  table.sig td { border: 1px solid #ccc; padding: 12px; width: 50%; vertical-align: top; font-size: 11px; }
-  .sig-label { font-weight: bold; margin-bottom: 4px; }
-  .sig-sub { color: #888; font-size: 10px; }
-  .legal-note { font-size: 10px; color: #999; margin-top: 12px; }
-  .amount { color: #c47f00; font-weight: bold; }
+body{font-family:Georgia,serif;color:#1a1a1a;background:#fff;font-size:12px;line-height:1.6;margin:0;padding:0}
+.page{max-width:700px;margin:0 auto;padding:40px 48px}
+.header{text-align:center;border-bottom:2px solid #f59e0b;padding-bottom:20px;margin-bottom:28px}
+.logo{font-size:20px;color:#f59e0b;letter-spacing:4px;font-weight:bold}
+.logo-sub{font-size:10px;color:#888;letter-spacing:2px;margin-top:4px}
+h1{font-size:15px;margin:14px 0 4px;color:#1a1a1a}
+.subtitle{font-size:10px;color:#888}
+h2{font-size:12px;color:#c47f00;border-bottom:1px solid #eee;padding-bottom:4px;margin:20px 0 10px;text-transform:uppercase;letter-spacing:1px}
+table.info{width:100%;border-collapse:collapse;margin-bottom:4px}
+table.info td{padding:3px 6px;font-size:11px}
+table.info td:first-child{color:#666;width:180px}
+p.clause{font-size:11px;color:#333;margin-bottom:10px}
+.sig-block{border-top:2px solid #f59e0b;padding-top:20px;margin-top:28px}
+table.sig{width:100%;border-collapse:collapse}
+table.sig td{border:1px solid #ccc;padding:12px;width:50%;vertical-align:top;font-size:11px}
+.legal{font-size:10px;color:#999;margin-top:12px}
+.amount{color:#c47f00;font-weight:bold}
 </style>
 </head>
 <body>
 <div class="page">
-  <div class="header">
-    <div class="logo">LIEU SECRET</div>
-    <div class="logo-sub">ÉCOLE DE PIANO EN LIGNE</div>
-    <h1>CONTRAT DE LOCATION DE MATÉRIEL MUSICAL</h1>
-    <div class="subtitle">Signé électroniquement le ${dateSignature} à ${heureSignature} par ${body.signature_nom}</div>
-  </div>
+<div class="header">
+  <div class="logo">LIEU SECRET</div>
+  <div class="logo-sub">ÉCOLE DE PIANO EN LIGNE</div>
+  <h1>CONTRAT DE LOCATION DE MATÉRIEL MUSICAL</h1>
+  <div class="subtitle">Signé électroniquement le ${dateSignature} à ${heureSignature} par ${body.signature_nom || body.locataire_nom}</div>
+</div>
 
-  <h2>1. Identification des parties</h2>
-  <table class="info">
-    <tr><td>Loueur</td><td>Claudine Yombo — EI (SIRET 98246654200015)</td></tr>
-    <tr><td>Adresse du loueur</td><td>106F rue de la Richelandière — 42100 Saint-Étienne</td></tr>
-    <tr><td>Locataire</td><td>${body.locataire_nom}</td></tr>
-    <tr><td>Email</td><td>${body.locataire_email}</td></tr>
-    ${body.locataire_telephone ? `<tr><td>Téléphone</td><td>${body.locataire_telephone}</td></tr>` : ''}
-    ${body.locataire_adresse ? `<tr><td>Adresse</td><td>${body.locataire_adresse}, ${body.locataire_ville || ''}</td></tr>` : ''}
+<h2>1. Identification des parties</h2>
+<table class="info">
+  <tr><td>Loueur</td><td>Claudine Yombo — EI (SIRET 98246654200015)</td></tr>
+  <tr><td>Adresse du loueur</td><td>106F rue de la Richelandière — 42100 Saint-Étienne</td></tr>
+  <tr><td>Locataire</td><td>${body.locataire_nom}</td></tr>
+  <tr><td>Email</td><td>${body.locataire_email}</td></tr>
+  ${body.locataire_telephone ? `<tr><td>Téléphone</td><td>${body.locataire_telephone}</td></tr>` : ''}
+  ${body.locataire_adresse ? `<tr><td>Adresse</td><td>${body.locataire_adresse}${body.locataire_ville ? ', ' + body.locataire_ville : ''}</td></tr>` : ''}
+</table>
+
+<h2>2. Matériel loué</h2>
+<table class="info">
+  <tr><td>Matériel</td><td>${article.nom}</td></tr>
+  ${article.accessoires_inclus ? `<tr><td>Accessoires remis</td><td>${article.accessoires_inclus}</td></tr>` : ''}
+  <tr><td>Date de remise</td><td>${fDate(body.date_debut as string)}</td></tr>
+  <tr><td>Date de retour prévue</td><td>${fDate(body.date_fin as string)}</td></tr>
+  <tr><td>Durée</td><td>${body.nb_jours} jour(s)</td></tr>
+  <tr><td>Mode de remise</td><td>${body.mode_remise === 'livraison' ? 'Livraison à domicile' : 'Retrait à Saint-Étienne'}</td></tr>
+</table>
+
+<h2>3. Conditions financières</h2>
+<table class="info">
+  <tr><td>Montant de la location</td><td>${fMontant(body.montant_location as number)}</td></tr>
+  ${(body.frais_livraison as number) > 0 ? `<tr><td>Frais de livraison</td><td>${fMontant(body.frais_livraison as number)}</td></tr>` : ''}
+  <tr><td>Montant total</td><td class="amount">${fMontant(body.montant_total as number)}</td></tr>
+  ${body.est_acompte ? `<tr><td>Acompte (50%)</td><td>${fMontant(body.montant_acompte as number)}</td></tr>` : ''}
+  <tr><td>Mode de paiement</td><td>${paiementLabel[body.moyen_paiement as string] || body.moyen_paiement}</td></tr>
+</table>
+
+<h2>4. Caution</h2>
+<table class="info">
+  <tr><td>Montant</td><td>${fMontant(body.caution_montant as number)}</td></tr>
+  <tr><td>Type</td><td>${cautionLabel[body.caution_type as string] || body.caution_type}</td></tr>
+</table>
+<p class="clause">La caution peut être retenue totalement ou partiellement en cas de dommage, perte, vol ou non-restitution. Elle est restituée dans les 5 jours ouvrés après retour du matériel en bon état.</p>
+
+<h2>5. Obligations du locataire</h2>
+<p class="clause">Le locataire est responsable du matériel dès sa remise jusqu'à sa restitution. Il s'interdit de le prêter, sous-louer, démonter ou modifier. Il doit protéger le matériel contre les chocs, liquides, humidité et mauvais usage.</p>
+
+<h2>6. Vol, perte et détérioration</h2>
+<p class="clause">En cas de vol, perte ou détérioration, le locataire prend en charge le coût réel de réparation ou de remplacement. En cas de vol, un dépôt de plainte doit être transmis sous 48 heures.</p>
+
+<h2>7. Restitution et retard</h2>
+<p class="clause">Pénalité de retard : 10 € par jour commencé. Au-delà de 10 jours, une mise en demeure puis toute procédure judiciaire utile pourra être engagée.</p>
+
+<h2>8. Données personnelles</h2>
+<p class="clause">Le locataire autorise la conservation des documents d'identification nécessaires à la gestion du contrat et d'éventuels litiges.</p>
+
+<h2>9. Litiges</h2>
+<p class="clause">Le contrat est soumis au droit français. Les tribunaux du ressort de Saint-Étienne sont compétents sauf disposition légale contraire.</p>
+
+<div class="sig-block">
+  <h2 style="margin-top:0">Signatures</h2>
+  <table class="sig">
+    <tr>
+      <td><strong>Loueur : Claudine Yombo</strong><br/><span style="color:#888;font-size:10px">Lieu Secret — Saint-Étienne</span></td>
+      <td><strong>Locataire : ${body.signature_nom || body.locataire_nom}</strong><br/><span style="color:#888;font-size:10px">Signé électroniquement le ${dateSignature} à ${heureSignature}</span><br/><span style="color:#888;font-size:10px">Mention : Lu et approuvé</span></td>
+    </tr>
   </table>
-
-  <h2>2. Matériel loué</h2>
-  <table class="info">
-    <tr><td>Matériel</td><td>${article.nom}</td></tr>
-    ${article.accessoires_inclus ? `<tr><td>Accessoires remis</td><td>${article.accessoires_inclus}</td></tr>` : ''}
-    <tr><td>Date de remise</td><td>${fDate(body.date_debut as string)}</td></tr>
-    <tr><td>Date de retour prévue</td><td>${fDate(body.date_fin as string)}</td></tr>
-    <tr><td>Durée</td><td>${body.nb_jours} jour(s)</td></tr>
-    <tr><td>Mode de remise</td><td>${body.mode_remise === 'livraison' ? 'Livraison à domicile' : 'Retrait à Saint-Étienne'}</td></tr>
-  </table>
-
-  <h2>3. Conditions financières</h2>
-  <table class="info">
-    <tr><td>Montant de la location</td><td>${fMontant(body.montant_location as number)}</td></tr>
-    ${(body.frais_livraison as number) > 0 ? `<tr><td>Frais de livraison</td><td>${fMontant(body.frais_livraison as number)}</td></tr>` : ''}
-    <tr><td>Montant total</td><td class="amount">${fMontant(body.montant_total as number)}</td></tr>
-    ${body.est_acompte ? `<tr><td>Acompte (50%)</td><td>${fMontant(body.montant_acompte as number)}</td></tr>` : ''}
-    <tr><td>Mode de paiement</td><td>${paiementLabel[body.moyen_paiement as string] || body.moyen_paiement}</td></tr>
-  </table>
-
-  <h2>4. Caution</h2>
-  <table class="info">
-    <tr><td>Montant</td><td>${fMontant(body.caution_montant as number)}</td></tr>
-    <tr><td>Type</td><td>${cautionLabel[body.caution_type as string] || body.caution_type}</td></tr>
-  </table>
-  <p class="clause">La caution peut être retenue totalement ou partiellement en cas de dommage, perte, vol ou non-restitution. Elle est restituée dans les 5 jours ouvrés après retour du matériel en bon état. Si le préjudice dépasse la caution, le locataire s'engage à indemniser intégralement le loueur.</p>
-
-  <h2>5. Obligations du locataire</h2>
-  <p class="clause">Le locataire est responsable du matériel dès sa remise jusqu'à sa restitution. Il s'interdit de le prêter, sous-louer, démonter ou modifier. Il doit protéger le matériel contre les chocs, liquides, humidité et mauvais usage.</p>
-
-  <h2>6. Vol, perte et détérioration</h2>
-  <p class="clause">En cas de vol, perte ou détérioration, le locataire prend en charge le coût réel de réparation ou de remplacement. En cas de vol, un dépôt de plainte doit être transmis sous 48 heures.</p>
-
-  <h2>7. Restitution et retard</h2>
-  <p class="clause">Pénalité de retard : 10 € par jour commencé. Au-delà de 10 jours, une mise en demeure puis toute procédure judiciaire utile pourra être engagée.</p>
-
-  <h2>8. Données personnelles</h2>
-  <p class="clause">Le locataire autorise la conservation des documents d'identification nécessaires à la gestion du contrat et d'éventuels litiges.</p>
-
-  <h2>9. Litiges</h2>
-  <p class="clause">Le contrat est soumis au droit français. Les tribunaux du ressort de Saint-Étienne sont compétents sauf disposition légale contraire.</p>
-
-  <div class="signature-block">
-    <h2 style="margin-top:0;">Signatures</h2>
-    <table class="sig">
-      <tr>
-        <td>
-          <div class="sig-label">Loueur : Claudine Yombo</div>
-          <div class="sig-sub">Lieu Secret — Saint-Étienne</div>
-        </td>
-        <td>
-          <div class="sig-label">Locataire : ${body.signature_nom}</div>
-          <div class="sig-sub">Signé électroniquement le ${dateSignature} à ${heureSignature}</div>
-        </td>
-      </tr>
-    </table>
-    <p class="legal-note">Ce contrat a été signé électroniquement conformément au règlement eIDAS (UE) n°910/2014. La signature par saisie du nom complet constitue une acceptation légalement valable.</p>
-  </div>
+  <p class="legal">Ce contrat a été signé électroniquement conformément au règlement eIDAS (UE) n°910/2014.</p>
+</div>
 </div>
 </body>
 </html>`
@@ -139,6 +140,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
 
+    // Validations
     if (!body.article_id || !body.locataire_nom || !body.locataire_email) {
       return NextResponse.json({ error: 'Données manquantes.' }, { status: 400 })
     }
@@ -160,10 +162,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Article introuvable.' }, { status: 404 })
     }
     if (!article.disponible || article.stock < 1) {
-      return NextResponse.json({ error: 'Cet article n\'est plus disponible à la location.' }, { status: 400 })
+      return NextResponse.json({ error: "Cet article n'est plus disponible à la location." }, { status: 400 })
     }
 
-    // Récupérer IBAN depuis les paramètres
+    // Récupérer IBAN
     const { data: settings } = await supabaseAdmin
       .from('site_settings')
       .select('virement_iban, virement_nom, virement_info')
@@ -213,35 +215,32 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (resaErr || !reservation) {
+      const errMsg = resaErr?.message || resaErr?.details || 'Erreur lors de la création de la réservation.'
       console.error('Erreur création réservation:', JSON.stringify(resaErr))
-      const errMsg = resaErr?.message || resaErr?.details || resaErr?.hint || 'Erreur lors de la création de la réservation.'
       return NextResponse.json({ error: errMsg }, { status: 500 })
     }
 
-    // Retourner immédiatement la réservation pour ne pas bloquer le paiement
+    // Retourner immédiatement — emails en arrière-plan
     const response = NextResponse.json(reservation)
 
-    // Générer le PDF et envoyer les emails en arrière-plan (non bloquant)
-    ;(async () => {
-      // Générer le contrat en HTML (fonctionne sur Vercel, s'ouvre dans tous les navigateurs)
-    ;(async () => {
+    // Emails et contrat en arrière-plan (non bloquant)
+    void (async () => {
       try {
-        const now = new Date()
-        const dateSignature = now.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) +
-          ' à ' + now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+        const contratHTML  = genContratHTML(body, article, iban, nomBenef)
+        const contratB64   = Buffer.from(contratHTML).toString('base64')
+        const contratFile  = `contrat-location-${(body.article_nom as string).toLowerCase().replace(/\s+/g, '-')}.html`
 
-        const htmlContrat = genContratHTML(body, article)
-        const contratBase64 = Buffer.from(htmlContrat).toString('base64')
-        const contratFilename = `contrat-location-${(body.article_nom as string).toLowerCase().replace(/\s+/g, '-')}.html`
-
-        // Stocker l'URL du contrat (upload Cloudinary optionnel)
+        // Upload Cloudinary (optionnel)
         try {
           const { cloudinary } = await import('@/lib/cloudinary')
           const uploadResult = await new Promise<{ secure_url: string }>((resolve, reject) => {
             cloudinary.uploader.upload_stream(
               { folder: `location-contrats/${reservation.id}`, resource_type: 'raw', public_id: `contrat-${reservation.id}` },
-              (error, result) => { if (error || !result) reject(error); else resolve(result as { secure_url: string }) }
-            ).end(Buffer.from(htmlContrat))
+              (error, result) => {
+                if (error || !result) reject(error)
+                else resolve(result as { secure_url: string })
+              }
+            ).end(Buffer.from(contratHTML))
           })
           await supabaseAdmin
             .from('location_reservations')
@@ -252,64 +251,66 @@ export async function POST(req: NextRequest) {
         }
 
         const cautionLabel: Record<string, string> = {
-          cheque: 'Chèque remis à la livraison', virement: 'Virement bancaire',
-          especes: 'Espèces', stripe_hold: 'Empreinte carte (Stripe)',
+          cheque: 'Chèque remis à la livraison',
+          virement: 'Virement bancaire',
+          especes: 'Espèces',
+          stripe_hold: 'Empreinte carte (Stripe)',
         }
 
         const clientHtml = `
-          <div style="font-family:Arial;background:#1a1a2e;padding:32px;color:#f0f0f0;max-width:600px;margin:0 auto;border-radius:12px;">
-            <div style="text-align:center;margin-bottom:24px;">
-              <div style="font-size:22px;color:#f59e0b;letter-spacing:4px;">LIEU SECRET</div>
-              <div style="font-size:11px;color:#7070a0;margin-top:4px;letter-spacing:2px;">ÉCOLE DE PIANO EN LIGNE</div>
-            </div>
-            <h2 style="color:#f59e0b;margin:0 0 16px;">Demande de location reçue !</h2>
-            <p style="color:#d0d0e8;font-size:14px;line-height:1.7;">Bonjour ${body.locataire_nom},</p>
-            <p style="color:#d0d0e8;font-size:14px;line-height:1.7;">
-              Votre demande de location a bien été reçue. Votre contrat de location signé est joint à cet email.
-              <strong style="color:#f59e0b;">Ouvrez le fichier joint</strong> pour consulter votre contrat.
-            </p>
-            <div style="background:#252540;border:1px solid #3a3a5c;border-radius:8px;padding:16px;margin:20px 0;">
-              <p style="color:#a0a0c0;font-size:12px;margin:0 0 12px;font-weight:bold;text-transform:uppercase;">Récapitulatif</p>
-              <table style="width:100%;border-collapse:collapse;">
-                <tr><td style="padding:6px 0;color:#a0a0c0;font-size:13px;">Article</td><td style="padding:6px 0;color:#f0f0f0;font-size:13px;text-align:right;">${body.article_nom}</td></tr>
-                <tr><td style="padding:6px 0;color:#a0a0c0;font-size:13px;">Période</td><td style="padding:6px 0;color:#f0f0f0;font-size:13px;text-align:right;">${fDate(body.date_debut as string)} → ${fDate(body.date_fin as string)}</td></tr>
-                <tr><td style="padding:6px 0;color:#a0a0c0;font-size:13px;">Montant total</td><td style="padding:6px 0;color:#f59e0b;font-size:13px;font-weight:bold;text-align:right;">${fMontant(body.montant_total as number)}</td></tr>
-                ${body.est_acompte ? `<tr><td style="padding:6px 0;color:#a0a0c0;font-size:13px;">Acompte (50%)</td><td style="padding:6px 0;color:#fbbf24;font-size:13px;text-align:right;">${fMontant(body.montant_acompte as number)}</td></tr>` : ''}
-                <tr><td style="padding:6px 0;color:#a0a0c0;font-size:13px;">Caution</td><td style="padding:6px 0;color:#f0f0f0;font-size:13px;text-align:right;">${fMontant(body.caution_montant as number)} (${cautionLabel[body.caution_type as string] || body.caution_type})</td></tr>
-              </table>
-            </div>
-            ${body.moyen_paiement === 'virement' ? `
-              <div style="background:#2a2010;border:1px solid #f59e0b;border-radius:8px;padding:16px;margin:16px 0;">
-                <p style="color:#f59e0b;font-size:13px;font-weight:bold;margin:0 0 12px;">Coordonnées bancaires</p>
-                ${iban ? `<div style="margin-bottom:8px;"><span style="color:#a0a0c0;font-size:11px;display:block;">IBAN</span><span style="color:#f0f0f0;font-size:14px;font-family:monospace;">${iban}</span></div>` : ''}
-                <div style="margin-bottom:8px;"><span style="color:#a0a0c0;font-size:11px;display:block;">Bénéficiaire</span><span style="color:#f0f0f0;font-size:14px;">${nomBenef}</span></div>
-                <div><span style="color:#a0a0c0;font-size:11px;display:block;">Montant à virer</span><span style="color:#f59e0b;font-size:16px;font-weight:bold;">${fMontant(body.est_acompte ? body.montant_acompte as number : body.montant_total as number)}</span></div>
-                <div style="margin-top:8px;"><span style="color:#a0a0c0;font-size:11px;display:block;">Référence</span><span style="color:#f0f0f0;font-size:13px;">Location ${body.article_nom} — ${body.locataire_nom}</span></div>
-              </div>
-            ` : ''}
-            <div style="background:#1a2a1a;border:1px solid #22c55e;border-radius:8px;padding:14px;margin:16px 0;">
-              <p style="color:#22c55e;font-size:13px;font-weight:bold;margin:0 0 4px;">Contrat joint à cet email</p>
-              <p style="color:#a0d0a0;font-size:12px;margin:0;">Ouvrez le fichier .html joint dans votre navigateur pour consulter votre contrat signé. Vous pouvez l'imprimer ou le sauvegarder en PDF depuis votre navigateur (Ctrl+P).</p>
-            </div>
-            <p style="color:#a0a0c0;font-size:13px;">Contact : <a href="mailto:${ADMIN_EMAIL}" style="color:#f59e0b;">${ADMIN_EMAIL}</a></p>
-          </div>
-        `
+<div style="font-family:Arial;background:#1a1a2e;padding:32px;color:#f0f0f0;max-width:600px;margin:0 auto;border-radius:12px;">
+  <div style="text-align:center;margin-bottom:24px;">
+    <div style="font-size:22px;color:#f59e0b;letter-spacing:4px;">LIEU SECRET</div>
+    <div style="font-size:11px;color:#7070a0;margin-top:4px;letter-spacing:2px;">ÉCOLE DE PIANO EN LIGNE</div>
+  </div>
+  <h2 style="color:#f59e0b;margin:0 0 16px;">Demande de location reçue !</h2>
+  <p style="color:#d0d0e8;font-size:14px;line-height:1.7;">Bonjour ${body.locataire_nom},</p>
+  <p style="color:#d0d0e8;font-size:14px;line-height:1.7;">
+    Votre demande de location a bien été reçue. Votre contrat signé est joint à cet email (fichier .html — ouvrez-le dans votre navigateur).
+  </p>
+  <div style="background:#252540;border:1px solid #3a3a5c;border-radius:8px;padding:16px;margin:20px 0;">
+    <p style="color:#a0a0c0;font-size:12px;margin:0 0 12px;font-weight:bold;text-transform:uppercase;">Récapitulatif</p>
+    <table style="width:100%;border-collapse:collapse;">
+      <tr><td style="padding:6px 0;color:#a0a0c0;font-size:13px;">Article</td><td style="padding:6px 0;color:#f0f0f0;font-size:13px;text-align:right;">${body.article_nom}</td></tr>
+      <tr><td style="padding:6px 0;color:#a0a0c0;font-size:13px;">Période</td><td style="padding:6px 0;color:#f0f0f0;font-size:13px;text-align:right;">${fDate(body.date_debut as string)} → ${fDate(body.date_fin as string)}</td></tr>
+      <tr><td style="padding:6px 0;color:#a0a0c0;font-size:13px;">Montant total</td><td style="padding:6px 0;color:#f59e0b;font-size:13px;font-weight:bold;text-align:right;">${fMontant(body.montant_total as number)}</td></tr>
+      ${body.est_acompte ? `<tr><td style="padding:6px 0;color:#a0a0c0;font-size:13px;">Acompte (50%)</td><td style="padding:6px 0;color:#fbbf24;font-size:13px;text-align:right;">${fMontant(body.montant_acompte as number)}</td></tr>` : ''}
+      <tr><td style="padding:6px 0;color:#a0a0c0;font-size:13px;">Caution</td><td style="padding:6px 0;color:#f0f0f0;font-size:13px;text-align:right;">${fMontant(body.caution_montant as number)} (${cautionLabel[body.caution_type as string] || body.caution_type})</td></tr>
+      <tr><td style="padding:6px 0;color:#a0a0c0;font-size:13px;">Mode de remise</td><td style="padding:6px 0;color:#f0f0f0;font-size:13px;text-align:right;">${body.mode_remise === 'livraison' ? 'Livraison à domicile' : 'Retrait à Saint-Étienne'}</td></tr>
+    </table>
+  </div>
+  ${body.moyen_paiement === 'virement' ? `
+  <div style="background:#2a2010;border:1px solid #f59e0b;border-radius:8px;padding:16px;margin:16px 0;">
+    <p style="color:#f59e0b;font-size:13px;font-weight:bold;margin:0 0 12px;">Coordonnées bancaires pour le virement</p>
+    ${iban ? `<div style="margin-bottom:8px;"><span style="color:#a0a0c0;font-size:11px;display:block;">IBAN</span><span style="color:#f0f0f0;font-size:14px;font-family:monospace;">${iban}</span></div>` : ''}
+    <div style="margin-bottom:8px;"><span style="color:#a0a0c0;font-size:11px;display:block;">Bénéficiaire</span><span style="color:#f0f0f0;font-size:14px;">${nomBenef}</span></div>
+    <div style="margin-bottom:8px;"><span style="color:#a0a0c0;font-size:11px;display:block;">Montant à virer</span><span style="color:#f59e0b;font-size:16px;font-weight:bold;">${fMontant(body.est_acompte ? body.montant_acompte as number : body.montant_total as number)}</span></div>
+    <div><span style="color:#a0a0c0;font-size:11px;display:block;">Référence</span><span style="color:#f0f0f0;font-size:13px;">Location ${body.article_nom} — ${body.locataire_nom}</span></div>
+    ${infoVir ? `<p style="margin:10px 0 0;color:#a0a0c0;font-size:11px;">${infoVir}</p>` : ''}
+  </div>
+  ` : ''}
+  <div style="background:#1a2a1a;border:1px solid #22c55e;border-radius:8px;padding:14px;margin:16px 0;">
+    <p style="color:#22c55e;font-size:13px;font-weight:bold;margin:0 0 4px;">Contrat joint à cet email</p>
+    <p style="color:#a0d0a0;font-size:12px;margin:0;">Ouvrez le fichier .html joint dans votre navigateur. Vous pouvez l'imprimer ou le sauvegarder en PDF (Ctrl+P).</p>
+  </div>
+  <p style="color:#a0a0c0;font-size:13px;">Contact : <a href="mailto:${ADMIN_EMAIL}" style="color:#f59e0b;">${ADMIN_EMAIL}</a></p>
+  <p style="color:#505080;font-size:12px;text-align:center;margin-top:24px;">Vérifiez votre dossier Spam si vous ne recevez pas de réponse.</p>
+</div>`
 
         const adminHtml = `
-          <div style="font-family:Arial;background:#1a1a2e;padding:32px;color:#f0f0f0;max-width:600px;margin:0 auto;border-radius:12px;">
-            <h2 style="color:#f59e0b;">[Location] Nouvelle demande — ${body.article_nom}</h2>
-            <table style="width:100%;border-collapse:collapse;background:#252540;border-radius:8px;overflow:hidden;">
-              <tr><td style="padding:8px 12px;color:#a0a0c0;font-size:13px;border-bottom:1px solid #3a3a5c;">Article</td><td style="padding:8px 12px;color:#f0f0f0;font-size:13px;border-bottom:1px solid #3a3a5c;">${body.article_nom}</td></tr>
-              <tr><td style="padding:8px 12px;color:#a0a0c0;font-size:13px;border-bottom:1px solid #3a3a5c;">Locataire</td><td style="padding:8px 12px;color:#f0f0f0;font-size:13px;border-bottom:1px solid #3a3a5c;">${body.locataire_nom} — ${body.locataire_email}</td></tr>
-              <tr><td style="padding:8px 12px;color:#a0a0c0;font-size:13px;border-bottom:1px solid #3a3a5c;">Période</td><td style="padding:8px 12px;color:#f0f0f0;font-size:13px;border-bottom:1px solid #3a3a5c;">${fDate(body.date_debut as string)} → ${fDate(body.date_fin as string)}</td></tr>
-              <tr><td style="padding:8px 12px;color:#a0a0c0;font-size:13px;border-bottom:1px solid #3a3a5c;">Montant</td><td style="padding:8px 12px;color:#f59e0b;font-size:13px;font-weight:bold;border-bottom:1px solid #3a3a5c;">${fMontant(body.montant_total as number)}</td></tr>
-              <tr><td style="padding:8px 12px;color:#a0a0c0;font-size:13px;">Paiement</td><td style="padding:8px 12px;color:#f0f0f0;font-size:13px;">${body.moyen_paiement}</td></tr>
-            </table>
-            <div style="text-align:center;margin:24px 0;">
-              <a href="${BASE_URL}/admin/location/${reservation.id}" style="background:#f59e0b;color:#1a1a2e;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;">Voir la réservation →</a>
-            </div>
-          </div>
-        `
+<div style="font-family:Arial;background:#1a1a2e;padding:32px;color:#f0f0f0;max-width:600px;margin:0 auto;border-radius:12px;">
+  <h2 style="color:#f59e0b;">[Location] Nouvelle demande — ${body.article_nom}</h2>
+  <table style="width:100%;border-collapse:collapse;background:#252540;border-radius:8px;overflow:hidden;">
+    <tr><td style="padding:8px 12px;color:#a0a0c0;font-size:13px;border-bottom:1px solid #3a3a5c;">Article</td><td style="padding:8px 12px;color:#f0f0f0;font-size:13px;border-bottom:1px solid #3a3a5c;">${body.article_nom}</td></tr>
+    <tr><td style="padding:8px 12px;color:#a0a0c0;font-size:13px;border-bottom:1px solid #3a3a5c;">Locataire</td><td style="padding:8px 12px;color:#f0f0f0;font-size:13px;border-bottom:1px solid #3a3a5c;">${body.locataire_nom} — ${body.locataire_email}</td></tr>
+    <tr><td style="padding:8px 12px;color:#a0a0c0;font-size:13px;border-bottom:1px solid #3a3a5c;">Période</td><td style="padding:8px 12px;color:#f0f0f0;font-size:13px;border-bottom:1px solid #3a3a5c;">${fDate(body.date_debut as string)} → ${fDate(body.date_fin as string)} (${body.nb_jours} j.)</td></tr>
+    <tr><td style="padding:8px 12px;color:#a0a0c0;font-size:13px;border-bottom:1px solid #3a3a5c;">Montant</td><td style="padding:8px 12px;color:#f59e0b;font-size:13px;font-weight:bold;border-bottom:1px solid #3a3a5c;">${fMontant(body.montant_total as number)}</td></tr>
+    <tr><td style="padding:8px 12px;color:#a0a0c0;font-size:13px;">Paiement</td><td style="padding:8px 12px;color:#f0f0f0;font-size:13px;">${body.moyen_paiement}</td></tr>
+  </table>
+  <div style="text-align:center;margin:24px 0;">
+    <a href="${BASE_URL}/admin/location/${reservation.id}" style="background:#f59e0b;color:#1a1a2e;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;">Voir la réservation →</a>
+  </div>
+</div>`
 
         await Promise.all([
           resend.emails.send({
@@ -317,28 +318,20 @@ export async function POST(req: NextRequest) {
             to:   body.locataire_email as string,
             subject: `Votre contrat de location — ${body.article_nom}`,
             html: clientHtml,
-            attachments: [{
-              filename: contratFilename,
-              content:  contratBase64,
-            }],
+            attachments: [{ filename: contratFile, content: contratB64 }],
           }),
           resend.emails.send({
             from: FROM,
             to:   ADMIN_EMAIL,
             subject: `[Location] Nouvelle demande — ${body.article_nom}`,
             html: adminHtml,
-            attachments: [{
-              filename: contratFilename,
-              content:  contratBase64,
-            }],
+            attachments: [{ filename: contratFile, content: contratB64 }],
           }),
-        ]).catch(e => console.error('Erreur envoi emails:', e))
-
+        ])
       } catch (bgErr) {
-        console.error('Erreur arrière-plan:', bgErr)
+        console.error('Erreur arrière-plan emails:', bgErr)
       }
-    }
-    })().catch(e => console.error('Erreur arrière-plan PDF/email:', e))
+    })()
 
     return response
 
