@@ -193,7 +193,7 @@ export async function POST(req: NextRequest) {
         nb_jours:              body.nb_jours || null,
         mode_remise:           body.mode_remise || 'retrait',
         adresse_livraison:     body.adresse_livraison || null,
-        zone_livraison_id:     body.zone_livraison_id || null,
+        zone_livraison_id:     (body.mode_remise === 'livraison' && body.zone_livraison_id) ? body.zone_livraison_id : null,
         frais_livraison:       body.frais_livraison || 0,
         montant_location:      body.montant_location,
         montant_acompte:       body.montant_acompte || null,
