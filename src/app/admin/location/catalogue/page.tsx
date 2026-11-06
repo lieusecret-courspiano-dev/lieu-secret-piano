@@ -57,7 +57,7 @@ export default function AdminLocationCataloguePage() {
 
   async function loadArticles() {
     setLoading(true)
-    const data = await fetch('/api/admin/location/catalogue').then(r => r.json()).catch(() => [])
+    const data = await fetch('/api/admin/location/catalogue', { cache: 'no-store' }).then(r => r.json()).catch(() => [])
     setArticles(Array.isArray(data) ? data : [])
     setLoading(false)
   }
