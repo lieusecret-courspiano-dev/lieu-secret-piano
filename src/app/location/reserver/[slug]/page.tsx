@@ -59,6 +59,7 @@ export default function LocationReserverPage() {
   const [dateFin, setDateFin] = useState('')
   const [dureeType, setDureeType] = useState<DureeType>('jours')
   const [quantite, setQuantite] = useState<number>(1)
+  const [samedisSelectionnes, setSamedisSelectionnes] = useState<string[]>([])
   const [modeRemise, setModeRemise] = useState<ModeRemise>('retrait')
   const [adresseLivraison, setAdresseLivraison] = useState('')
   const [zoneId, setZoneId] = useState('')
@@ -425,6 +426,7 @@ export default function LocationReserverPage() {
                               setQuantite(1)
                               setDateDebut('')
                               setDateFin('')
+                              setSamedisSelectionnes([])
                             }}
                               className={`px-4 py-2 rounded-xl border text-sm font-medium transition-all ${
                                 dureeType === d.key
@@ -448,6 +450,7 @@ export default function LocationReserverPage() {
                               onClick={() => {
                                 const q = Math.max(1, quantite - 1)
                                 setQuantite(q)
+                                setSamedisSelectionnes(prev => prev.slice(0, q))
                                 if (dateDebut) setDateFin(calcDateFin(dateDebut, dureeType, q))
                               }}
                               className="w-10 h-10 rounded-xl border border-noir-700 text-white hover:border-gold-500/50 flex items-center justify-center text-xl font-bold transition-all">
@@ -472,41 +475,92 @@ export default function LocationReserverPage() {
                         </div>
                       )}
 
-                      {/* Dates */}
-                      <div className="grid sm:grid-cols-2 gap-4">
-                        <div>
-                          <label className="label mb-1.5 block">
-                            {dureeType === 'weekend' ? 'Samedi de début *' : 'Date de début *'}
-                          </label>
-                          {dureeType === 'weekend' && (
-                            <p className="text-noir-500 text-xs mb-1">Sélectionnez un samedi uniquement</p>
-                          )}
-                          <input type="date" value={dateDebut} min={today}
-                            onChange={e => {
-                              const d = e.target.value
-                              if (dureeType === 'weekend') {
-                                const day = new Date(d + 'T12:00:00').getDay()
-                                if (day !== 6) {
-                                  alert('Pour une location week-end, veuillez sélectionner un samedi (la fin sera automatiquement fixée au dimanche).')
-                                  return
+                      {/* Dates — week-end multiple */}
+                      {dureeType === 'weekend' && quantite > 1 ? (
+                        <div className="space-y-3">
+                          <p className="text-noir-400 text-xs">
+                            Sélectionnez le samedi de chaque week-end souhaité.
+                          </p>
+                          {Array.from({ length: quantite }, (_, i) => (
+                            <div key={i} className="grid sm:grid-cols-2 gap-4 items-start">
+                              <div>
+                                <label className="label mb-1.5 block text-xs">
+                                  Week-end {i + 1} — Samedi *
+                                </label>
+                                <input type="date" min={today}
+                                  value={samedisSelectionnes[i] || ''}
+                                  onChange={e => {
+                                    const d = e.target.value
+                                    const day = new Date(d + 'T12:00:00').getDay()
+                                    if (day !== 6) {
+                                      alert('Veuillez sélectionner un samedi.')
+                                      return
+                                    }
+                                    const newSamedis = [...samedisSelectionnes]
+                                    newSamedis[i] = d
+                                    setSamedisSelectionnes(newSamedis)
+                                    // Mettre à jour dateDebut et dateFin
+                                    const filled = newSamedis.filter(Boolean).sort()
+                                    if (filled.length > 0) {
+                                      setDateDebut(filled[0])
+                                      // Dernier dimanche = dernier samedi + 1 jour
+                                      const lastSam = new Date(filled[filled.length - 1] + 'T12:00:00')
+                                      lastSam.setDate(lastSam.getDate() + 1)
+                                      setDateFin(lastSam.toISOString().split('T')[0])
+                                    }
+                                  }}
+                                  className="input w-full text-sm" />
+                              </div>
+                              <div>
+                                <label className="label mb-1.5 block text-xs">Dimanche</label>
+                                <input type="date" readOnly
+                                  value={samedisSelectionnes[i]
+                                    ? (() => { const d = new Date(samedisSelectionnes[i] + 'T12:00:00'); d.setDate(d.getDate() + 1); return d.toISOString().split('T')[0] })()
+                                    : ''}
+                                  className="input w-full opacity-60 cursor-not-allowed text-sm" />
+                                <p className="text-noir-600 text-xs mt-1">Automatique</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        /* Dates — jours, 1 week-end, mois */
+                        <div className="grid sm:grid-cols-2 gap-4 items-start">
+                          <div>
+                            <label className="label mb-1.5 block">
+                              {dureeType === 'weekend' ? 'Samedi de début *' : 'Date de début *'}
+                            </label>
+                            {dureeType === 'weekend' && (
+                              <p className="text-noir-500 text-xs mb-1">Sélectionnez un samedi uniquement</p>
+                            )}
+                            <input type="date" value={dateDebut} min={today}
+                              onChange={e => {
+                                const d = e.target.value
+                                if (dureeType === 'weekend') {
+                                  const day = new Date(d + 'T12:00:00').getDay()
+                                  if (day !== 6) {
+                                    alert('Pour une location week-end, veuillez sélectionner un samedi.')
+                                    return
+                                  }
+                                  setSamedisSelectionnes([d])
                                 }
-                              }
-                              setDateDebut(d)
-                              setDateFin(calcDateFin(d, dureeType, quantite))
-                            }}
-                            className="input w-full" />
+                                setDateDebut(d)
+                                setDateFin(calcDateFin(d, dureeType, quantite))
+                              }}
+                              className="input w-full" />
+                          </div>
+                          <div>
+                            <label className="label mb-1.5 block">Date de fin</label>
+                            <input type="date" value={dateFin}
+                              readOnly={dureeType !== 'jours'}
+                              onChange={e => { if (dureeType === 'jours') setDateFin(e.target.value) }}
+                              className={`input w-full ${dureeType !== 'jours' ? 'opacity-60 cursor-not-allowed' : ''}`} />
+                            {dureeType !== 'jours' && (
+                              <p className="text-noir-600 text-xs mt-1">Calculée automatiquement</p>
+                            )}
+                          </div>
                         </div>
-                        <div>
-                          <label className="label mb-1.5 block">Date de fin</label>
-                          <input type="date" value={dateFin}
-                            readOnly={dureeType !== 'jours'}
-                            onChange={e => { if (dureeType === 'jours') setDateFin(e.target.value) }}
-                            className={`input w-full ${dureeType !== 'jours' ? 'opacity-60 cursor-not-allowed' : ''}`} />
-                          {dureeType !== 'jours' && (
-                            <p className="text-noir-600 text-xs mt-1">Calculée automatiquement</p>
-                          )}
-                        </div>
-                      </div>
+                      )}
                                             {dateDebut && dateFin && detail && (
                         <div className="bg-noir-800 rounded-xl p-3 text-sm text-noir-300 space-y-1">
                           <div>
@@ -567,16 +621,58 @@ export default function LocationReserverPage() {
                           <input value={adresseLivraison} onChange={e => setAdresseLivraison(e.target.value)}
                             className="input w-full" placeholder="Adresse complète de livraison" />
                         </div>
+                        {/* Détection automatique de zone selon code postal */}
                         <div>
-                          <label className="label mb-1.5 block">Zone de livraison *</label>
-                          <select value={zoneId} onChange={e => setZoneId(e.target.value)} className="input w-full">
-                            <option value="">Sélectionnez votre zone...</option>
-                            {zones.map(z => (
-                              <option key={z.id} value={z.id}>
-                                {z.nom} — {z.sur_devis ? 'Sur devis' : z.tarif === 0 ? 'Gratuit' : f(z.tarif!)}
-                              </option>
-                            ))}
-                          </select>
+                          <label className="label mb-1.5 block">Zone de livraison</label>
+                          {codePostalVille ? (
+                            <div className="space-y-2">
+                              {/* Détection automatique */}
+                              {(() => {
+                                const cp = codePostalVille.trim().split(/[\s,]+/)[0]
+                                const stEtienne = cp.startsWith('42') && (
+                                  cp === '42000' || cp === '42100' || cp === '42230' ||
+                                  cp === '42270' || cp === '42340' || cp === '42400'
+                                )
+                                const proche = cp.startsWith('42') && !stEtienne
+                                const autoZone = stEtienne
+                                  ? zones.find(z => z.distance_min === 0 && (z.distance_max || 99) <= 15)
+                                  : proche
+                                  ? zones.find(z => z.distance_min === 15 && (z.distance_max || 99) <= 30)
+                                  : null
+                                if (autoZone && !zoneId) {
+                                  setTimeout(() => setZoneId(autoZone.id), 0)
+                                }
+                                return null
+                              })()}
+                              <select value={zoneId} onChange={e => setZoneId(e.target.value)} className="input w-full">
+                                <option value="">Sélectionnez votre zone...</option>
+                                {zones.map(z => (
+                                  <option key={z.id} value={z.id}>
+                                    {z.nom} — {z.sur_devis ? 'Sur devis' : z.tarif === 0 ? 'Gratuit' : f(z.tarif!)}
+                                  </option>
+                                ))}
+                              </select>
+                              {zoneId && (
+                                <p className="text-green-400 text-xs">
+                                  Zone détectée automatiquement selon votre code postal.
+                                </p>
+                              )}
+                            </div>
+                          ) : (
+                            <div>
+                              <select value={zoneId} onChange={e => setZoneId(e.target.value)} className="input w-full">
+                                <option value="">Sélectionnez votre zone...</option>
+                                {zones.map(z => (
+                                  <option key={z.id} value={z.id}>
+                                    {z.nom} — {z.sur_devis ? 'Sur devis' : z.tarif === 0 ? 'Gratuit' : f(z.tarif!)}
+                                  </option>
+                                ))}
+                              </select>
+                              <p className="text-noir-600 text-xs mt-1">
+                                Renseignez votre code postal ci-dessus pour une détection automatique.
+                              </p>
+                            </div>
+                          )}
                         </div>
                         {zoneSelectionnee?.sur_devis && (
                           <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 text-sm text-amber-300">
