@@ -275,9 +275,16 @@ export async function POST(req: NextRequest) {
         // Upload Cloudinary (optionnel)
         try {
           const { cloudinary } = await import('@/lib/cloudinary')
+          // Forcer l'extension selon le type de contrat généré
+          const ext = contratFile.endsWith('.pdf') ? '.pdf' : '.html'
           const uploadResult = await new Promise<{ secure_url: string }>((resolve, reject) => {
             cloudinary.uploader.upload_stream(
-              { folder: `location-contrats/${reservation.id}`, resource_type: 'raw', public_id: `contrat-${reservation.id}` },
+              {
+                folder: `location-contrats/${reservation.id}`,
+                resource_type: 'raw',
+                public_id: `contrat-${reservation.id}${ext}`,
+                format: ext.replace('.', ''),
+              },
               (error, result) => {
                 if (error || !result) reject(error)
                 else resolve(result as { secure_url: string })
