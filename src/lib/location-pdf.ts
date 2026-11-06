@@ -90,14 +90,14 @@ export function generateContratLocationPDF(params: ContratParams): Promise<Buffe
       let y = 132
 
       // ── Fonctions utilitaires ─────────────────────────────
-      function section(title: string) {
+      const section = (title: string) => {
         doc.rect(50, y, W, 16).fill('#f5f0e8')
         doc.font('Helvetica-Bold').fontSize(8).fillColor(GOLD)
           .text(title.toUpperCase(), 56, y + 4, { characterSpacing: 0.8 })
         y += 22
       }
 
-      function row(label: string, value: string, bold = false) {
+      const row = (label: string, value: string, bold = false) => {
         doc.font('Helvetica').fontSize(9).fillColor(LGRAY)
           .text(label, 56, y, { width: 160 })
         doc.font(bold ? 'Helvetica-Bold' : 'Helvetica').fontSize(9)
@@ -106,17 +106,17 @@ export function generateContratLocationPDF(params: ContratParams): Promise<Buffe
         y += 15
       }
 
-      function sep() {
+      const sep = () => {
         doc.moveTo(56, y - 2).lineTo(50 + W - 6, y - 2).lineWidth(0.3).stroke('#dddddd')
       }
 
-      function clause(text: string) {
+      const clause = (text: string) => {
         doc.font('Helvetica').fontSize(8).fillColor(GRAY)
           .text(text, 56, y, { width: W - 12 })
         y += doc.heightOfString(text, { width: W - 12 }) + 8
       }
 
-      function checkPage() {
+      const checkPage = () => {
         if (y > 700) { doc.addPage(); y = 50 }
       }
 
