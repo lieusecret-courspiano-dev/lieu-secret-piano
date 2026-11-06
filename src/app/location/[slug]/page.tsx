@@ -51,7 +51,7 @@ export default function LocationDetailPage() {
   const [notFound, setNotFound] = useState(false)
 
   useEffect(() => {
-    fetch(`/api/location/${slug}`)
+    fetch(`/api/location/${slug}?t=${Date.now()}`, { cache: 'no-store' })
       .then(r => {
         if (r.status === 404) { setNotFound(true); setLoading(false); return null }
         return r.json()
