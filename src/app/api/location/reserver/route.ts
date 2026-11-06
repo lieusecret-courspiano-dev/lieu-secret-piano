@@ -337,6 +337,7 @@ export async function POST(req: NextRequest) {
       } catch (bgErr) {
         console.error('Erreur arrière-plan:', bgErr)
       }
+    }
     })().catch(e => console.error('Erreur arrière-plan PDF/email:', e))
 
     return response
