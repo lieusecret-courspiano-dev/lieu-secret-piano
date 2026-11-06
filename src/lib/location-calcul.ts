@@ -1,13 +1,14 @@
 /**
  * Calcul des montants de location
- * Logique : chaque unité (week-end, semaine, mois) se multiplie
- * en fonction du nombre d'unités dans la période sélectionnée.
+ * Logique :
+ *  - Jours : prix_jour × nb_jours
+ *  - Week-end : prix_weekend × quantite (choisie par l'utilisateur)
+ *  - Mois : prix_mois × quantite (choisie par l'utilisateur)
  *
  * Exemples :
- *  - 2 jours à 15€/j = 30€
- *  - 1 week-end (2j) à 55€ = 55€ | 2 week-ends (9j) à 55€ = 110€
- *  - 1 semaine (7j) à 80€ = 80€ | 10j à 80€ = 160€ (2 semaines)
- *  - 1 mois (30j) à 500€ = 500€ | 45j à 500€ = 1000€ (2 mois)
+ *  - 3 jours à 15€/j = 45€
+ *  - 2 week-ends à 55€ = 110€ (2 × 55€, PAS 4 × 55€)
+ *  - 2 mois à 500€ = 1000€ (2 × 500€)
  */
 
 export type DureeType = 'jours' | 'weekend' | 'mois'
@@ -20,56 +21,23 @@ export interface PrixArticle {
 }
 
 /**
- * Compte le nombre de week-ends (paires sam-dim) dans une période
- */
-export function countWeekends(dateDebut: string, dateFin: string): number {
-  if (!dateDebut || !dateFin) return 0
-  const start = new Date(dateDebut)
-  const end   = new Date(dateFin)
-  let count = 0
-  const cur = new Date(start)
-  while (cur <= end) {
-    if (cur.getDay() === 6) { // Samedi
-      const nextDay = new Date(cur)
-      nextDay.setDate(nextDay.getDate() + 1)
-      if (nextDay <= end && nextDay.getDay() === 0) { // Dimanche suivant dans la période
-        count++
-      }
-    }
-    cur.setDate(cur.getDate() + 1)
-  }
-  return Math.max(1, count) // Au moins 1 si le type est weekend
-}
-
-/**
  * Nombre de jours entre deux dates (inclus)
  */
 export function nbJours(dateDebut: string, dateFin: string): number {
   if (!dateDebut || !dateFin) return 0
-  const d1 = new Date(dateDebut)
-  const d2 = new Date(dateFin)
+  const d1 = new Date(dateDebut + 'T12:00:00')
+  const d2 = new Date(dateFin + 'T12:00:00')
   return Math.max(1, Math.ceil((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24)) + 1)
-}
-
-/**
- * Nombre de semaines (arrondi au supérieur)
- */
-export function nbSemaines(dateDebut: string, dateFin: string): number {
-  const jours = nbJours(dateDebut, dateFin)
-  return Math.max(1, Math.ceil(jours / 7))
 }
 
 /**
  * Nombre de mois calendaires réels
  * Basé sur calcDateFin qui génère : debut + N mois - 1 jour
- * Donc : d2 + 1 jour = d1 + N mois → on calcule N depuis d2+1
- * Ex: 06/11 → 05/01 : 05/01 + 1j = 06/01 = 06/11 + 2 mois → 2 mois ✓
  */
 export function nbMois(dateDebut: string, dateFin: string): number {
   if (!dateDebut || !dateFin) return 1
   const d1 = new Date(dateDebut + 'T12:00:00')
   const d2 = new Date(dateFin + 'T12:00:00')
-  // Ajouter 1 jour à la date de fin pour retrouver le vrai point de fin
   const d2p1 = new Date(d2)
   d2p1.setDate(d2p1.getDate() + 1)
   const annees = d2p1.getFullYear() - d1.getFullYear()
@@ -80,25 +48,32 @@ export function nbMois(dateDebut: string, dateFin: string): number {
 }
 
 /**
- * Calcule le montant de location selon le type de durée
+ * Calcule le montant de location
+ * quantite = nombre de week-ends ou de mois choisis par l'utilisateur
  */
 export function calculMontantLocation(
   article: PrixArticle,
   dureeType: DureeType,
   dateDebut: string,
-  dateFin: string
+  dateFin: string,
+  quantite: number = 1
 ): number {
   if (!dateDebut || !dateFin) return 0
 
   switch (dureeType) {
     case 'jours':
+      // Pour les jours : calculer depuis les dates
       return (article.prix_jour || 0) * nbJours(dateDebut, dateFin)
 
     case 'weekend':
-      return (article.prix_weekend || 0) * countWeekends(dateDebut, dateFin)
+      // Pour les week-ends : quantite × prix_weekend
+      // Ex: 2 week-ends = 2 × 55€ = 110€
+      return (article.prix_weekend || 0) * quantite
 
     case 'mois':
-      return (article.prix_mois || 0) * nbMois(dateDebut, dateFin)
+      // Pour les mois : quantite × prix_mois
+      // Ex: 2 mois = 2 × 500€ = 1000€
+      return (article.prix_mois || 0) * quantite
 
     default:
       return 0
@@ -112,23 +87,32 @@ export function detailCalcul(
   article: PrixArticle,
   dureeType: DureeType,
   dateDebut: string,
-  dateFin: string
+  dateFin: string,
+  quantite: number = 1
 ): { quantite: number; prixUnitaire: number; label: string } {
   if (!dateDebut || !dateFin) return { quantite: 0, prixUnitaire: 0, label: '' }
 
   switch (dureeType) {
     case 'jours': {
       const q = nbJours(dateDebut, dateFin)
-      return { quantite: q, prixUnitaire: article.prix_jour || 0, label: `${q} jour${q > 1 ? 's' : ''}` }
+      return {
+        quantite: q,
+        prixUnitaire: article.prix_jour || 0,
+        label: `${q} jour${q > 1 ? 's' : ''}`,
+      }
     }
-    case 'weekend': {
-      const q = countWeekends(dateDebut, dateFin)
-      return { quantite: q, prixUnitaire: article.prix_weekend || 0, label: `${q} week-end${q > 1 ? 's' : ''}` }
-    }
-    case 'mois': {
-      const q = nbMois(dateDebut, dateFin)
-      return { quantite: q, prixUnitaire: article.prix_mois || 0, label: `${q} mois` }
-    }
+    case 'weekend':
+      return {
+        quantite,
+        prixUnitaire: article.prix_weekend || 0,
+        label: `${quantite} week-end${quantite > 1 ? 's' : ''}`,
+      }
+    case 'mois':
+      return {
+        quantite,
+        prixUnitaire: article.prix_mois || 0,
+        label: `${quantite} mois`,
+      }
     default:
       return { quantite: 0, prixUnitaire: 0, label: '' }
   }
