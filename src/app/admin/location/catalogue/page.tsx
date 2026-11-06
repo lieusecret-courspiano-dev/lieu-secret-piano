@@ -57,7 +57,7 @@ export default function AdminLocationCataloguePage() {
 
   async function loadArticles() {
     setLoading(true)
-    const data = await fetch('/api/admin/location/catalogue', { cache: 'no-store' }).then(r => r.json()).catch(() => [])
+    const data = await fetch('/api/admin/location/catalogue', { cache: 'no-store', credentials: 'include' }).then(r => r.json()).catch(() => [])
     setArticles(Array.isArray(data) ? data : [])
     setLoading(false)
   }
@@ -98,7 +98,7 @@ export default function AdminLocationCataloguePage() {
     try {
       const fd = new FormData()
       fd.append('file', file)
-      const res = await fetch('/api/admin/location/upload', { method: 'POST', body: fd })
+      const res = await fetch('/api/admin/location/upload', { method: 'POST', body: fd, credentials: 'include' })
       const data = await res.json()
       if (data.url) {
         setPhotos(prev => [...prev, data.url])
@@ -150,7 +150,7 @@ export default function AdminLocationCataloguePage() {
       const method = editItem ? 'PATCH' : 'POST'
       const body = editItem ? { id: editItem.id, ...payload } : payload
       const res = await fetch('/api/admin/location/catalogue', {
-        method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+        method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), credentials: 'include',
       })
       if (!res.ok) { const d = await res.json(); throw new Error(d.error || 'Erreur') }
       // Recharger avec cache désactivé
@@ -170,6 +170,7 @@ export default function AdminLocationCataloguePage() {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id }),
+        credentials: 'include',
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
@@ -191,7 +192,7 @@ export default function AdminLocationCataloguePage() {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: a.id, publie: !a.publie }),
-      cache: 'no-store',
+      credentials: 'include',
     })
     if (res.ok) {
       setArticles(prev => prev.map(x => x.id === a.id ? { ...x, publie: !x.publie } : x))
