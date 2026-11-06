@@ -11,7 +11,7 @@ import {
 
 interface DashboardData {
   periode: { from: string; to: string }
-  revenus: { total: number; packs: number; cadeaux: number; events: number; cb_direct: number; supports?: number; par_stripe: number; par_paypal: number; par_carte: number; par_virement: number }
+  revenus: { total: number; packs: number; cadeaux: number; events: number; cb_direct: number; supports?: number; location?: number; par_stripe: number; par_paypal: number; par_carte: number; par_virement: number }
   activite: { cours_confirmes: number; cours_avec_pack: number; heures_consommees: number; heures_restantes: number; eleves_actifs: number; inscriptions: number }
   comptabilite: { nb_transactions: number; nb_packs_vendus: number; nb_cadeaux_vendus: number; nb_events_vendus: number; montant_stripe: number; montant_paypal: number; montant_carte: number; montant_virement: number }
   monthlyData: { month: string; label: string; revenus: number; revenus_packs: number; revenus_cadeaux: number; revenus_events: number; revenus_cb: number; cours: number; packs_vendus: number; cadeaux_vendus: number }[]
@@ -114,6 +114,7 @@ export default function DashboardPage() {
     { name: 'CB direct', value: data.revenus.cb_direct },
     { name: 'Supports', value: data.revenus.supports || 0 },
     { name: 'Ressources premium', value: (data.revenus as any).ressources || 0 },
+    { name: 'Location', value: data.revenus.location || 0 },
   ].filter(d => d.value > 0) : []
 
   return (
@@ -174,6 +175,7 @@ export default function DashboardPage() {
                 { label: 'Bons cadeaux', value: fmt(data.revenus.cadeaux), color: 'text-purple-400', border: '' },
                 { label: 'Événements', value: fmt(data.revenus.events), color: 'text-green-400', border: '' },
                 { label: 'Ressources premium', value: fmt((data.revenus as any).ressources || 0), color: 'text-orange-400', border: '' },
+                { label: 'Location matériel', value: fmt(data.revenus.location || 0), color: 'text-teal-400', border: '' },
               ].map((s, i) => (
                 <div key={i} className={`card ${s.border}`}>
                   <div className={`text-xl font-bold ${s.color} mb-1`}>{s.value}</div>
