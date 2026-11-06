@@ -136,7 +136,7 @@ export default function AdminLocationDetailPage() {
       setMsgSujet('')
       setMsgTexte('')
       setTimeout(() => setMsgSent(false), 4000)
-    } catch { alert('Erreur lors de l'envoi') }
+    } catch { alert("Erreur lors de l'envoi") }
     setSendingMsg(false)
   }
 
