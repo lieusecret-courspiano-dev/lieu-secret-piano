@@ -267,7 +267,11 @@ export default function LocationReserverPage() {
           date_debut: dateDebut,
           date_fin: dateFin,
           duree_type: dureeType,
-          nb_jours: nb,
+          nb_jours: dureeType === 'weekend'
+                ? quantite * 2
+                : dureeType === 'mois'
+                ? quantite * 30
+                : nb,
           mode_remise: modeRemise,
           adresse_livraison: modeRemise === 'livraison' ? adresseLivraison : null,
           zone_livraison_id: modeRemise === 'livraison' && zoneId ? zoneId : null,
@@ -633,7 +637,13 @@ export default function LocationReserverPage() {
                                             {dateDebut && dateFin && detail && (
                         <div className="bg-noir-800 rounded-xl p-3 text-sm text-noir-300 space-y-1">
                           <div>
-                            Durée : <span className="text-white font-medium">{nb} jour{nb > 1 ? 's' : ''}</span>
+                            Durée : <span className="text-white font-medium">
+                              {dureeType === 'weekend'
+                                ? `${quantite * 2} jour${quantite * 2 > 1 ? 's' : ''} (${quantite} week-end${quantite > 1 ? 's' : ''})`
+                                : dureeType === 'mois'
+                                ? `${quantite} mois`
+                                : `${nb} jour${nb > 1 ? 's' : ''}`}
+                            </span>
                           </div>
                           <div>
                             Calcul : <span className="text-gold-400 font-medium">
@@ -722,38 +732,7 @@ export default function LocationReserverPage() {
                         <div>
                           <label className="label mb-1.5 block">Zone de livraison</label>
                           <div className="space-y-2">
-                            {/* Bouton détection GPS */}
-                            <button
-                              type="button"
-                              disabled={detectingZone || !adresseLivraison}
-                              onClick={() => {
-                                const adresseComplete = adresseLivraison + (codePostalVille ? ', ' + codePostalVille : '')
-                                detecterZoneParAdresse(adresseComplete)
-                              }}
-                              className={`w-full flex items-center justify-center gap-2 py-2 rounded-xl border text-sm transition-all ${
-                                detectingZone
-                                  ? 'border-gold-500/30 text-gold-400 bg-gold-500/10'
-                                  : adresseLivraison
-                                  ? 'border-blue-500/30 text-blue-400 bg-blue-500/10 hover:bg-blue-500/20'
-                                  : 'border-noir-700 text-noir-600 cursor-not-allowed'
-                              }`}>
-                              {detectingZone ? (
-                                <>
-                                  <div className="w-4 h-4 border-2 border-gold-500 border-t-transparent rounded-full animate-spin" />
-                                  Calcul de la distance...
-                                </>
-                              ) : (
-                                <>
-                                  <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
-                                    <circle cx="12" cy="9" r="2.5"/>
-                                  </svg>
-                                  Détecter ma zone automatiquement
-                                </>
-                              )}
-                            </button>
-
-                            {/* Résultat détection */}
+                            {/* Résultat détection auto via autocomplétion */}
                             {zoneDetectee && (
                               <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-2.5 text-xs text-green-400">
                                 Zone détectée : {zoneDetectee}
