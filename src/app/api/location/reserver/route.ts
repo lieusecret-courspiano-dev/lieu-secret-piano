@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { Resend } from 'resend'
+import { generateContratLocationPDF } from '@/lib/location-pdf'
 
 export const dynamic = 'force-dynamic'
 
@@ -226,9 +227,50 @@ export async function POST(req: NextRequest) {
     // Emails et contrat en arrière-plan (non bloquant)
     void (async () => {
       try {
-        const contratHTML  = genContratHTML(body, article, iban, nomBenef)
-        const contratB64   = Buffer.from(contratHTML).toString('base64')
-        const contratFile  = `contrat-location-${(body.article_nom as string).toLowerCase().replace(/\s+/g, '-')}.html`
+        // Générer le PDF avec pdfkit (polices intégrées, fonctionne sur Vercel)
+        const now = new Date()
+        const dateSignature = now.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) +
+          ' à ' + now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+
+        let contratB64: string
+        let contratFile: string
+        let contratMime: string
+
+        try {
+          const pdfBuffer = await generateContratLocationPDF({
+            locataire_nom:       body.locataire_nom as string,
+            locataire_email:     body.locataire_email as string,
+            locataire_telephone: body.locataire_telephone as string || null,
+            locataire_adresse:   body.locataire_adresse as string || null,
+            locataire_ville:     body.locataire_ville as string || null,
+            article_nom:         body.article_nom as string,
+            accessoires_inclus:  article.accessoires_inclus || null,
+            date_debut:          body.date_debut as string,
+            date_fin:            body.date_fin as string,
+            nb_jours:            (body.nb_jours as number) || 0,
+            mode_remise:         body.mode_remise as string || 'retrait',
+            montant_location:    body.montant_location as number,
+            frais_livraison:     (body.frais_livraison as number) || 0,
+            montant_total:       body.montant_total as number,
+            est_acompte:         (body.est_acompte as boolean) || false,
+            montant_acompte:     body.montant_acompte as number || null,
+            moyen_paiement:      body.moyen_paiement as string || 'virement',
+            caution_montant:     (body.caution_montant as number) || 0,
+            caution_type:        body.caution_type as string || 'cheque',
+            signature_nom:       body.signature_nom as string || body.locataire_nom as string,
+            date_signature:      dateSignature,
+          })
+          contratB64  = pdfBuffer.toString('base64')
+          contratFile = `contrat-location-${(body.article_nom as string).toLowerCase().replace(/\s+/g, '-')}.pdf`
+          contratMime = 'application/pdf'
+          console.log('✅ PDF généré:', pdfBuffer.length, 'bytes')
+        } catch (pdfErr) {
+          console.error('⚠️ pdfkit échoué, fallback HTML:', pdfErr)
+          const htmlContrat = genContratHTML(body, article, iban, nomBenef)
+          contratB64  = Buffer.from(htmlContrat).toString('base64')
+          contratFile = `contrat-location-${(body.article_nom as string).toLowerCase().replace(/\s+/g, '-')}.html`
+          contratMime = 'text/html'
+        }
 
         // Upload Cloudinary (optionnel)
         try {
@@ -240,7 +282,7 @@ export async function POST(req: NextRequest) {
                 if (error || !result) reject(error)
                 else resolve(result as { secure_url: string })
               }
-            ).end(Buffer.from(contratHTML))
+            ).end(Buffer.from(contratB64, 'base64'))
           })
           await supabaseAdmin
             .from('location_reservations')
