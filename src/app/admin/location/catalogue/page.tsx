@@ -80,8 +80,8 @@ export default function AdminLocationCataloguePage() {
       prix_jour: a.prix_jour?.toString() || '', prix_weekend: a.prix_weekend?.toString() || '',
       prix_semaine: a.prix_semaine?.toString() || '', prix_mois: a.prix_mois?.toString() || '',
       caution: a.caution.toString(), accessoires_inclus: a.accessoires_inclus || '',
-      disponible: a.disponible, stock: a.stock.toString(),
-      categorie: a.categorie, position: a.position.toString(), publie: a.publie,
+      disponible: a.disponible === true, stock: a.stock.toString(),
+      categorie: a.categorie, position: a.position.toString(), publie: a.publie === true,
     })
     setPhotos(a.photos || [])
     setShowForm(true)
@@ -143,6 +143,9 @@ export default function AdminLocationCataloguePage() {
         caution: parseFloat(form.caution) || 0,
         stock: parseInt(form.stock) || 1,
         position: parseInt(form.position) || 0,
+        // Forcer les booléens explicitement
+        disponible: form.disponible === true,
+        publie: form.publie === true,
       }
       const method = editItem ? 'PATCH' : 'POST'
       const body = editItem ? { id: editItem.id, ...payload } : payload
