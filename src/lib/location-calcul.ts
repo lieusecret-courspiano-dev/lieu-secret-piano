@@ -60,11 +60,23 @@ export function nbSemaines(dateDebut: string, dateFin: string): number {
 }
 
 /**
- * Nombre de mois (arrondi au supérieur, base 30 jours)
+ * Nombre de mois calendaires réels
+ * Basé sur calcDateFin qui génère : debut + N mois - 1 jour
+ * Donc : d2 + 1 jour = d1 + N mois → on calcule N depuis d2+1
+ * Ex: 06/11 → 05/01 : 05/01 + 1j = 06/01 = 06/11 + 2 mois → 2 mois ✓
  */
 export function nbMois(dateDebut: string, dateFin: string): number {
-  const jours = nbJours(dateDebut, dateFin)
-  return Math.max(1, Math.ceil(jours / 30))
+  if (!dateDebut || !dateFin) return 1
+  const d1 = new Date(dateDebut + 'T12:00:00')
+  const d2 = new Date(dateFin + 'T12:00:00')
+  // Ajouter 1 jour à la date de fin pour retrouver le vrai point de fin
+  const d2p1 = new Date(d2)
+  d2p1.setDate(d2p1.getDate() + 1)
+  const annees = d2p1.getFullYear() - d1.getFullYear()
+  const mois   = d2p1.getMonth() - d1.getMonth()
+  let total    = annees * 12 + mois
+  if (d2p1.getDate() < d1.getDate()) total -= 1
+  return Math.max(1, total)
 }
 
 /**
