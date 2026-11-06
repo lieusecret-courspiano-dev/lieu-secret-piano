@@ -51,7 +51,7 @@ export default function LocationPage() {
   const [categorie, setCategorie] = useState('')
 
   useEffect(() => {
-    fetch('/api/location', { cache: 'no-store' })
+    fetch(`/api/location?t=${Date.now()}`, { cache: 'no-store' })
       .then(r => r.json())
       .then(d => { setArticles(Array.isArray(d) ? d : []); setLoading(false) })
       .catch(() => setLoading(false))
