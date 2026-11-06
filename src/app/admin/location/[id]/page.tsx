@@ -151,7 +151,7 @@ export default function AdminLocationDetailPage() {
   async function saveEtatLieux() {
     setSavingEtat(true)
     try {
-      const res = await fetch(`/api/admin/location/${id}/etat-lieux`, {
+      const res = await fetch(`/api/admin/location/${id}/etat-lieux`, { credentials: 'include',
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ type: typeEtat, elements: elementsEtat, observations: obsEtat }),
@@ -172,7 +172,7 @@ export default function AdminLocationDetailPage() {
     if (!msgSujet.trim() || !msgTexte.trim()) return
     setSendingMsg(true)
     try {
-      await fetch(`/api/admin/location/${id}/message`, {
+      await fetch(`/api/admin/location/${id}/message`, { credentials: 'include',
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sujet: msgSujet, message: msgTexte }),
@@ -205,7 +205,7 @@ export default function AdminLocationDetailPage() {
   }
 
   async function validerDoc(docId: string, valide: boolean) {
-    await fetch(`/api/admin/location/${id}/documents`, {
+    await fetch(`/api/admin/location/${id}/documents`, { credentials: 'include',
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ doc_id: docId, valide }),
