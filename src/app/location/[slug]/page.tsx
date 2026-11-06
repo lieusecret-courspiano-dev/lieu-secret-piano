@@ -117,7 +117,11 @@ export default function LocationDetailPage() {
                     <>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={photos[photoIndex]} alt={`${article.nom} — photo ${photoIndex + 1}`}
-                        className="w-full h-full object-cover" />
+                        className="w-full h-full object-cover"
+                        onError={e => {
+                          const t = e.target as HTMLImageElement
+                          t.style.display = 'none'
+                        }} />
                       {photos.length > 1 && (
                         <>
                           <button onClick={() => setPhotoIndex(i => (i - 1 + photos.length) % photos.length)}
@@ -153,7 +157,8 @@ export default function LocationDetailPage() {
                           i === photoIndex ? 'border-gold-500' : 'border-noir-800 hover:border-noir-600'
                         }`}>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={url} alt={`Miniature ${i + 1}`} className="w-full h-full object-cover" />
+                        <img src={url} alt={`Miniature ${i + 1}`} className="w-full h-full object-cover"
+                          onError={e => { (e.target as HTMLImageElement).style.opacity = '0.3' }} />
                       </button>
                     ))}
                   </div>
