@@ -6,7 +6,7 @@ import { DateTime } from 'luxon'
 interface Cours {
   slot_start: string
   slot_end: string
-  zoom_link?: string | null
+  kmeet_url?: string | null
   status: string
 }
 
