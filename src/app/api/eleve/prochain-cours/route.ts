@@ -24,13 +24,14 @@ export async function GET() {
 
   if (!cours) return NextResponse.json({ cours: null })
 
+  const coursData = cours as Record<string, unknown>
   return NextResponse.json({
     cours: {
-      id:         cours.id,
-      slot_start: cours.slot_start,
-      kmeet_url:  cours.kmeet_url,
-      type:       cours.type,
-      status:     cours.status,
+      id:         coursData.id,
+      slot_start: coursData.slot_start,
+      kmeet_url:  coursData.kmeet_url || coursData.zoom_link || null,
+      type:       coursData.type,
+      status:     coursData.status,
     }
   })
 }
