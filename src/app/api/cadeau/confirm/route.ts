@@ -3,6 +3,7 @@ import Stripe from 'stripe'
 import { supabaseAdmin } from '@/lib/supabase'
 import { Resend } from 'resend'
 import { generateGiftCardPDF } from '@/lib/pdf'
+import { factureDepuisCadeau, factureExistePour } from '@/lib/facturation'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2024-06-20' })
 const resend  = new Resend(process.env.RESEND_API_KEY!)
@@ -34,7 +35,7 @@ export async function GET(req: NextRequest) {
     const code = generateGiftCode()
     const expiresAt = new Date(); expiresAt.setFullYear(expiresAt.getFullYear() + 1)
 
-    await supabaseAdmin.from('gift_cards').insert({
+    const { data: giftData } = await supabaseAdmin.from('gift_cards').insert({
       code,
       montant:           parseFloat(meta.montant || '0'),
       montant_restant:   parseFloat(meta.montant || '0'),
@@ -46,6 +47,8 @@ export async function GET(req: NextRequest) {
       status:            'active',
       expires_at:        expiresAt.toISOString(),
     })
+    .select('id')
+    .single()
 
     // Générer le vrai PDF
     const pdfBuffer = await generateGiftCardPDF({
@@ -108,6 +111,26 @@ ${meta.message ? `<div style="background:#2a2a45;border-left:4px solid #f59e0b;p
       html:        buyerHtml,
       attachments: [pdfAttachment],
     })
+
+    // Générer la facture automatiquement
+    try {
+      const dejaFacture = await factureExistePour('cadeau', giftData?.id || code)
+      if (!dejaFacture && giftData) {
+        await factureDepuisCadeau({
+          id:               giftData.id,
+          code,
+          montant:          parseFloat(meta.montant || '0'),
+          acheteur_nom:     meta.acheteur_nom || session.customer_details?.name || 'Client',
+          acheteur_email:   meta.acheteur_email || session.customer_email || '',
+          destinataire_nom: meta.destinataire_nom || '',
+          formule_label:    meta.formule_label,
+          payment_method:   'stripe',
+          created_at:       new Date().toISOString(),
+        })
+      }
+    } catch (factureErr) {
+      console.error('Erreur génération facture cadeau:', factureErr)
+    }
 
     return NextResponse.json({ success: true, code })
 
