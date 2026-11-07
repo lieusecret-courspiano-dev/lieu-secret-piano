@@ -22,16 +22,16 @@ export async function GET(req: NextRequest) {
       const hoursLeft = startDT.diff(now, 'hours').hours
       const timezone = res.student_timezone || 'Europe/Paris'
       const dateLocal = startDT.setZone(timezone).setLocale('fr').toFormat("EEEE d MMMM yyyy 'a' HH'h'mm")
-      const zoomLink = settings?.zoom_cours || null
+      const kmeetUrl = settings?.zoom_cours || null
       const key48h = 'reminder_48h_' + res.id
       const key1h = 'reminder_1h_' + res.id
       const { data: ex48h } = await supabaseAdmin.from('email_logs').select('id').eq('key', key48h).single()
       const { data: ex1h } = await supabaseAdmin.from('email_logs').select('id').eq('key', key1h).single()
       if (hoursLeft >= 47 && hoursLeft <= 49 && !ex48h) {
-        try { await resend.emails.send({ from: FROM, to: res.student_email, subject: 'Rappel - Votre cours dans 48h', html: '<p>Bonjour ' + res.student_name + ', votre cours est prevu le ' + dateLocal + (zoomLink ? '. Lien Zoom : ' + zoomLink : '') + '</p>' }); await supabaseAdmin.from('email_logs').insert({ key: key48h, type: 'reminder_48h', reservation_id: res.id }); sent48h++ } catch {}
+        try { await resend.emails.send({ from: FROM, to: res.student_email, subject: 'Rappel - Votre cours dans 48h', html: '<p>Bonjour ' + res.student_name + ', votre cours est prevu le ' + dateLocal + (kmeetUrl ? '. Lien Zoom : ' + kmeetUrl : '') + '</p>' }); await supabaseAdmin.from('email_logs').insert({ key: key48h, type: 'reminder_48h', reservation_id: res.id }); sent48h++ } catch {}
       }
       if (hoursLeft >= 0.9 && hoursLeft <= 1.1 && !ex1h) {
-        try { await resend.emails.send({ from: FROM, to: res.student_email, subject: 'Votre cours commence dans 1h', html: '<p>Bonjour ' + res.student_name + ', votre cours commence bientot !' + (zoomLink ? ' Lien Zoom : ' + zoomLink : '') + '</p>' }); await supabaseAdmin.from('email_logs').insert({ key: key1h, type: 'reminder_1h', reservation_id: res.id }); sent1h++ } catch {}
+        try { await resend.emails.send({ from: FROM, to: res.student_email, subject: 'Votre cours commence dans 1h', html: '<p>Bonjour ' + res.student_name + ', votre cours commence bientot !' + (kmeetUrl ? ' Lien Zoom : ' + kmeetUrl : '') + '</p>' }); await supabaseAdmin.from('email_logs').insert({ key: key1h, type: 'reminder_1h', reservation_id: res.id }); sent1h++ } catch {}
       }
     }
     const { data: pastRes } = await supabaseAdmin.from('reservations').select('*').eq('status', 'confirmed').not('slot_start', 'is', null).gte('slot_start', now.minus({ hours: 3 }).toISO()).lte('slot_start', now.minus({ hours: 2 }).toISO())
