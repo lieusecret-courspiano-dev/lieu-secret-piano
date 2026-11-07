@@ -61,7 +61,7 @@ export default function FacturesPage() {
 
   // Formulaire nouvelle facture manuelle
   const [form, setForm] = useState({
-    client_nom: '', client_email: '', client_telephone: '',
+    client_nom: '', client_email: '', client_telephone: '', client_adresse: '',
     date_facture: new Date().toISOString().split('T')[0],
     moyen_paiement: 'virement', statut_paiement: 'paye', notes: '',
   })
