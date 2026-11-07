@@ -66,7 +66,7 @@ export async function sendCoursConfirmation(params: {
   startISO:       string
   endISO:         string
   timezone:       string
-  zoomLink?:      string | null
+  kmeetUrl?:      string | null
   message?:       string | null
   cancelUrl?:     string | null
   paymentMethod?: string | null
@@ -80,7 +80,7 @@ export async function sendCoursConfirmation(params: {
     studentName: params.studentName,
     startISO:    params.startISO,
     endISO:      params.endISO,
-    zoomLink:    params.zoomLink ?? undefined,
+    kmeetUrl:    params.kmeetUrl ?? undefined,
   })
 
   const msgBlock = params.message
@@ -94,7 +94,7 @@ export async function sendCoursConfirmation(params: {
     '<p style="margin:0 0 6px;color:#e8e8e8;font-size:15px;font-weight:bold;">' + dateLocal + '</p>',
     '<p style="margin:0;color:#a8a8a8;font-size:13px;">Fuseau horaire : ' + params.timezone + '</p>',
     '</div>',
-    zoomBlock(params.zoomLink),
+    zoomBlock(params.kmeetUrl),
     '<p style="color:#d0d0d0;font-size:14px;line-height:1.7;margin-top:20px;">',
     'Votre cours de piano individuel a bien été enregistré. Le fichier .ics joint vous permet d\'ajouter ce rendez-vous dans Outlook, Google Calendar ou Apple Calendar.',
     '</p>',
@@ -139,7 +139,7 @@ export async function sendEventConfirmation(params: {
   timezone:     string
   isPaid:       boolean
   amount?:      number
-  zoomLink?:    string | null
+  kmeetUrl?:    string | null
   cancelUrl?:   string | null
 }) {
   const dateLocal  = formatDate(params.startISO, params.timezone)
@@ -148,7 +148,7 @@ export async function sendEventConfirmation(params: {
     eventTitle:  params.eventTitle,
     startISO:    params.startISO,
     endISO:      params.endISO,
-    zoomLink:    params.zoomLink ?? undefined,
+    kmeetUrl:    params.kmeetUrl ?? undefined,
   })
 
   const paiementLine = params.isPaid && params.amount
@@ -164,7 +164,7 @@ export async function sendEventConfirmation(params: {
     '<p style="margin:0;color:#a8a8a8;font-size:13px;">Fuseau horaire : ' + params.timezone + '</p>',
     paiementLine,
     '</div>',
-    zoomBlock(params.zoomLink),
+    zoomBlock(params.kmeetUrl),
     '<p style="color:#d0d0d0;font-size:14px;line-height:1.7;margin-top:20px;">',
     'Votre inscription a bien été enregistrée. Le fichier .ics joint vous permet d\'ajouter cet événement à votre agenda.',
     '</p>',
@@ -198,7 +198,7 @@ export async function sendAdminNotification(params: {
   type:         string
   dateLocal:    string
   timezone:     string
-  zoomLink?:    string | null
+  kmeetUrl?:    string | null
   message?:     string | null
   icsContent?:  string | null
 }) {
@@ -210,7 +210,7 @@ export async function sendAdminNotification(params: {
     '<tr><td style="padding:8px 0;color:#a8a8a8;font-size:13px;">Type</td><td style="padding:8px 0;color:#e8e8e8;font-size:14px;">' + params.type + '</td></tr>',
     '<tr><td style="padding:8px 0;color:#a8a8a8;font-size:13px;">Date</td><td style="padding:8px 0;color:#e8e8e8;font-size:14px;">' + params.dateLocal + '</td></tr>',
     '<tr><td style="padding:8px 0;color:#a8a8a8;font-size:13px;">Fuseau</td><td style="padding:8px 0;color:#e8e8e8;font-size:14px;">' + params.timezone + '</td></tr>',
-    params.zoomLink ? '<tr><td style="padding:8px 0;color:#a8a8a8;font-size:13px;">Zoom</td><td style="padding:8px 0;font-size:14px;"><a href="' + params.zoomLink + '" style="color:#f59e0b;">' + params.zoomLink + '</a></td></tr>' : '',
+    params.kmeetUrl ? '<tr><td style="padding:8px 0;color:#a8a8a8;font-size:13px;">Zoom</td><td style="padding:8px 0;font-size:14px;"><a href="' + params.kmeetUrl + '" style="color:#f59e0b;">' + params.kmeetUrl + '</a></td></tr>' : '',
     params.message  ? '<tr><td style="padding:8px 0;color:#a8a8a8;font-size:13px;vertical-align:top;">Message</td><td style="padding:8px 0;color:#e8e8e8;font-size:14px;font-style:italic;">&ldquo;' + params.message + '&rdquo;</td></tr>' : '',
   ].join('')
 
