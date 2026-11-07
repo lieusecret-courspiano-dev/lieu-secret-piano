@@ -30,7 +30,7 @@ interface Event {
   spots_remaining: number
   price: number
   is_free: boolean
-  kmeet_link: string | null
+  zoom_link: string | null
   is_featured?: boolean
 }
 
