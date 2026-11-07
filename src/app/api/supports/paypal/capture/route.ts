@@ -114,7 +114,7 @@ export async function POST(req: NextRequest) {
       const { data: achat } = await supabaseAdmin
         .from('supports_achats')
         .select('id, montant, supports_pedagogiques(titre)')
-        .eq('support_id', supportId)
+        .eq('support_id', support_id)
         .eq('acheteur_email', eleve.email)
         .order('created_at', { ascending: false })
         .limit(1)
