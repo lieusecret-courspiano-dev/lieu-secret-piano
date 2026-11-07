@@ -14,7 +14,7 @@ export async function GET() {
   // Chercher le prochain cours confirmé dans les 24h
   const { data: cours } = await supabaseAdmin
     .from('reservations')
-    .select('id, slot_start, status, type, zoom_link')
+    .select('id, slot_start, status, type, kmeet_url')
     .eq('email', eleve.email)
     .eq('status', 'confirmed')
     .gte('slot_start', now)
@@ -28,7 +28,7 @@ export async function GET() {
     cours: {
       id:         cours.id,
       slot_start: cours.slot_start,
-      kmeet_url:  cours.kmeet_url, // zoom_link contient maintenant l'URL Kmeet
+      kmeet_url:  cours.kmeet_url,
       type:       cours.type,
       status:     cours.status,
     }
