@@ -3,7 +3,7 @@ import { usePathname } from 'next/navigation'
 
 import { useState, useEffect } from 'react'
 import { DateTime } from 'luxon'
-import { Search, Trash2, CheckCircle, XCircle, Download } from 'lucide-react'
+import { Search, Trash2, CheckCircle, XCircle, Download, Video, ExternalLink } from 'lucide-react'
 
 interface Reservation {
   id: string
@@ -19,6 +19,7 @@ interface Reservation {
   created_at: string
   slot_start?: string | null
   slot_end?: string | null
+  kmeet_url?: string | null
   event?: { title: string; type: string } | null
 }
 
@@ -258,6 +259,7 @@ export default function AdminReservations() {
                 { label: 'Type',      value: selected.type },
                 { label: 'Statut',    value: STATUS_LABELS[selected.status]?.label || selected.status },
                 { label: 'Paiement',  value: selected.payment_method },
+                { label: 'Date cours', value: selected.slot_start ? new Date(selected.slot_start).toLocaleString('fr-FR') : '—' },
                 { label: 'Montant',   value: selected.amount > 0 ? `${selected.amount.toFixed(2)} €` : 'Gratuit' },
                 selected.slot_start ? { label: 'Creneau', value: formatDate(selected.slot_start, selected.student_timezone) } : null,
                 selected.event   ? { label: 'Événement', value: selected.event.title } : null,
@@ -288,6 +290,24 @@ export default function AdminReservations() {
                 <button onClick={() => handleStatus(selected.id, 'cancelled')} className="btn-outline flex items-center gap-1 text-sm flex-1">
                   <XCircle size={14} /> Annuler
                 </button>
+              )}
+              {selected.kmeet_url && (
+                <a href={selected.kmeet_url} target="_blank" rel="noopener noreferrer"
+                  className="btn-gold flex items-center gap-2 text-sm">
+                  <Video size={14} /> Rejoindre le cours
+                </a>
+              )}
+              {selected.kmeet_url && (
+                <div className="w-full p-3 bg-green-500/10 border border-green-500/20 rounded-xl mb-2">
+                  <p className="text-green-400 text-xs font-semibold mb-1 flex items-center gap-1">
+                    <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M15 10l4.553-2.069A1 1 0 0 1 21 8.87v6.26a1 1 0 0 1-1.447.894L15 14M3 8a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8z"/></svg>
+                    Lien Kmeet
+                  </p>
+                  <a href={selected.kmeet_url} target="_blank" rel="noopener noreferrer"
+                    className="text-green-300 text-xs break-all hover:underline">
+                    {selected.kmeet_url}
+                  </a>
+                </div>
               )}
               <button onClick={() => handleDelete(selected.id)} className="btn-outline border-red-500/50 text-red-400 hover:bg-red-900/20 flex items-center gap-1 text-sm">
                 <Trash2 size={14} /> Supprimer
