@@ -98,7 +98,7 @@ export async function POST(req: NextRequest) {
             amount: coursAmount,
             payment_method: 'paypal',
             client_nom: (data as {nom?: string; name?: string; email?: string}).nom || (data as {nom?: string; name?: string}).name || 'Client',
-            client_email: (data as {email?: string}).email || capture.payer?.email_address || '',
+            client_email: (data as {email?: string}).email || '',
           })
         }
       } catch (fe) { console.error('Erreur facture cours PayPal:', fe) }
