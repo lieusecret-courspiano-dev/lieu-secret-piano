@@ -166,6 +166,16 @@ export async function POST(req: NextRequest) {
       await sendEleveWelcomeEmail(email, prenom || nameParts[0], setupToken)
       console.log(`[inscription] Email bienvenue envoyé à ${email}`)
     }
+
+    // Mettre à jour les infos élève avec les données d'inscription (téléphone, adresse, etc.)
+    if (telephone || adresse || ville || code_postal) {
+      await supabaseAdmin.from('eleves').update({
+        telephone:   telephone || null,
+        adresse:     adresse || null,
+        ville:       ville || null,
+        code_postal: code_postal || null,
+      }).eq('id', eleveId)
+    }
   } catch (eleveErr) { console.error('Eleve creation error:', eleveErr) }
 
   return NextResponse.json({ success: true })
