@@ -141,7 +141,7 @@ export async function GET(req: NextRequest) {
       try {
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.lieusecret-courspiano.fr'
         const expireDate = expiresAt.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
-        await sendAdminNotification({ studentName: student_name, studentEmail: student_email, type: `Pack ${pack_label} — Code : ${packCode}`, dateLocal: new Date().toLocaleDateString('fr-FR'), timezone: 'Europe/Paris', zoomLink: null, message: null, icsContent: null })
+        await sendAdminNotification({ studentName: student_name, studentEmail: student_email, type: `Pack ${pack_label} — Code : ${packCode}`, dateLocal: new Date().toLocaleDateString('fr-FR'), timezone: 'Europe/Paris', kmeetUrl: null, message: null, icsContent: null })
         const { Resend } = await import('resend')
         const resend = new Resend(process.env.RESEND_API_KEY!)
         await resend.emails.send({
@@ -195,20 +195,23 @@ export async function GET(req: NextRequest) {
       }
 
       // Envoyer les emails
-      const zoomLink = siteSettings.zoom_cours || null
+      // Générer un lien Kmeet unique
+      const { kmeetCours: genKmeet } = await import('@/lib/kmeet')
+      const kmeetUrl = genKmeet({ prenom: student_name?.split(' ')[0], dateHeure: slot_start })
+      await supabaseAdmin.from('reservations').update({ kmeet_url: kmeetUrl }).eq('stripe_session_id', sessionId)
       await sendCoursConfirmation({
         studentName:  student_name,
         studentEmail: student_email,
         startISO:     slot_start,
         endISO:       slot_end,
         timezone:     student_timezone,
-        zoomLink,
+        kmeetUrl,
         message,
       })
 
       const dateLocal = formatDateLocal(slot_start, student_timezone)
-      const { ics: adminICS, uid: adminICSUid } = generateCoursICS({ studentName: student_name, startISO: slot_start, endISO: slot_end, zoomLink: zoomLink ?? undefined, uid: stripeIcsUid })
-      await sendAdminNotification({ studentName: student_name, studentEmail: student_email, type: 'Cours individuel (CB)', dateLocal, timezone: student_timezone, zoomLink, message, icsContent: adminICS })
+      const { ics: adminICS, uid: adminICSUid } = generateCoursICS({ studentName: student_name, startISO: slot_start, endISO: slot_end, kmeetUrl: kmeetUrl ?? undefined, uid: stripeIcsUid })
+      await sendAdminNotification({ studentName: student_name, studentEmail: student_email, type: 'Cours individuel (CB)', dateLocal, timezone: student_timezone, kmeetUrl, message, icsContent: adminICS })
 
       return NextResponse.json({ success: true, student_name, student_email })
     }
@@ -251,18 +254,18 @@ export async function GET(req: NextRequest) {
       cours: siteSettings.zoom_cours || '', atelier: siteSettings.zoom_atelier || '',
       masterclass: siteSettings.zoom_masterclass || '', evenement: siteSettings.zoom_evenement || '',
     }
-    const zoomLink = ev.zoom_link || zoomByType[ev.type] || null
+    const kmeetUrl = ev.kmeet_url || zoomByType[ev.type] || null
     const endISO   = DateTime.fromISO(ev.date_heure, { zone: 'utc' }).plus({ minutes: ev.duration_minutes }).toISO()!
 
     await sendEventConfirmation({
       studentName: student_name, studentEmail: student_email, eventTitle: ev.title,
       startISO: ev.date_heure, endISO, timezone: student_timezone,
-      isPaid: true, amount: ev.price, zoomLink,
+      isPaid: true, amount: ev.price, kmeetUrl,
     })
 
     const dateLocal = formatDateLocal(ev.date_heure, student_timezone)
-    const { ics: adminICS, uid: adminICSUid } = generateEventICS({ studentName: student_name, eventTitle: ev.title, startISO: ev.date_heure, endISO, zoomLink: zoomLink ?? undefined })
-    await sendAdminNotification({ studentName: student_name, studentEmail: student_email, type: ev.title, dateLocal, timezone: student_timezone, zoomLink, message, icsContent: adminICS })
+    const { ics: adminICS, uid: adminICSUid } = generateEventICS({ studentName: student_name, eventTitle: ev.title, startISO: ev.date_heure, endISO, kmeetUrl: kmeetUrl ?? undefined })
+    await sendAdminNotification({ studentName: student_name, studentEmail: student_email, type: ev.title, dateLocal, timezone: student_timezone, kmeetUrl, message, icsContent: adminICS })
 
     return NextResponse.json({ success: true, student_name, student_email, event_title: ev.title })
 
