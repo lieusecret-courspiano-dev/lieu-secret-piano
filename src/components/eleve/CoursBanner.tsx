@@ -12,7 +12,7 @@ interface Cours {
 
 export default function CoursBanner() {
   const [prochainCours, setProchainCours] = useState<Cours | null>(null)
-  const [zoomLink, setZoomLink] = useState<string | null>(null)
+  const [kmeetUrl, setZoomLink] = useState<string | null>(null)
   const [heuresAvant, setHeuresAvant] = useState<number>(999)
   const [dismissed, setDismissed] = useState(false)
 
@@ -78,8 +78,8 @@ export default function CoursBanner() {
         </div>
       </div>
       <div className="flex items-center gap-2">
-        {zoomLink && (
-          <a href={zoomLink} target="_blank" rel="noopener noreferrer"
+        {kmeetUrl && (
+          <a href={kmeetUrl} target="_blank" rel="noopener noreferrer"
             className="btn-gold text-xs px-4 py-2 flex items-center gap-1.5">
             <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M15 10l4.553-2.069A1 1 0 0 1 21 8.87v6.26a1 1 0 0 1-1.447.894L15 14M3 8a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8z"/></svg>
             Rejoindre Zoom
