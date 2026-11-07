@@ -90,15 +90,15 @@ export async function POST(req: NextRequest) {
 
       // Générer la facture si cours payant sans pack
       try {
-        const coursAmount = parseFloat(String(capture.purchase_units?.[0]?.amount?.value || 0))
+        const coursAmount = capture.amount || 0
         if (reservation?.id && coursAmount > 0 && !(await factureExistePour('cours', reservation.id))) {
           await factureDepuisCours({
             id: reservation.id,
-            slot_start: (reservation as Record<string, unknown>).slot_start as string || new Date().toISOString(),
+            slot_start: (reservation as {slot_start?: string}).slot_start || new Date().toISOString(),
             amount: coursAmount,
             payment_method: 'paypal',
-            client_nom: (data as Record<string, unknown>).nom as string || (data as Record<string, unknown>).name as string || 'Client',
-            client_email: (data as Record<string, unknown>).email as string || capture.payer?.email_address || '',
+            client_nom: (data as {nom?: string; name?: string; email?: string}).nom || (data as {nom?: string; name?: string}).name || 'Client',
+            client_email: (data as {email?: string}).email || capture.payer?.email_address || '',
           })
         }
       } catch (fe) { console.error('Erreur facture cours PayPal:', fe) }
