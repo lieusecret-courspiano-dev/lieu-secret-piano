@@ -7,7 +7,7 @@ import {
   Calendar, Users, Star, MessageSquare, Settings, LogOut,
   LayoutDashboard, ClipboardList, Image, Gift, Mail, BookOpen,
   TrendingUp, CheckSquare, Music, Mic, HelpCircle, Library,
-  Package, Truck, Receipt, PiggyBank, FileSpreadsheet
+  Package, Truck, Receipt, PiggyBank, FileSpreadsheet, Download
 } from 'lucide-react'
 import { GlobalSearch } from '@/components/admin/ui/SearchBar'
 
@@ -64,6 +64,7 @@ const NAV_GROUPS = [
       { href: '/admin/comptabilite/devis',     label: 'Devis',      icon: FileSpreadsheet},
       { href: '/admin/comptabilite/depenses',  label: 'Dépenses',   icon: PiggyBank      },
       { href: '/admin/comptabilite/export',    label: 'Export',     icon: ClipboardList  },
+      { href: '/admin/comptabilite/import',    label: 'Import',     icon: Download       },
     ],
   },
   {
