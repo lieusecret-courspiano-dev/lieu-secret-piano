@@ -10,6 +10,25 @@ async function checkAdmin() {
   return null
 }
 
+// Interface explicite pour éviter les erreurs TypeScript
+interface LigneNormalisee {
+  numero_odoo: string
+  client_nom: string
+  client_email: string
+  date_facture: string
+  montant_ht: number
+  montant_tva: number
+  montant_ttc: number
+  taux_tva: number
+  statut_paiement: string
+  designation: string
+  description: string | null
+  moyen_paiement: string
+  quantite: number
+  unite: string
+  notes: string | null
+}
+
 // GET — historique des imports
 export async function GET() {
   const err = await checkAdmin()
@@ -25,7 +44,7 @@ export async function GET() {
   return NextResponse.json(data || [])
 }
 
-// POST — importer des factures depuis CSV/Excel (données JSON parsées côté client)
+// POST — importer des factures depuis CSV
 export async function POST(req: NextRequest) {
   const err = await checkAdmin()
   if (err) return err
@@ -57,14 +76,13 @@ export async function POST(req: NextRequest) {
   for (let i = 0; i < lignes.length; i++) {
     const ligne = lignes[i]
     try {
-      // Normaliser les données selon le format Odoo ou CSV générique
-      const normalized = normaliserLigne(ligne, source)
+      const normalized: LigneNormalisee | null = normaliserLigne(ligne, source)
       if (!normalized) {
         erreurs.push({ ligne: i + 1, erreur: 'Ligne ignorée (vide ou en-tête)', data: ligne })
         continue
       }
 
-      // Vérifier si la facture existe déjà (par numéro Odoo)
+      // Vérifier si la facture existe déjà
       if (normalized.numero_odoo) {
         const { data: existing } = await supabaseAdmin
           .from('comptabilite_factures')
@@ -79,16 +97,13 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      // Déterminer l'année
       const annee = normalized.date_facture
         ? new Date(normalized.date_facture).getFullYear()
         : new Date().getFullYear()
 
-      // Générer le numéro interne
       const { data: numero } = await supabaseAdmin
         .rpc('get_next_numero', { p_type: 'facture', p_annee: annee })
 
-      // Créer la facture
       const { data: facture, error: factErr } = await supabaseAdmin
         .from('comptabilite_factures')
         .insert({
@@ -106,7 +121,7 @@ export async function POST(req: NextRequest) {
           moyen_paiement:   normalized.moyen_paiement || null,
           statut_paiement:  normalized.statut_paiement || 'paye',
           statut:           'emise',
-          notes:            normalized.notes || null,
+          notes:            normalized.notes,
           numero_odoo:      normalized.numero_odoo || null,
         })
         .select('id')
@@ -118,13 +133,12 @@ export async function POST(req: NextRequest) {
         continue
       }
 
-      // Créer la ligne de facture
       if (normalized.designation) {
         await supabaseAdmin.from('comptabilite_factures_lignes').insert({
           facture_id:    facture.id,
           position:      0,
           designation:   normalized.designation,
-          description:   normalized.description || null,
+          description:   normalized.description,
           quantite:      normalized.quantite || 1,
           unite:         normalized.unite || 'unité',
           prix_unitaire: normalized.montant_ht || normalized.montant_ttc || 0,
@@ -142,42 +156,30 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Mettre à jour l'entrée d'import
   if (importId) {
     await supabaseAdmin
       .from('comptabilite_imports')
       .update({
         nb_importees,
         nb_erreurs,
-        erreurs: erreurs.slice(0, 50), // Limiter les erreurs stockées
+        erreurs: erreurs.slice(0, 50),
         statut: nb_erreurs === lignes.length ? 'erreur' : 'termine',
       })
       .eq('id', importId)
   }
 
-  return NextResponse.json({
-    success: true,
-    nb_importees,
-    nb_erreurs,
-    erreurs: erreurs.slice(0, 10), // Retourner les 10 premières erreurs
-  })
+  return NextResponse.json({ success: true, nb_importees, nb_erreurs, erreurs: erreurs.slice(0, 10) })
 }
 
-// ── Normalisation des données selon la source ────────────────
-function normaliserLigne(ligne: Record<string, string>, source: string) {
-  // Ignorer les lignes vides
+// ── Normalisation ────────────────────────────────────────────
+function normaliserLigne(ligne: Record<string, string>, source: string): LigneNormalisee | null {
   const values = Object.values(ligne).filter(v => v?.trim())
   if (values.length === 0) return null
-
-  if (source === 'odoo') {
-    return normaliserOdoo(ligne)
-  }
+  if (source === 'odoo') return normaliserOdoo(ligne)
   return normaliserCSVGenerique(ligne)
 }
 
-// Format Odoo : colonnes standard de l'export factures
-function normaliserOdoo(ligne: Record<string, string>) {
-  // Colonnes Odoo typiques : Numéro, Date, Client, Montant HT, TVA, Montant TTC, État
+function normaliserOdoo(ligne: Record<string, string>): LigneNormalisee | null {
   const numero_odoo   = ligne['Numéro'] || ligne['Number'] || ligne['name'] || ''
   const client_nom    = ligne['Client'] || ligne['Partner'] || ligne['customer'] || ''
   const date_str      = ligne['Date de facturation'] || ligne['Invoice Date'] || ligne['date'] || ''
@@ -191,13 +193,11 @@ function normaliserOdoo(ligne: Record<string, string>) {
 
   if (!client_nom && !montant_ttc) return null
 
-  // Convertir la date Odoo (DD/MM/YYYY ou YYYY-MM-DD)
   let date_facture = ''
   if (date_str) {
     if (date_str.includes('/')) {
       const parts = date_str.split('/')
       if (parts.length === 3) {
-        // DD/MM/YYYY → YYYY-MM-DD
         date_facture = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`
       }
     } else {
@@ -205,14 +205,12 @@ function normaliserOdoo(ligne: Record<string, string>) {
     }
   }
 
-  // Convertir le statut Odoo
   const statut_paiement = statut_odoo.toLowerCase().includes('payé') || statut_odoo.toLowerCase().includes('paid')
     ? 'paye'
     : statut_odoo.toLowerCase().includes('annul') || statut_odoo.toLowerCase().includes('cancel')
     ? 'annule'
-    : 'paye' // Par défaut pour les imports historiques
+    : 'paye'
 
-  // Calculer le taux TVA
   const taux_tva = montant_ht > 0 && montant_tva > 0
     ? Math.round((montant_tva / montant_ht) * 100)
     : 0
@@ -228,19 +226,15 @@ function normaliserOdoo(ligne: Record<string, string>) {
     taux_tva,
     statut_paiement,
     designation,
+    description:   null,
     moyen_paiement: paiement ? normaliserPaiement(paiement) : 'virement',
-    quantite: 1,
-    unite: 'forfait',
-    description: null,
-    notes: null,
+    quantite:      1,
+    unite:         'forfait',
+    notes:         null,
   }
 }
 
-// Format CSV générique
-function normaliserCSVGenerique(ligne: Record<string, string>) {
-  // Essayer de détecter les colonnes automatiquement
-  const keys = Object.keys(ligne).map(k => k.toLowerCase())
-
+function normaliserCSVGenerique(ligne: Record<string, string>): LigneNormalisee | null {
   const getVal = (patterns: string[]) => {
     for (const p of patterns) {
       const key = Object.keys(ligne).find(k => k.toLowerCase().includes(p))
@@ -274,19 +268,19 @@ function normaliserCSVGenerique(ligne: Record<string, string>) {
   return {
     numero_odoo,
     client_nom,
-    client_email: getVal(['email', 'mail']),
+    client_email:    getVal(['email', 'mail']),
     date_facture,
-    montant_ht:   montant_ttc,
-    montant_tva:  0,
+    montant_ht:      montant_ttc,
+    montant_tva:     0,
     montant_ttc,
-    taux_tva:     0,
+    taux_tva:        0,
     statut_paiement: 'paye',
-    designation:  designation || 'Prestation de services',
-    moyen_paiement: normaliserPaiement(getVal(['paiement', 'payment', 'reglement'])),
-    quantite: 1,
-    unite: 'forfait',
-    description: null,
-    notes: null,
+    designation:     designation || 'Prestation de services',
+    description:     null,
+    moyen_paiement:  normaliserPaiement(getVal(['paiement', 'payment', 'reglement'])),
+    quantite:        1,
+    unite:           'forfait',
+    notes:           null,
   }
 }
 
