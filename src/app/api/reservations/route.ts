@@ -5,6 +5,7 @@ import { sendCoursConfirmation, sendEventConfirmation, sendAdminNotification } f
 import { formatDateLocal } from '@/lib/utils'
 import { getSiteSettings } from '@/lib/settings'
 import { kmeetCours, kmeetEvenement } from '@/lib/kmeet'
+import { factureDepuisCours, factureExistePour } from '@/lib/facturation'
 import { generateCancelUrl } from '@/lib/cancel'
 import { generateCoursICS, generateEventICS } from '@/lib/ics'
 import { DateTime } from 'luxon'
@@ -214,6 +215,22 @@ export async function POST(req: NextRequest) {
     } catch (giftErr) { console.error('Gift deduction error:', giftErr) }
   }
 
+  // Générer la facture SEULEMENT si cours payant (pas pack, pas bon cadeau)
+  if (reservation && slot_start && !pack_code && !gift_code && amount > 0) {
+    try {
+      if (!(await factureExistePour('cours', reservation.id))) {
+        await factureDepuisCours({
+          id:           reservation.id,
+          slot_start:   slot_start,
+          amount:       amount,
+          payment_method: payment_method || 'stripe',
+          client_nom:   student_name,
+          client_email: student_email,
+        })
+      }
+    } catch (fe) { console.error('Erreur facture cours:', fe) }
+  }
+
   // Envoyer les emails
   try {
     const siteSettings = await getSiteSettings()
@@ -224,12 +241,12 @@ export async function POST(req: NextRequest) {
         prenom:    student_name.split(' ')[0],
         dateHeure: slot_start,
       })
-      const zoomLink = kmeetUrl
+      const kmeetUrl = kmeetUrl
 
       // Sauvegarder le lien Kmeet dans la réservation
       await supabaseAdmin
         .from('reservations')
-        .update({ zoom_link: kmeetUrl })
+        .update({ kmeet_url: kmeetUrl })
         .eq('id', reservation.id)
       // Récupérer les coordonnées bancaires si virement
       let virementIban = null, virementNom = null, virementInfo = null
@@ -246,7 +263,7 @@ export async function POST(req: NextRequest) {
         startISO:       slot_start,
         endISO:         slot_end,
         timezone,
-        zoomLink,
+        kmeetUrl,
         message,
         cancelUrl:      generateCancelUrl(reservation.id),
         paymentMethod:  payment_method || null,
@@ -257,10 +274,10 @@ export async function POST(req: NextRequest) {
       })
 
       const dateLocal = formatDateLocal(slot_start, timezone)
-      const { ics: adminICS, uid: adminICSUid } = generateCoursICS({ studentName: student_name, startISO: slot_start, endISO: slot_end, zoomLink: zoomLink ?? undefined, uid: reservationIcsUid })
+      const { ics: adminICS, uid: adminICSUid } = generateCoursICS({ studentName: student_name, startISO: slot_start, endISO: slot_end, kmeetUrl: kmeetUrl ?? undefined, uid: reservationIcsUid })
       await sendAdminNotification({
         studentName: student_name, studentEmail: student_email,
-        type: 'Cours individuel', dateLocal, timezone, zoomLink, message, icsContent: adminICS,
+        type: 'Cours individuel', dateLocal, timezone, kmeetUrl, message, icsContent: adminICS,
       })
     }
 
@@ -273,13 +290,13 @@ export async function POST(req: NextRequest) {
           dateHeure: event.date_heure,
           type:     event.type as 'atelier' | 'masterclass' | 'evenement',
         })
-        const zoomLink = event.zoom_link || kmeetUrlEvent
+        const kmeetUrl = event.kmeet_url || kmeetUrlEvent
 
         // Sauvegarder le lien Kmeet si pas déjà défini
-        if (!event.zoom_link) {
+        if (!event.kmeet_url) {
           await supabaseAdmin
             .from('events')
-            .update({ zoom_link: kmeetUrlEvent })
+            .update({ kmeet_url: kmeetUrlEvent })
             .eq('id', event_id)
         }
         const endISO   = DateTime.fromISO(event.date_heure, { zone: 'utc' }).plus({ minutes: event.duration_minutes }).toISO()!
@@ -287,14 +304,14 @@ export async function POST(req: NextRequest) {
         await sendEventConfirmation({
           studentName: student_name, studentEmail: student_email, eventTitle: event.title,
           startISO: event.date_heure, endISO, timezone, isPaid: !event.is_free,
-          amount: event.price, zoomLink, cancelUrl: generateCancelUrl(reservation.id),
+          amount: event.price, kmeetUrl, cancelUrl: generateCancelUrl(reservation.id),
         })
 
         const dateLocal = formatDateLocal(event.date_heure, timezone)
-        const { ics: adminICS, uid: adminICSUid } = generateEventICS({ studentName: student_name, eventTitle: event.title, startISO: event.date_heure, endISO, zoomLink: zoomLink ?? undefined, uid: reservationIcsUid })
+        const { ics: adminICS, uid: adminICSUid } = generateEventICS({ studentName: student_name, eventTitle: event.title, startISO: event.date_heure, endISO, kmeetUrl: kmeetUrl ?? undefined, uid: reservationIcsUid })
         await sendAdminNotification({
           studentName: student_name, studentEmail: student_email, type: event.title,
-          dateLocal, timezone, zoomLink, message, icsContent: adminICS,
+          dateLocal, timezone, kmeetUrl, message, icsContent: adminICS,
         })
       }
     }
