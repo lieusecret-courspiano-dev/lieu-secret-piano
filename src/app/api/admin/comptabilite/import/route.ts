@@ -231,6 +231,7 @@ function normaliserOdoo(ligne: Record<string, string>) {
     moyen_paiement: paiement ? normaliserPaiement(paiement) : 'virement',
     quantite: 1,
     unite: 'forfait',
+    notes: null,
   }
 }
 
@@ -283,6 +284,7 @@ function normaliserCSVGenerique(ligne: Record<string, string>) {
     moyen_paiement: normaliserPaiement(getVal(['paiement', 'payment', 'reglement'])),
     quantite: 1,
     unite: 'forfait',
+    notes: null,
   }
 }
 
