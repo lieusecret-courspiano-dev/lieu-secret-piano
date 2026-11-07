@@ -29,8 +29,8 @@ const FAQ = [
 
   // ── Réservation ──
   { cat: 'Réservation', q: "Quels sont les modes de paiement disponibles ?", a: "Trois modes : (1) Carte bancaire via Stripe — paiement immédiat et sécurisé, (2) Code pack PK — déduction automatique d'une heure, (3) Bon cadeau avec code LS — déduction du montant disponible." },
-  { cat: 'Réservation', q: "Je n'ai pas reçu l'email de confirmation.", a: "Vérifiez votre dossier Spam. Si vous avez choisi le virement, l'email de confirmation avec le lien Zoom sera envoyé après réception de votre paiement. Pour un paiement CB ou pack, l'email est envoyé immédiatement." },
-  { cat: 'Réservation', q: "Comment se déroule le cours en ligne ?", a: "Tous les cours se déroulent en ligne via Zoom. Le lien de connexion vous est envoyé par email dans votre confirmation de réservation. Assurez-vous d'avoir un piano ou clavier accessible." },
+  { cat: 'Réservation', q: "Je n'ai pas reçu l'email de confirmation.", a: "Vérifiez votre dossier Spam. Si vous avez choisi le virement, l'email de confirmation avec le lien Kmeet sera envoyé après réception de votre paiement. Pour un paiement CB ou pack, l'email est envoyé immédiatement." },
+  { cat: 'Réservation', q: "Comment se déroule le cours en ligne ?", a: "Tous les cours se déroulent en ligne via Kmeet. Le lien de connexion vous est envoyé par email dans votre confirmation de réservation. Assurez-vous d'avoir un piano ou clavier accessible." },
   { cat: 'Réservation', q: "Les créneaux affichés sont-ils dans mon fuseau horaire ?", a: "Oui. Sur la page de réservation, sélectionnez votre fuseau horaire dans le sélecteur en haut. Tous les créneaux s'affichent automatiquement dans votre heure locale." },
 
   // ── Bons cadeaux ──
@@ -67,7 +67,7 @@ const FAQ = [
   { cat: 'Mon profil', q: "Comment personnaliser mon avatar ?", a: "Dans votre tableau de bord élève, cliquez sur l'icône en haut à gauche de votre nom. Un sélecteur s'ouvre avec 6 avatars au choix (Piano, Notes, Clé de sol, Étoile, Cœur, Couronne). Votre choix est sauvegardé automatiquement." },
 
   // ── Technique ──
-  { cat: 'Technique', q: "De quel matériel ai-je besoin ?", a: "Un piano ou clavier (au moins 61 touches recommandées), une connexion internet stable, et Zoom installé. Un casque audio est conseillé pour une meilleure qualité sonore." },
+  { cat: 'Technique', q: "De quel matériel ai-je besoin ?", a: "Un piano ou clavier (au moins 61 touches recommandées), une connexion internet stable, et Kmeet installé. Un casque audio est conseillé pour une meilleure qualité sonore." },
   { cat: 'Technique', q: "Comment changer mon fuseau horaire ?", a: "Sur la page de réservation, utilisez le sélecteur de fuseau horaire. Dans votre espace élève, le fuseau est détecté automatiquement. Vous pouvez le modifier à tout moment." },
   { cat: 'Technique', q: "Comment supprimer mon compte ?", a: "Dans votre espace élève, allez dans les paramètres de votre profil et cliquez sur 'Supprimer mon compte'. Cette action est irréversible. Vos données seront effacées conformément au RGPD." },
 ]
