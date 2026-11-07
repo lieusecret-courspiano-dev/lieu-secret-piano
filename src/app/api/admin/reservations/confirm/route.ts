@@ -42,7 +42,14 @@ export async function POST(req: NextRequest) {
 
     const siteSettings = await getSiteSettings()
     const timezone     = reservation.student_timezone || 'Europe/Paris'
-    const zoomLink     = siteSettings.zoom_cours || null
+    // Générer un lien Kmeet pour ce cours confirmé
+    const { kmeetCours } = await import('@/lib/kmeet')
+    const kmeetUrl = kmeetCours({
+      prenom:    reservation.student_name?.split(' ')[0] || 'eleve',
+      dateHeure: reservation.slot_start,
+    })
+    // Sauvegarder le lien Kmeet
+    await supabaseAdmin.from('reservations').update({ kmeet_url: kmeetUrl }).eq('id', reservation_id)
 
     // Envoyer l'email de confirmation cours
     await sendCoursConfirmation({
@@ -51,7 +58,7 @@ export async function POST(req: NextRequest) {
       startISO:     reservation.slot_start,
       endISO:       reservation.slot_end,
       timezone,
-      zoomLink,
+      kmeetUrl,
       message:      reservation.message,
       cancelUrl:    generateCancelUrl(reservation_id),
     })
@@ -62,7 +69,7 @@ export async function POST(req: NextRequest) {
       studentName: reservation.student_name,
       startISO:    reservation.slot_start,
       endISO:      reservation.slot_end,
-      zoomLink:    zoomLink ?? undefined,
+      kmeetUrl:    kmeetUrl ?? undefined,
       uid:         reservation.ics_uid || undefined,
     })
     await sendAdminNotification({
@@ -71,7 +78,7 @@ export async function POST(req: NextRequest) {
       type:         'Cours individuel (virement confirmé)',
       dateLocal,
       timezone,
-      zoomLink,
+      kmeetUrl,
       message:      reservation.message,
       icsContent:   adminICS,
     })
