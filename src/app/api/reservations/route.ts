@@ -4,6 +4,7 @@ import { validateAdminSession } from '@/lib/auth'
 import { sendCoursConfirmation, sendEventConfirmation, sendAdminNotification } from '@/lib/email'
 import { formatDateLocal } from '@/lib/utils'
 import { getSiteSettings } from '@/lib/settings'
+import { kmeetCours, kmeetEvenement } from '@/lib/kmeet'
 import { generateCancelUrl } from '@/lib/cancel'
 import { generateCoursICS, generateEventICS } from '@/lib/ics'
 import { DateTime } from 'luxon'
@@ -218,7 +219,18 @@ export async function POST(req: NextRequest) {
     const siteSettings = await getSiteSettings()
 
     if (slot_start && slot_end) {
-      const zoomLink = siteSettings.zoom_cours || null
+      // Générer un lien Kmeet unique pour ce cours
+      const kmeetUrl = kmeetCours({
+        prenom:    student_name.split(' ')[0],
+        dateHeure: slot_start,
+      })
+      const zoomLink = kmeetUrl
+
+      // Sauvegarder le lien Kmeet dans la réservation
+      await supabaseAdmin
+        .from('reservations')
+        .update({ zoom_link: kmeetUrl })
+        .eq('id', reservation.id)
       // Récupérer les coordonnées bancaires si virement
       let virementIban = null, virementNom = null, virementInfo = null
       if (payment_method === 'virement') {
@@ -255,11 +267,21 @@ export async function POST(req: NextRequest) {
     if (event_id) {
       const { data: event } = await supabaseAdmin.from('events').select('*').eq('id', event_id).single()
       if (event) {
-        const zoomByType: Record<string, string> = {
-          cours: siteSettings.zoom_cours || '', atelier: siteSettings.zoom_atelier || '',
-          masterclass: siteSettings.zoom_masterclass || '', evenement: siteSettings.zoom_evenement || '',
+        // Générer un lien Kmeet unique pour cet événement
+        const kmeetUrlEvent = kmeetEvenement({
+          titre:    event.title,
+          dateHeure: event.date_heure,
+          type:     event.type as 'atelier' | 'masterclass' | 'evenement',
+        })
+        const zoomLink = event.zoom_link || kmeetUrlEvent
+
+        // Sauvegarder le lien Kmeet si pas déjà défini
+        if (!event.zoom_link) {
+          await supabaseAdmin
+            .from('events')
+            .update({ zoom_link: kmeetUrlEvent })
+            .eq('id', event_id)
         }
-        const zoomLink = event.zoom_link || zoomByType[event.type] || null
         const endISO   = DateTime.fromISO(event.date_heure, { zone: 'utc' }).plus({ minutes: event.duration_minutes }).toISO()!
 
         await sendEventConfirmation({
