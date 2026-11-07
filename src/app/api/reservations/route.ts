@@ -241,8 +241,6 @@ export async function POST(req: NextRequest) {
         prenom:    student_name.split(' ')[0],
         dateHeure: slot_start,
       })
-      const kmeetUrl = kmeetUrl
-
       // Sauvegarder le lien Kmeet dans la réservation
       await supabaseAdmin
         .from('reservations')
