@@ -146,10 +146,11 @@ export async function GET(req: NextRequest) {
 
     // Générer la facture automatiquement
     try {
-      const dejaFacture = await factureExistePour('pack', packData.id)
-      if (!dejaFacture) {
-        await factureDepuisPack({
-          id:             packData.id,
+      if (packData?.id) {
+        const dejaFacture = await factureExistePour('pack', packData.id)
+        if (!dejaFacture) {
+          await factureDepuisPack({
+            id:             packData.id,
           code,
           pack_label:     meta.pack_label || 'Pack de cours de piano',
           montant:        montant,
@@ -158,7 +159,8 @@ export async function GET(req: NextRequest) {
           acheteur_email: meta.acheteur_email || session.customer_email || undefined,
           payment_method: 'stripe',
           created_at:     new Date().toISOString(),
-        })
+          })
+        }
       }
     } catch (factureErr) {
       console.error('Erreur génération facture pack:', factureErr)
