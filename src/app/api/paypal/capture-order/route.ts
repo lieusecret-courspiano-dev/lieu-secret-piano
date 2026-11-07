@@ -7,6 +7,7 @@ import { generateCoursICS } from '@/lib/ics'
 import { formatDateLocal } from '@/lib/utils'
 import { Resend } from 'resend'
 import { generateGiftCardPDF } from '@/lib/pdf'
+import { factureDepuisPack, factureDepuisCadeau, factureDepuisCours, factureExistePour } from '@/lib/facturation'
 
 export const dynamic = 'force-dynamic'
 
@@ -87,6 +88,20 @@ export async function POST(req: NextRequest) {
         await sendAdminNotification({ studentName: student_name, studentEmail: student_email, type: 'Cours individuel (PayPal)', dateLocal, timezone, zoomLink: zoomLink || null, message: message || null, icsContent: null })
       } catch (emailErr) { console.error('Email cours PayPal error:', emailErr) }
 
+      // Générer la facture si cours payant sans pack
+      try {
+        if (reservation?.id && amount > 0 && !(await factureExistePour('cours', reservation.id))) {
+          await factureDepuisCours({
+            id: reservation.id,
+            slot_start: reservation.slot_start || new Date().toISOString(),
+            amount,
+            payment_method: 'paypal',
+            client_nom: data.nom || data.name || 'Client',
+            client_email: data.email || capture.payer?.email_address,
+          })
+        }
+      } catch (fe) { console.error('Erreur facture cours PayPal:', fe) }
+
       return NextResponse.json({ success: true, type: 'cours', reservation_id: reservation?.id })
     }
 
@@ -164,6 +179,21 @@ export async function POST(req: NextRequest) {
         await sendAdminNotification({ studentName: acheteur_nom, studentEmail: acheteur_email, type: `Pack ${pack_label} (PayPal) — Code : ${packCode}`, dateLocal: new Date().toLocaleDateString('fr-FR'), timezone: 'Europe/Paris', zoomLink: null, message: null, icsContent: null })
       } catch (emailErr) { console.error('Email pack PayPal error:', emailErr) }
 
+      // Générer la facture automatiquement
+      try {
+        if (newPack?.id && !(await factureExistePour('pack', newPack.id))) {
+          await factureDepuisPack({
+            id: newPack.id, code: packCode,
+            pack_label: pack_label || 'Pack de cours de piano',
+            montant: parseFloat(String(montant)),
+            heures_total: parseInt(String(heures)),
+            acheteur_nom, acheteur_email,
+            payment_method: 'paypal',
+            created_at: new Date().toISOString(),
+          })
+        }
+      } catch (fe) { console.error('Erreur facture pack PayPal:', fe) }
+
       return NextResponse.json({ success: true, type: 'pack', pack_code: packCode })
     }
 
@@ -215,6 +245,20 @@ export async function POST(req: NextRequest) {
           attachments,
         })
       } catch (emailErr) { console.error('Email cadeau PayPal error:', emailErr) }
+
+      // Générer la facture automatiquement
+      try {
+        if (newCard?.id && !(await factureExistePour('cadeau', newCard.id))) {
+          await factureDepuisCadeau({
+            id: newCard.id, code: giftCode,
+            montant: parseFloat(String(montant)),
+            acheteur_nom, acheteur_email,
+            destinataire_nom,
+            payment_method: 'paypal',
+            created_at: new Date().toISOString(),
+          })
+        }
+      } catch (fe) { console.error('Erreur facture cadeau PayPal:', fe) }
 
       return NextResponse.json({ success: true, type: 'cadeau', gift_code: giftCode, card_id: newCard?.id })
     }
