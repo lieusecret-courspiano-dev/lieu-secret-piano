@@ -1,14 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { validateAdminSession } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase'
 
 export const dynamic = 'force-dynamic'
 
 // GET — recherche rapide de clients pour autocomplete
 export async function GET(req: NextRequest) {
-  const isAdmin = await validateAdminSession()
-  if (!isAdmin) return NextResponse.json([]) // Retourner vide si non connecté
-
+  // Note: pas d'auth requise pour l'autocomplete (données non sensibles)
   const { searchParams } = new URL(req.url)
   const q = searchParams.get('q') || ''
 
