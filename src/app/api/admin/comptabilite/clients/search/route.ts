@@ -14,13 +14,20 @@ export async function GET(req: NextRequest) {
 
   if (q.length < 2) return NextResponse.json([])
 
-  // Chercher dans les élèves
+  // Chercher dans les élèves (tous, actifs ou non)
   const { data: eleves } = await supabaseAdmin
     .from('eleves')
     .select('id, prenom, nom, email, telephone, adresse, ville, code_postal')
     .or(`prenom.ilike.%${q}%,nom.ilike.%${q}%,email.ilike.%${q}%`)
-    .eq('is_active', true)
+    .order('nom', { ascending: true })
     .limit(8)
+
+  // Chercher dans les inscriptions (prospects)
+  const { data: inscriptions } = await supabaseAdmin
+    .from('inscriptions')
+    .select('prenom, nom, email, telephone, adresse, ville, code_postal')
+    .or(`prenom.ilike.%${q}%,nom.ilike.%${q}%,email.ilike.%${q}%`)
+    .limit(5)
 
   // Chercher dans les factures existantes (clients sans espace élève)
   const { data: factures } = await supabaseAdmin
@@ -58,6 +65,24 @@ export async function GET(req: NextRequest) {
         ville:       e.ville || null,
         code_postal: e.code_postal || null,
         source:      'eleve',
+      })
+    }
+  }
+
+  // Inscriptions (prospects sans espace élève)
+  for (const i of inscriptions || []) {
+    const email = i.email?.toLowerCase() || ''
+    if (email && !seen.has(email)) {
+      seen.add(email)
+      results.push({
+        id:          email,
+        nom:         `${i.prenom || ''} ${i.nom || ''}`.trim(),
+        email:       i.email || '',
+        telephone:   i.telephone || null,
+        adresse:     i.adresse || null,
+        ville:       i.ville || null,
+        code_postal: i.code_postal || null,
+        source:      'eleve' as const,
       })
     }
   }
