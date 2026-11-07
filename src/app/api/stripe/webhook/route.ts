@@ -205,7 +205,7 @@ export async function POST(req: NextRequest) {
         masterclass: siteSettings.zoom_masterclass || '',
         evenement:   siteSettings.zoom_evenement   || '',
       }
-      const zoomLink = ev.zoom_link || zoomByType[ev.type] || null
+      const kmeetUrl = ev.kmeet_url || zoomByType[ev.type] || null
 
       const endISO = DateTime.fromISO(ev.date_heure, { zone: 'utc' })
         .plus({ minutes: ev.duration_minutes })
@@ -220,7 +220,7 @@ export async function POST(req: NextRequest) {
         timezone:     student_timezone,
         isPaid:       true,
         amount:       ev.price,
-        zoomLink,
+        kmeetUrl,
       })
 
       const dateLocal = formatDateLocal(ev.date_heure, student_timezone)
@@ -230,7 +230,7 @@ export async function POST(req: NextRequest) {
         type:         ev.title,
         dateLocal,
         timezone:     student_timezone,
-        zoomLink,
+        kmeetUrl,
         message,
       })
 
