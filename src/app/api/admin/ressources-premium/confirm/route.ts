@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { validateAdminSession } from '@/lib/auth'
+import { factureDepuisRessource, factureExistePour } from '@/lib/facturation'
 
 export const dynamic = 'force-dynamic'
 
@@ -27,6 +28,21 @@ export async function POST(req: NextRequest) {
     .eq('id', achat_id)
 
   
+
+  // Générer la facture automatiquement
+  try {
+    if (!(await factureExistePour('ressource', achat_id))) {
+      await factureDepuisRessource({
+        id:              achat_id,
+        montant:         achat.montant || 0,
+        payment_method:  achat.payment_method || 'virement',
+        acheteur_nom:    achat.acheteur_nom || 'Client',
+        acheteur_email:  achat.acheteur_email || null,
+        ressource_titre: (achat.ressources_premium as {titre?: string})?.titre || 'Ressource premium',
+        created_at:      new Date().toISOString(),
+      })
+    }
+  } catch (fe) { console.error('Erreur facture ressource premium:', fe) }
 
   return NextResponse.json({ success: true, token: achat.token_acces })
 }
