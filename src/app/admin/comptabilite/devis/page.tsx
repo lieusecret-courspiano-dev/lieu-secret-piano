@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import ClientSearch from '@/components/admin/ClientSearch'
 import { Plus, Download, Eye, FileText, CheckCircle, Clock, XCircle, Send, ArrowRight } from 'lucide-react'
 
 interface Devis {
@@ -166,10 +167,26 @@ export default function DevisPage() {
               className="input w-full" placeholder="Ex : Location clavier Yamaha MODX6+ — 2 semaines" />
           </div>
 
+          {/* Recherche client */}
+          <div>
+            <label className="label mb-1.5 block">Rechercher un client existant</label>
+            <ClientSearch
+              placeholder="Tapez un nom, email... (élèves et clients précédents)"
+              onSelect={client => setForm(f => ({
+                ...f,
+                client_nom:       client.nom || f.client_nom,
+                client_email:     client.email || f.client_email,
+                client_telephone: client.telephone || f.client_telephone,
+                client_adresse:   [client.adresse, client.code_postal, client.ville].filter(Boolean).join(', ') || f.client_adresse,
+              }))}
+            />
+            <p className="text-noir-600 text-xs mt-1">Ou saisissez manuellement ci-dessous</p>
+          </div>
+
           {/* Client */}
           <div className="grid sm:grid-cols-2 gap-4">
             <div>
-              <label className="label mb-1.5 block">Client *</label>
+              <label className="label mb-1.5 block">Nom du client *</label>
               <input value={form.client_nom} onChange={e => setForm(f => ({ ...f, client_nom: e.target.value }))}
                 className="input w-full" placeholder="Nom du client" required />
             </div>
