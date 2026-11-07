@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic'
 import { supabaseAdmin } from '@/lib/supabase'
 import { getEleveFromSession } from '@/lib/eleve-auth'
+import { factureDepuisSupport, factureExistePour } from '@/lib/facturation'
 import { capturePayPalOrder } from '@/lib/paypal'
 import { Resend } from 'resend'
 
@@ -107,6 +108,30 @@ export async function POST(req: NextRequest) {
     } catch (emailErr) {
       console.error('Email non envoyé:', emailErr)
     }
+
+    // Générer la facture automatiquement
+    try {
+      const { data: achat } = await supabaseAdmin
+        .from('supports_achats')
+        .select('id, montant, supports_pedagogiques(titre)')
+        .eq('support_id', supportId)
+        .eq('acheteur_email', eleve.email)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single()
+
+      if (achat?.id && !(await factureExistePour('support', achat.id))) {
+        await factureDepuisSupport({
+          id:             achat.id,
+          montant:        achat.montant || capture.amount || 0,
+          payment_method: 'paypal',
+          acheteur_nom:   `${eleve.prenom} ${eleve.nom}`.trim(),
+          acheteur_email: eleve.email,
+          support_titre:  (achat.supports_pedagogiques as {titre?: string})?.titre || 'Support pédagogique',
+          created_at:     new Date().toISOString(),
+        })
+      }
+    } catch (fe) { console.error('Erreur facture support PayPal:', fe) }
 
     return NextResponse.json({ success: true })
   } catch (err: unknown) {
