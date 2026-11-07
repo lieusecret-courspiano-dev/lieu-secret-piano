@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { supabaseAdmin } from '@/lib/supabase'
 import { Resend } from 'resend'
+import { factureDepuisPack, factureExistePour } from '@/lib/facturation'
 
 const stripe  = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2024-06-20' })
 const resend  = new Resend(process.env.RESEND_API_KEY!)
@@ -35,7 +36,7 @@ export async function GET(req: NextRequest) {
     const montant = parseFloat(meta.montant || '0')
     const expiresAt = new Date(); expiresAt.setFullYear(expiresAt.getFullYear() + 1)
 
-    await supabaseAdmin.from('course_packs').insert({
+    const { data: packData } = await supabaseAdmin.from('course_packs').insert({
       code,
       pack_label:       meta.pack_label,
       heures_total:     heures,
@@ -49,6 +50,8 @@ export async function GET(req: NextRequest) {
       date_paiement:    new Date().toISOString().split('T')[0],
       expires_at:       expiresAt.toISOString(),
     })
+    .select('id')
+    .single()
 
     const expiresDate = expiresAt.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
 
@@ -140,6 +143,26 @@ export async function GET(req: NextRequest) {
 <p style="margin:0;font-size:12px;color:#505080;">Lieu Secret — Ecole de Piano en Ligne</p>
 </td></tr></table></td></tr></table></body></html>`,
     })
+
+    // Générer la facture automatiquement
+    try {
+      const dejaFacture = await factureExistePour('pack', packData.id)
+      if (!dejaFacture) {
+        await factureDepuisPack({
+          id:             packData.id,
+          code,
+          pack_label:     meta.pack_label || 'Pack de cours de piano',
+          montant:        montant,
+          heures_total:   heures,
+          acheteur_nom:   meta.acheteur_nom || session.customer_details?.name || 'Client',
+          acheteur_email: meta.acheteur_email || session.customer_email || undefined,
+          payment_method: 'stripe',
+          created_at:     new Date().toISOString(),
+        })
+      }
+    } catch (factureErr) {
+      console.error('Erreur génération facture pack:', factureErr)
+    }
 
     return NextResponse.json({ success: true, code, heures, pack_label: meta.pack_label })
   } catch (err: unknown) {
