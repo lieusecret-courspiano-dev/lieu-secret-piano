@@ -31,7 +31,7 @@ export async function GET(
   // Chercher les factures
   const { data: factures } = await supabaseAdmin
     .from('comptabilite_factures')
-    .select('id, numero, date_facture, montant_ttc, source, statut_paiement, moyen_paiement')
+    .select('id, numero, date_facture, montant_ttc, source, statut_paiement, moyen_paiement, client_nom')
     .eq('client_email', email)
     .neq('statut', 'annulee')
     .order('date_facture', { ascending: false })
