@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 // GET — recherche rapide de clients pour autocomplete
 export async function GET(req: NextRequest) {
   const isAdmin = await validateAdminSession()
-  if (!isAdmin) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
+  if (!isAdmin) return NextResponse.json([]) // Retourner vide si non connecté
 
   const { searchParams } = new URL(req.url)
   const q = searchParams.get('q') || ''
