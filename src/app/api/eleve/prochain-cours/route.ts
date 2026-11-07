@@ -28,7 +28,7 @@ export async function GET() {
     cours: {
       id:         cours.id,
       slot_start: cours.slot_start,
-      kmeet_url:  cours.zoom_link, // zoom_link contient maintenant l'URL Kmeet
+      kmeet_url:  cours.kmeet_url, // zoom_link contient maintenant l'URL Kmeet
       type:       cours.type,
       status:     cours.status,
     }
