@@ -170,14 +170,12 @@ export default function ClientsPage() {
                   </div>
                 )}
                 <div className="flex gap-1">
-                  {c.eleve_id && (
-                    <Link href={`/admin/eleves/${c.eleve_id}`}
-                      className="text-xs px-2 py-1 rounded-lg border border-blue-500/30 text-blue-400 hover:bg-blue-500/10 transition-colors">
-                      Fiche élève
-                    </Link>
-                  )}
-                  <Link href={`/admin/comptabilite/factures?search=${encodeURIComponent(c.email)}`}
+                  <Link href={`/admin/comptabilite/clients/${encodeURIComponent(c.email)}`}
                     className="text-xs px-2 py-1 rounded-lg border border-gold-500/30 text-gold-400 hover:bg-gold-500/10 transition-colors">
+                    Voir fiche
+                  </Link>
+                  <Link href={`/admin/comptabilite/factures?search=${encodeURIComponent(c.email)}`}
+                    className="text-xs px-2 py-1 rounded-lg border border-noir-700 text-noir-400 hover:text-white hover:bg-noir-800 transition-colors">
                     Factures
                   </Link>
                 </div>
