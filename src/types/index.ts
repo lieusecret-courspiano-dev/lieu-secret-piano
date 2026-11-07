@@ -3,7 +3,7 @@ export type ReservationStatus = 'pending' | 'confirmed' | 'cancelled'
 export type PaymentMethod = 'gratuit' | 'virement' | 'stripe' | 'cadeau'
 
 export interface Creneau { id: string; start_time: string; end_time: string; is_available: boolean; notes: string | null; created_at: string }
-export interface Event { id: string; title: string; description: string | null; type: EventType; date_heure: string; duration_minutes: number; max_spots: number | null; spots_remaining: number; price: number; is_free: boolean; is_active: boolean; zoom_link: string | null; created_at: string }
+export interface Event { id: string; title: string; description: string | null; type: EventType; date_heure: string; duration_minutes: number; max_spots: number | null; spots_remaining: number; price: number; is_free: boolean; is_active: boolean; kmeet_url: string | null; created_at: string }
 export interface Reservation { id: string; creneau_id: string | null; event_id: string | null; student_name: string; student_email: string; student_phone: string | null; student_timezone: string; message: string | null; type: EventType; status: ReservationStatus; payment_method: PaymentMethod; amount: number; stripe_session_id: string | null; gift_code: string | null; created_at: string; creneau?: Creneau; event?: Event }
 export interface Message { id: string; name: string; email: string; subject: string | null; message: string; is_read: boolean; created_at: string }
 
