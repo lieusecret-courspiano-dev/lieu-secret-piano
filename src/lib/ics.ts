@@ -102,7 +102,7 @@ export function generateCoursICS(params: {
   studentName: string
   startISO:    string
   endISO:      string
-  zoomLink?:   string
+  kmeetUrl?:   string
   uid?:        string
 }): { ics: string; uid: string } {
   return generateICS({
@@ -110,8 +110,8 @@ export function generateCoursICS(params: {
     description: `Bonjour ${params.studentName},\n\nVotre cours de piano est confirmé.\n\nLieu Secret — École de Piano en Ligne\nlieusecret-courspiano@outlook.fr`,
     startISO:    params.startISO,
     endISO:      params.endISO,
-    location:    params.zoomLink || 'En ligne (lien envoyé par email)',
-    url:         params.zoomLink,
+    location:    params.kmeetUrl || 'En ligne (lien envoyé par email)',
+    url:         params.kmeetUrl,
     uid:         params.uid,
   })
 }
@@ -121,7 +121,7 @@ export function generateEventICS(params: {
   eventTitle:  string
   startISO:    string
   endISO:      string
-  zoomLink?:   string
+  kmeetUrl?:   string
   uid?:        string
 }): { ics: string; uid: string } {
   return generateICS({
@@ -129,8 +129,8 @@ export function generateEventICS(params: {
     description: `Bonjour ${params.studentName},\n\nVotre inscription à "${params.eventTitle}" est confirmée.\n\nLieu Secret — École de Piano en Ligne\nlieusecret-courspiano@outlook.fr`,
     startISO:    params.startISO,
     endISO:      params.endISO,
-    location:    params.zoomLink || 'En ligne (lien envoyé par email)',
-    url:         params.zoomLink,
+    location:    params.kmeetUrl || 'En ligne (lien envoyé par email)',
+    url:         params.kmeetUrl,
     uid:         params.uid,
   })
 }
