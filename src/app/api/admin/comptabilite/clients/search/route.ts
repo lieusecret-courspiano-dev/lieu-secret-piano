@@ -29,6 +29,15 @@ export async function GET(req: NextRequest) {
     .or(`prenom.ilike.%${q}%,nom.ilike.%${q}%,email.ilike.%${q}%`)
     .limit(5)
 
+  // Chercher dans les locations
+  const { data: locations } = await supabaseAdmin
+    .from('location_reservations')
+    .select('locataire_nom, locataire_email, locataire_telephone, locataire_adresse, locataire_ville, locataire_code_postal')
+    .or(`locataire_nom.ilike.%${q}%,locataire_email.ilike.%${q}%`)
+    .not('locataire_email', 'is', null)
+    .order('created_at', { ascending: false })
+    .limit(5)
+
   // Chercher dans les factures existantes (clients sans espace élève)
   const { data: factures } = await supabaseAdmin
     .from('comptabilite_factures')
@@ -83,6 +92,24 @@ export async function GET(req: NextRequest) {
         ville:       i.ville || null,
         code_postal: i.code_postal || null,
         source:      'eleve' as const,
+      })
+    }
+  }
+
+  // Locataires
+  for (const l of locations || []) {
+    const email = l.locataire_email?.toLowerCase() || ''
+    if (email && !seen.has(email)) {
+      seen.add(email)
+      results.push({
+        id:          email,
+        nom:         l.locataire_nom || '',
+        email:       l.locataire_email || '',
+        telephone:   l.locataire_telephone || null,
+        adresse:     l.locataire_adresse || null,
+        ville:       l.locataire_ville || null,
+        code_postal: l.locataire_code_postal || null,
+        source:      'facture' as const,
       })
     }
   }
