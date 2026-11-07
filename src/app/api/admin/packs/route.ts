@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { validateAdminSession } from '@/lib/auth'
 import { Resend } from 'resend'
+import { factureDepuisPack, factureExistePour } from '@/lib/facturation'
 
 const resend      = new Resend(process.env.RESEND_API_KEY!)
 const FROM        = process.env.RESEND_FROM_EMAIL || 'Lieu Secret <onboarding@resend.dev>'
@@ -61,6 +62,23 @@ export async function POST(req: NextRequest) {
   }).select().single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  // Générer la facture automatiquement
+  try {
+    if (data?.id && !(await factureExistePour('pack', data.id))) {
+      await factureDepuisPack({
+        id:             data.id,
+        code:           data.code,
+        pack_label:     pack_label,
+        montant:        parseFloat(String(montant || 0)),
+        heures_total:   parseInt(String(heures_total)),
+        acheteur_nom,
+        acheteur_email,
+        payment_method: payment_method || 'virement',
+        created_at:     new Date().toISOString(),
+      })
+    }
+  } catch (fe) { console.error('Erreur facture pack admin:', fe) }
 
   const expiresDate = expiresAt.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
 
