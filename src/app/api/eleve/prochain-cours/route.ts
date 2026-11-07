@@ -11,11 +11,11 @@ export async function GET() {
 
   const now = new Date().toISOString()
 
-  // Chercher le prochain cours confirmé dans les 24h
+  // Chercher le prochain cours confirmé à venir
   const { data: cours } = await supabaseAdmin
     .from('reservations')
     .select('id, slot_start, status, type, kmeet_url')
-    .eq('email', eleve.email)
+    .eq('student_email', eleve.email)
     .eq('status', 'confirmed')
     .gte('slot_start', now)
     .order('slot_start', { ascending: true })
