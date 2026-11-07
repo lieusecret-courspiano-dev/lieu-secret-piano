@@ -254,7 +254,7 @@ export default function ComptaDashboardPage() {
               tickFormatter={v => v.toFixed(0) + '€'} />
             <Tooltip
               contentStyle={{ background: '#252540', border: '1px solid #3a3a5c', borderRadius: 8, fontSize: 11 }}
-              formatter={(v: number, name: string) => [fmt(v), name]}
+              formatter={(v) => [fmt(Number(v) || 0), '']}
               labelStyle={{ color: '#f59e0b' }}
             />
             <Legend wrapperStyle={{ fontSize: 11, color: '#a0a0c0' }} />
@@ -275,7 +275,7 @@ export default function ComptaDashboardPage() {
                 <Pie data={sourceData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} dataKey="value">
                   {sourceData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                 </Pie>
-                <Tooltip formatter={(v: number) => fmt(v)}
+                <Tooltip formatter={(v) => fmt(Number(v) || 0)}
                   contentStyle={{ background: '#252540', border: '1px solid #3a3a5c', borderRadius: 8, fontSize: 11 }} />
                 <Legend wrapperStyle={{ fontSize: 10, color: '#a0a0c0' }} />
               </PieChart>
