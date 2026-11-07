@@ -83,9 +83,9 @@ export async function POST(req: NextRequest) {
       try {
         const timezone = student_timezone || 'Europe/Paris'
         const dateLocal = formatDateLocal(slot_start, timezone)
-        const zoomLink  = settings.zoom_cours || undefined
-        await sendCoursConfirmation({ studentName: student_name, studentEmail: student_email, startISO: slot_start, endISO: slot_end, timezone, zoomLink: zoomLink || null, message: message || null, paymentMethod: 'paypal' })
-        await sendAdminNotification({ studentName: student_name, studentEmail: student_email, type: 'Cours individuel (PayPal)', dateLocal, timezone, zoomLink: zoomLink || null, message: message || null, icsContent: null })
+        const kmeetUrl  = settings.zoom_cours || undefined
+        await sendCoursConfirmation({ studentName: student_name, studentEmail: student_email, startISO: slot_start, endISO: slot_end, timezone, kmeetUrl: kmeetUrl || null, message: message || null, paymentMethod: 'paypal' })
+        await sendAdminNotification({ studentName: student_name, studentEmail: student_email, type: 'Cours individuel (PayPal)', dateLocal, timezone, kmeetUrl: kmeetUrl || null, message: message || null, icsContent: null })
       } catch (emailErr) { console.error('Email cours PayPal error:', emailErr) }
 
       // Générer la facture si cours payant sans pack
@@ -177,7 +177,7 @@ export async function POST(req: NextRequest) {
           </div>`,
         })
         // Email admin
-        await sendAdminNotification({ studentName: acheteur_nom, studentEmail: acheteur_email, type: `Pack ${pack_label} (PayPal) — Code : ${packCode}`, dateLocal: new Date().toLocaleDateString('fr-FR'), timezone: 'Europe/Paris', zoomLink: null, message: null, icsContent: null })
+        await sendAdminNotification({ studentName: acheteur_nom, studentEmail: acheteur_email, type: `Pack ${pack_label} (PayPal) — Code : ${packCode}`, dateLocal: new Date().toLocaleDateString('fr-FR'), timezone: 'Europe/Paris', kmeetUrl: null, message: null, icsContent: null })
       } catch (emailErr) { console.error('Email pack PayPal error:', emailErr) }
 
       // Générer la facture automatiquement
