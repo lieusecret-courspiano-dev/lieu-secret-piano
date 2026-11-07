@@ -7,7 +7,7 @@ import { TIMEZONES } from '@/types'
 import { X, Calendar, Clock, User, Mail, Phone, MessageSquare, Globe, Gift, Check, CreditCard, CheckCircle } from 'lucide-react'
 
 interface Creneau { id: string; start_time: string; end_time: string; notes: string | null }
-interface Event { id: string; title: string; description: string | null; type: string; date_heure: string; duration_minutes: number; max_spots: number | null; spots_remaining: number; price: number; is_free: boolean; zoom_link: string | null }
+interface Event { id: string; title: string; description: string | null; type: string; date_heure: string; duration_minutes: number; max_spots: number | null; spots_remaining: number; price: number; is_free: boolean; kmeet_url: string | null }
 interface Props { type: 'cours' | 'event'; creneau?: Creneau; event?: Event; timezone: string; onClose: () => void; onSuccess: () => void }
 interface GiftCardInfo { valid: boolean; montant: number; montant_restant: number; destinataire: string; code: string }
 interface PackInfo { valid: boolean; code: string; pack_label: string; heures_total: number; heures_restantes: number; acheteur_nom: string }
