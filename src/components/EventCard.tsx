@@ -15,7 +15,7 @@ interface Event {
   spots_remaining: number
   price: number
   is_free: boolean
-  zoom_link: string | null
+  kmeet_url: string | null
 }
 
 interface Props {
@@ -86,7 +86,7 @@ export default function EventCard({ event, timezone, onReserve }: Props) {
           <Clock size={12} className="text-gold-500 shrink-0" />
           <span>{timeStart} — {timeEnd} ({event.duration_minutes} min)</span>
         </div>
-        {event.zoom_link && (
+        {event.kmeet_url && (
           <div className="flex items-center gap-2 text-xs text-noir-400">
             <MapPin size={12} className="text-gold-500 shrink-0" />
             <span>En ligne (lien envoye par email)</span>
