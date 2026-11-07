@@ -5,6 +5,7 @@ import {
   Plus, Search, Download, Eye, FileText,
   CheckCircle, Clock, XCircle, Filter
 } from 'lucide-react'
+import ClientSearch from '@/components/admin/ClientSearch'
 
 interface Facture {
   id: string
@@ -150,10 +151,26 @@ export default function FacturesPage() {
         <form onSubmit={handleSaveFacture} className="card mb-6 space-y-4">
           <h2 className="text-white font-semibold">Nouvelle facture manuelle</h2>
 
+          {/* Recherche client */}
+          <div>
+            <label className="label mb-1.5 block">Rechercher un client existant</label>
+            <ClientSearch
+              placeholder="Tapez un nom, email... (élèves et clients précédents)"
+              onSelect={client => setForm(f => ({
+                ...f,
+                client_nom:       client.nom || f.client_nom,
+                client_email:     client.email || f.client_email,
+                client_telephone: client.telephone || f.client_telephone,
+                client_adresse:   [client.adresse, client.code_postal, client.ville].filter(Boolean).join(', ') || f.client_adresse,
+              }))}
+            />
+            <p className="text-noir-600 text-xs mt-1">Ou saisissez manuellement ci-dessous</p>
+          </div>
+
           {/* Client */}
           <div className="grid sm:grid-cols-3 gap-4">
             <div>
-              <label className="label mb-1.5 block">Client *</label>
+              <label className="label mb-1.5 block">Nom du client *</label>
               <input value={form.client_nom} onChange={e => setForm(f => ({ ...f, client_nom: e.target.value }))}
                 className="input w-full" placeholder="Nom du client" required />
             </div>
