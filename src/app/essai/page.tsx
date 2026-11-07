@@ -23,7 +23,7 @@ export default function EssaiPage() {
     duree: '1h offerte',
     duree_desc: 'Cours individuel',
     format: 'En ligne',
-    format_desc: 'Via Zoom',
+    format_desc: 'Via Kmeet',
     gratuit: 'Gratuit',
     gratuit_desc: 'Sans engagement',
     form_titre: "Réservez votre cours d'essai",
