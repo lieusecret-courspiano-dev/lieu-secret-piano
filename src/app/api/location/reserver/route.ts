@@ -25,15 +25,11 @@ function genContratHTML(
   nomBenef: string
 ): string {
   const cautionLabel: Record<string, string> = {
-    cheque: 'Chèque non encaissé',
-    virement: 'Virement bancaire',
-    especes: 'Espèces',
-    stripe_hold: 'Empreinte carte (Stripe)',
+    cheque: 'Chèque non encaissé', virement: 'Virement bancaire',
+    especes: 'Espèces', stripe_hold: 'Empreinte carte (Stripe)',
   }
   const paiementLabel: Record<string, string> = {
-    stripe: 'Carte bancaire (Stripe)',
-    paypal: 'PayPal',
-    virement: 'Virement bancaire',
+    stripe: 'Carte bancaire (Stripe)', paypal: 'PayPal', virement: 'Virement bancaire',
   }
   const now = new Date()
   const dateSignature = now.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
@@ -42,97 +38,132 @@ function genContratHTML(
   return `<!DOCTYPE html>
 <html lang="fr">
 <head><meta charset="UTF-8"/>
+<title>Contrat de location — ${article.nom}</title>
 <style>
-body{font-family:Georgia,serif;color:#1a1a1a;background:#fff;font-size:12px;line-height:1.6;margin:0;padding:0}
-.page{max-width:700px;margin:0 auto;padding:40px 48px}
-.header{text-align:center;border-bottom:2px solid #f59e0b;padding-bottom:20px;margin-bottom:28px}
-.logo{font-size:20px;color:#f59e0b;letter-spacing:4px;font-weight:bold}
-.logo-sub{font-size:10px;color:#888;letter-spacing:2px;margin-top:4px}
-h1{font-size:15px;margin:14px 0 4px;color:#1a1a1a}
-.subtitle{font-size:10px;color:#888}
-h2{font-size:12px;color:#c47f00;border-bottom:1px solid #eee;padding-bottom:4px;margin:20px 0 10px;text-transform:uppercase;letter-spacing:1px}
-table.info{width:100%;border-collapse:collapse;margin-bottom:4px}
-table.info td{padding:3px 6px;font-size:11px}
-table.info td:first-child{color:#666;width:180px}
-p.clause{font-size:11px;color:#333;margin-bottom:10px}
-.sig-block{border-top:2px solid #f59e0b;padding-top:20px;margin-top:28px}
-table.sig{width:100%;border-collapse:collapse}
-table.sig td{border:1px solid #ccc;padding:12px;width:50%;vertical-align:top;font-size:11px}
-.legal{font-size:10px;color:#999;margin-top:12px}
-.amount{color:#c47f00;font-weight:bold}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: Georgia, serif; color: #1a1a1a; background: #fff; font-size: 12px; }
+.page { max-width: 780px; margin: 0 auto; padding: 32px; border: 1.5px solid #c47f00; }
+.header { background: #1a1a2e; border-radius: 8px; padding: 22px 28px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: flex-start; }
+.logo-text { font-size: 22px; color: #f59e0b; letter-spacing: 5px; font-weight: bold; }
+.logo-sub { font-size: 9px; color: #a0a0c0; letter-spacing: 3px; text-transform: uppercase; margin-top: 3px; }
+.header-contact { margin-top: 12px; font-size: 10px; color: #c0c0d0; line-height: 1.8; }
+.header-right { text-align: right; }
+.contrat-label { font-size: 9px; color: #a0a0c0; letter-spacing: 2px; text-transform: uppercase; }
+.contrat-title { font-size: 13px; color: #f59e0b; font-weight: bold; margin-top: 4px; max-width: 220px; line-height: 1.4; }
+.contrat-date { font-size: 10px; color: #d0d0e0; margin-top: 5px; }
+.sep { border: none; border-top: 1.5px solid #f59e0b; margin: 16px 0; }
+h2 { font-size: 11px; color: #c47f00; text-transform: uppercase; letter-spacing: 1px; margin: 18px 0 8px; padding-bottom: 4px; border-bottom: 1px solid #f0ece0; }
+table.info { width: 100%; border-collapse: collapse; margin-bottom: 4px; }
+table.info td { padding: 4px 6px; font-size: 11px; }
+table.info td:first-child { color: #666; width: 180px; }
+p.clause { font-size: 11px; color: #333; margin-bottom: 8px; line-height: 1.6; }
+.amount { color: #c47f00; font-weight: bold; }
+.sig-block { border-top: 1.5px solid #f59e0b; padding-top: 16px; margin-top: 24px; }
+table.sig { width: 100%; border-collapse: collapse; }
+table.sig td { border: 1px solid #ddd; padding: 12px; width: 50%; vertical-align: top; font-size: 11px; }
+.music-deco { text-align: center; font-size: 20px; color: #f0ece0; letter-spacing: 8px; margin: 20px 0 12px; }
+.footer { border-top: 1.5px solid #f59e0b; padding-top: 10px; text-align: center; font-size: 10px; color: #888; line-height: 1.8; margin-top: 8px; }
+.legal { font-size: 10px; color: #999; margin-top: 10px; }
+.print-btn { display: block; text-align: center; margin: 16px auto; padding: 10px 24px; background: #f59e0b; color: #1a1a2e; border: none; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; font-family: Georgia, serif; }
+@media print { .print-btn { display: none; } body { print-color-adjust: exact; -webkit-print-color-adjust: exact; } @page { margin: 10mm; } }
 </style>
 </head>
 <body>
 <div class="page">
-<div class="header">
-  <div class="logo">LIEU SECRET</div>
-  <div class="logo-sub">ÉCOLE DE PIANO EN LIGNE</div>
-  <h1>CONTRAT DE LOCATION DE MATÉRIEL MUSICAL</h1>
-  <div class="subtitle">Signé électroniquement le ${dateSignature} à ${heureSignature} par ${body.signature_nom || body.locataire_nom}</div>
-</div>
+  <div class="header">
+    <div>
+      <div class="logo-text">LIEU SECRET</div>
+      <div class="logo-sub">École de Piano en Ligne</div>
+      <div class="header-contact">
+        Claudine Yombo — Auto-entrepreneur<br/>
+        106F rue de la Richelandière, 42100 Saint-Étienne<br/>
+        +33695346598 | lieusecret-courspiano@outlook.fr
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="contrat-label">Contrat de location</div>
+      <div class="contrat-title">MATÉRIEL MUSICAL</div>
+      <div class="contrat-date">Signé le ${dateSignature} à ${heureSignature}</div>
+    </div>
+  </div>
 
-<h2>1. Identification des parties</h2>
-<table class="info">
-  <tr><td>Loueur</td><td>Claudine Yombo — EI (SIRET 98246654200015)</td></tr>
-  <tr><td>Adresse du loueur</td><td>106F rue de la Richelandière — 42100 Saint-Étienne</td></tr>
-  <tr><td>Locataire</td><td>${body.locataire_nom}</td></tr>
-  <tr><td>Email</td><td>${body.locataire_email}</td></tr>
-  ${body.locataire_telephone ? `<tr><td>Téléphone</td><td>${body.locataire_telephone}</td></tr>` : ''}
-  ${body.locataire_adresse ? `<tr><td>Adresse</td><td>${body.locataire_adresse}${body.locataire_ville ? ', ' + body.locataire_ville : ''}</td></tr>` : ''}
-</table>
+  <button class="print-btn" onclick="window.print()">🖨️ Imprimer / Enregistrer en PDF</button>
 
-<h2>2. Matériel loué</h2>
-<table class="info">
-  <tr><td>Matériel</td><td>${article.nom}</td></tr>
-  ${article.accessoires_inclus ? `<tr><td>Accessoires remis</td><td>${article.accessoires_inclus}</td></tr>` : ''}
-  <tr><td>Date de remise</td><td>${fDate(body.date_debut as string)}</td></tr>
-  <tr><td>Date de retour prévue</td><td>${fDate(body.date_fin as string)}</td></tr>
-  <tr><td>Durée</td><td>${body.nb_jours} jour(s)</td></tr>
-  <tr><td>Mode de remise</td><td>${body.mode_remise === 'livraison' ? 'Livraison à domicile' : 'Retrait à Saint-Étienne'}</td></tr>
-</table>
-
-<h2>3. Conditions financières</h2>
-<table class="info">
-  <tr><td>Montant de la location</td><td>${fMontant(body.montant_location as number)}</td></tr>
-  ${(body.frais_livraison as number) > 0 ? `<tr><td>Frais de livraison</td><td>${fMontant(body.frais_livraison as number)}</td></tr>` : ''}
-  <tr><td>Montant total</td><td class="amount">${fMontant(body.montant_total as number)}</td></tr>
-  ${body.est_acompte ? `<tr><td>Acompte (50%)</td><td>${fMontant(body.montant_acompte as number)}</td></tr>` : ''}
-  <tr><td>Mode de paiement</td><td>${paiementLabel[body.moyen_paiement as string] || body.moyen_paiement}</td></tr>
-</table>
-
-<h2>4. Caution</h2>
-<table class="info">
-  <tr><td>Montant</td><td>${fMontant(body.caution_montant as number)}</td></tr>
-  <tr><td>Type</td><td>${cautionLabel[body.caution_type as string] || body.caution_type}</td></tr>
-</table>
-<p class="clause">La caution peut être retenue totalement ou partiellement en cas de dommage, perte, vol ou non-restitution. Elle est restituée dans les 5 jours ouvrés après retour du matériel en bon état.</p>
-
-<h2>5. Obligations du locataire</h2>
-<p class="clause">Le locataire est responsable du matériel dès sa remise jusqu'à sa restitution. Il s'interdit de le prêter, sous-louer, démonter ou modifier. Il doit protéger le matériel contre les chocs, liquides, humidité et mauvais usage.</p>
-
-<h2>6. Vol, perte et détérioration</h2>
-<p class="clause">En cas de vol, perte ou détérioration, le locataire prend en charge le coût réel de réparation ou de remplacement. En cas de vol, un dépôt de plainte doit être transmis sous 48 heures.</p>
-
-<h2>7. Restitution et retard</h2>
-<p class="clause">Pénalité de retard : 10 € par jour commencé. Au-delà de 10 jours, une mise en demeure puis toute procédure judiciaire utile pourra être engagée.</p>
-
-<h2>8. Données personnelles</h2>
-<p class="clause">Le locataire autorise la conservation des documents d'identification nécessaires à la gestion du contrat et d'éventuels litiges.</p>
-
-<h2>9. Litiges</h2>
-<p class="clause">Le contrat est soumis au droit français. Les tribunaux du ressort de Saint-Étienne sont compétents sauf disposition légale contraire.</p>
-
-<div class="sig-block">
-  <h2 style="margin-top:0">Signatures</h2>
-  <table class="sig">
-    <tr>
-      <td><strong>Loueur : Claudine Yombo</strong><br/><span style="color:#888;font-size:10px">Lieu Secret — Saint-Étienne</span></td>
-      <td><strong>Locataire : ${body.signature_nom || body.locataire_nom}</strong><br/><span style="color:#888;font-size:10px">Signé électroniquement le ${dateSignature} à ${heureSignature}</span><br/><span style="color:#888;font-size:10px">Mention : Lu et approuvé</span></td>
-    </tr>
+  <h2>1. Identification des parties</h2>
+  <table class="info">
+    <tr><td>Loueur</td><td>Claudine Yombo — EI (SIRET 98246654200015)</td></tr>
+    <tr><td>Adresse du loueur</td><td>106F rue de la Richelandière — 42100 Saint-Étienne</td></tr>
+    <tr><td>Locataire</td><td><strong>${body.locataire_nom}</strong></td></tr>
+    <tr><td>Email</td><td>${body.locataire_email}</td></tr>
+    ${body.locataire_telephone ? `<tr><td>Téléphone</td><td>${body.locataire_telephone}</td></tr>` : ''}
+    ${body.locataire_adresse ? `<tr><td>Adresse</td><td>${body.locataire_adresse}${body.locataire_ville ? ', ' + body.locataire_ville : ''}</td></tr>` : ''}
   </table>
-  <p class="legal">Ce contrat a été signé électroniquement conformément au règlement eIDAS (UE) n°910/2014.</p>
+
+  <h2>2. Matériel loué</h2>
+  <table class="info">
+    <tr><td>Matériel</td><td><strong>${article.nom}</strong></td></tr>
+    ${article.accessoires_inclus ? `<tr><td>Accessoires remis</td><td>${article.accessoires_inclus}</td></tr>` : ''}
+    <tr><td>Date de remise</td><td>${fDate(body.date_debut as string)}</td></tr>
+    <tr><td>Date de retour prévue</td><td>${fDate(body.date_fin as string)}</td></tr>
+    <tr><td>Durée</td><td>${body.nb_jours} jour(s)</td></tr>
+    <tr><td>Mode de remise</td><td>${body.mode_remise === 'livraison' ? 'Livraison à domicile' : 'Retrait à Saint-Étienne'}</td></tr>
+  </table>
+
+  <h2>3. Conditions financières</h2>
+  <table class="info">
+    <tr><td>Montant de la location</td><td>${fMontant(body.montant_location as number)}</td></tr>
+    ${(body.frais_livraison as number) > 0 ? `<tr><td>Frais de livraison</td><td>${fMontant(body.frais_livraison as number)}</td></tr>` : ''}
+    <tr><td>Montant total</td><td class="amount">${fMontant(body.montant_total as number)}</td></tr>
+    ${body.est_acompte ? `<tr><td>Acompte (50%)</td><td>${fMontant(body.montant_acompte as number)}</td></tr>` : ''}
+    <tr><td>Mode de paiement</td><td>${paiementLabel[body.moyen_paiement as string] || body.moyen_paiement}</td></tr>
+  </table>
+
+  <h2>4. Caution</h2>
+  <table class="info">
+    <tr><td>Montant</td><td>${fMontant(body.caution_montant as number)}</td></tr>
+    <tr><td>Type</td><td>${cautionLabel[body.caution_type as string] || body.caution_type}</td></tr>
+  </table>
+  <p class="clause">La caution peut être retenue totalement ou partiellement en cas de dommage, perte, vol ou non-restitution. Elle est restituée dans les 5 jours ouvrés après retour du matériel en bon état.</p>
+
+  <h2>5. Obligations du locataire</h2>
+  <p class="clause">Le locataire est responsable du matériel dès sa remise jusqu'à sa restitution. Il s'interdit de le prêter, sous-louer, démonter ou modifier. Il doit protéger le matériel contre les chocs, liquides, humidité et mauvais usage.</p>
+
+  <h2>6. Vol, perte et détérioration</h2>
+  <p class="clause">En cas de vol, perte ou détérioration, le locataire prend en charge le coût réel de réparation ou de remplacement. En cas de vol, un dépôt de plainte doit être transmis sous 48 heures.</p>
+
+  <h2>7. Restitution et retard</h2>
+  <p class="clause">Pénalité de retard : 10 € par jour commencé. Au-delà de 10 jours, une mise en demeure puis toute procédure judiciaire utile pourra être engagée.</p>
+
+  <h2>8. Données personnelles</h2>
+  <p class="clause">Le locataire autorise la conservation des documents d'identification nécessaires à la gestion du contrat et d'éventuels litiges.</p>
+
+  <h2>9. Litiges</h2>
+  <p class="clause">Le contrat est soumis au droit français. Les tribunaux du ressort de Saint-Étienne sont compétents sauf disposition légale contraire.</p>
+
+  <div class="sig-block">
+    <h2 style="margin-top:0;border:none">Signatures</h2>
+    <table class="sig">
+      <tr>
+        <td><strong>Loueur : Claudine Yombo</strong><br/><span style="color:#888;font-size:10px">Lieu Secret — Saint-Étienne</span></td>
+        <td><strong>Locataire : ${body.signature_nom || body.locataire_nom}</strong><br/><span style="color:#888;font-size:10px">Signé électroniquement le ${dateSignature} à ${heureSignature}</span><br/><span style="color:#888;font-size:10px">Mention : Lu et approuvé</span></td>
+      </tr>
+    </table>
+    <p class="legal">Ce contrat a été signé électroniquement conformément au règlement eIDAS (UE) n°910/2014.</p>
+  </div>
+
+  <div class="music-deco">♩ ♪ ♫ ♬ ♩ ♪ ♫</div>
+
+  <div class="footer">
+    Claudine Yombo — SIRET 98246654200015
+    ${iban ? '<br/>IBAN : ' + iban : ''}
+  </div>
 </div>
-</div>
+<script>
+  // Auto-print seulement si ouvert directement (pas depuis email)
+  if (window.location.search.includes('print=1')) {
+    setTimeout(function() { window.print(); }, 400);
+  }
+</script>
 </body>
 </html>`
 }
@@ -339,8 +370,10 @@ export async function POST(req: NextRequest) {
   </div>
   ` : ''}
   <div style="background:#1a2a1a;border:1px solid #22c55e;border-radius:8px;padding:14px;margin:16px 0;">
-    <p style="color:#22c55e;font-size:13px;font-weight:bold;margin:0 0 4px;">Contrat joint à cet email</p>
-    <p style="color:#a0d0a0;font-size:12px;margin:0;">Ouvrez le fichier .html joint dans votre navigateur. Vous pouvez l'imprimer ou le sauvegarder en PDF (Ctrl+P).</p>
+    <p style="color:#22c55e;font-size:13px;font-weight:bold;margin:0 0 8px;">Votre contrat signé</p>
+    <p style="color:#a0d0a0;font-size:12px;margin:0 0 10px;">Consultez et imprimez votre contrat :</p>
+    <a href="${BASE_URL}/api/location/contrat/${reservation.id}" style="display:inline-block;background:#f59e0b;color:#1a1a2e;padding:10px 20px;border-radius:6px;text-decoration:none;font-weight:bold;font-size:13px;">Voir et imprimer le contrat</a>
+    <p style="color:#a0d0a0;font-size:11px;margin:8px 0 0;">Le contrat est également joint en pièce jointe.</p>
   </div>
   <p style="color:#a0a0c0;font-size:13px;">Contact : <a href="mailto:${ADMIN_EMAIL}" style="color:#f59e0b;">${ADMIN_EMAIL}</a></p>
   <p style="color:#505080;font-size:12px;text-align:center;margin-top:24px;">Vérifiez votre dossier Spam si vous ne recevez pas de réponse.</p>
