@@ -3,6 +3,7 @@ import Stripe from 'stripe'
 import { supabaseAdmin } from '@/lib/supabase'
 import { sendCoursConfirmation, sendEventConfirmation, sendAdminNotification } from '@/lib/email'
 import { getSiteSettings } from '@/lib/settings'
+import { factureDepuisPack, factureDepuisCours, factureDepuisEvenement, factureExistePour } from '@/lib/facturation'
 import { generateCoursICS, generateEventICS } from '@/lib/ics'
 import { formatDateLocal } from '@/lib/utils'
 import { DateTime } from 'luxon'
@@ -152,6 +153,21 @@ export async function GET(req: NextRequest) {
         })
       } catch (emailErr) { console.error('Email pack CB error:', emailErr) }
 
+      // Générer facture pack Stripe
+      try {
+        if (newPack?.id && !(await factureExistePour('pack', newPack.id))) {
+          await factureDepuisPack({
+            id: newPack.id, code: packCode,
+            pack_label: metadata.pack_label || 'Pack de cours',
+            montant: parseFloat(metadata.montant || '0'),
+            heures_total: parseInt(metadata.heures || '5'),
+            acheteur_nom: metadata.acheteur_nom || student_name || 'Client',
+            acheteur_email: metadata.acheteur_email || student_email || '',
+            payment_method: 'stripe',
+            created_at: new Date().toISOString(),
+          })
+        }
+      } catch (fe) { console.error('Erreur facture pack stripe:', fe) }
       return NextResponse.json({ success: true, student_name, student_email, pack_code: packCode })
     }
 
@@ -213,6 +229,19 @@ export async function GET(req: NextRequest) {
       const { ics: adminICS, uid: adminICSUid } = generateCoursICS({ studentName: student_name, startISO: slot_start, endISO: slot_end, kmeetUrl: kmeetUrl ?? undefined, uid: stripeIcsUid })
       await sendAdminNotification({ studentName: student_name, studentEmail: student_email, type: 'Cours individuel (CB)', dateLocal, timezone: student_timezone, kmeetUrl, message, icsContent: adminICS })
 
+      // Générer facture cours Stripe (si payant, pas pack, pas cadeau)
+      try {
+        if (reservation?.id && amount > 0 && !pack_code && !gift_code && !(await factureExistePour('cours', reservation.id))) {
+          await factureDepuisCours({
+            id: reservation.id,
+            slot_start: slot_start,
+            amount: amount,
+            payment_method: 'stripe',
+            client_nom: student_name,
+            client_email: student_email,
+          })
+        }
+      } catch (fe) { console.error('Erreur facture cours stripe:', fe) }
       return NextResponse.json({ success: true, student_name, student_email })
     }
 
@@ -267,7 +296,21 @@ export async function GET(req: NextRequest) {
     const { ics: adminICS, uid: adminICSUid } = generateEventICS({ studentName: student_name, eventTitle: ev.title, startISO: ev.date_heure, endISO, kmeetUrl: kmeetUrl ?? undefined })
     await sendAdminNotification({ studentName: student_name, studentEmail: student_email, type: ev.title, dateLocal, timezone: student_timezone, kmeetUrl, message, icsContent: adminICS })
 
-    return NextResponse.json({ success: true, student_name, student_email, event_title: ev.title })
+    // Générer facture événement Stripe
+      try {
+        if (reservation?.id && ev.price > 0 && !(await factureExistePour('evenement', reservation.id))) {
+          await factureDepuisEvenement({
+            id: reservation.id,
+            event_title: ev.title,
+            amount: ev.price,
+            payment_method: 'stripe',
+            nom: student_name,
+            email: student_email,
+            created_at: new Date().toISOString(),
+          })
+        }
+      } catch (fe) { console.error('Erreur facture événement stripe:', fe) }
+      return NextResponse.json({ success: true, student_name, student_email, event_title: ev.title })
 
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Erreur inconnue'
