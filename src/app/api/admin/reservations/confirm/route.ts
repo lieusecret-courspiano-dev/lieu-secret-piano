@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
       dateHeure: reservation.slot_start,
     })
     // Sauvegarder le lien Kmeet
-    await supabaseAdmin.from('reservations').update({ kmeet_url: kmeetUrl }).eq('id', reservation_id)
+    await supabaseAdmin.from('reservations').update({ zoom_link: kmeetUrl }).eq('id', reservation_id)
 
     // Envoyer l'email de confirmation cours
     await sendCoursConfirmation({
