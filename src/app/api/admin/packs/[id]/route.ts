@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import { supabaseAdmin } from '@/lib/supabase'
 import { validateAdminSession } from '@/lib/auth'
 import { Resend } from 'resend'
+import { factureDepuisPack, factureExistePour } from '@/lib/facturation'
 
 const resend = new Resend(process.env.RESEND_API_KEY!)
 
@@ -137,6 +138,24 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
     // Appliquer les crédits de parrainage en attente
     await applyPendingParrainageCredits(params.id, currentPack.acheteur_email)
+
+    // Générer la facture automatiquement
+    try {
+      if (pack?.id && !(await factureExistePour('pack', pack.id))) {
+        await factureDepuisPack({
+          id:             pack.id,
+          code:           packCode,
+          pack_label:     currentPack.pack_label,
+          montant:        currentPack.montant || 0,
+          heures_total:   currentPack.heures_total,
+          acheteur_nom:   currentPack.acheteur_nom,
+          acheteur_email: currentPack.acheteur_email,
+          payment_method: 'virement',
+          created_at:     new Date().toISOString(),
+        })
+        console.log('✅ Facture générée pour pack virement:', pack.id)
+      }
+    } catch (fe) { console.error('Erreur facture pack virement:', fe) }
     
     return NextResponse.json({ ...pack, pack_code: packCode })
   }
