@@ -4,7 +4,6 @@ import { validateAdminSession } from '@/lib/auth'
 import { sendCoursConfirmation, sendEventConfirmation, sendAdminNotification } from '@/lib/email'
 import { formatDateLocal } from '@/lib/utils'
 import { getSiteSettings } from '@/lib/settings'
-import { kmeetCours, kmeetEvenement } from '@/lib/kmeet'
 import { factureDepuisCours, factureExistePour } from '@/lib/facturation'
 import { generateCancelUrl } from '@/lib/cancel'
 import { generateCoursICS, generateEventICS } from '@/lib/ics'
@@ -236,16 +235,7 @@ export async function POST(req: NextRequest) {
     const siteSettings = await getSiteSettings()
 
     if (slot_start && slot_end) {
-      // Générer un lien Kmeet unique pour ce cours
-      const kmeetUrl = kmeetCours({
-        prenom:    student_name.split(' ')[0],
-        dateHeure: slot_start,
-      })
-      // Sauvegarder le lien Kmeet dans la réservation
-      await supabaseAdmin
-        .from('reservations')
-        .update({ zoom_link: kmeetUrl })
-        .eq('id', reservation.id)
+      const zoomLink = siteSettings.zoom_cours || null
       // Récupérer les coordonnées bancaires si virement
       let virementIban = null, virementNom = null, virementInfo = null
       if (payment_method === 'virement') {
@@ -261,7 +251,7 @@ export async function POST(req: NextRequest) {
         startISO:       slot_start,
         endISO:         slot_end,
         timezone,
-        kmeetUrl,
+        zoomLink,
         message,
         cancelUrl:      generateCancelUrl(reservation.id),
         paymentMethod:  payment_method || null,
@@ -272,44 +262,35 @@ export async function POST(req: NextRequest) {
       })
 
       const dateLocal = formatDateLocal(slot_start, timezone)
-      const { ics: adminICS, uid: adminICSUid } = generateCoursICS({ studentName: student_name, startISO: slot_start, endISO: slot_end, kmeetUrl: kmeetUrl ?? undefined, uid: reservationIcsUid })
+      const { ics: adminICS, uid: adminICSUid } = generateCoursICS({ studentName: student_name, startISO: slot_start, endISO: slot_end, zoomLink: zoomLink ?? undefined, uid: reservationIcsUid })
       await sendAdminNotification({
         studentName: student_name, studentEmail: student_email,
-        type: 'Cours individuel', dateLocal, timezone, kmeetUrl, message, icsContent: adminICS,
+        type: 'Cours individuel', dateLocal, timezone, zoomLink, message, icsContent: adminICS,
       })
     }
 
     if (event_id) {
       const { data: event } = await supabaseAdmin.from('events').select('*').eq('id', event_id).single()
       if (event) {
-        // Générer un lien Kmeet unique pour cet événement
-        const kmeetUrlEvent = kmeetEvenement({
-          titre:    event.title,
-          dateHeure: event.date_heure,
-          type:     event.type as 'atelier' | 'masterclass' | 'evenement',
-        })
-        const kmeetUrl = event.zoom_link || kmeetUrlEvent
 
-        // Sauvegarder le lien Kmeet si pas déjà défini
-        if (!event.zoom_link) {
-          await supabaseAdmin
-            .from('events')
-            .update({ zoom_link: kmeetUrlEvent })
-            .eq('id', event_id)
+        const zoomByType: Record<string, string> = {
+          cours: siteSettings.zoom_cours || '', atelier: siteSettings.zoom_atelier || '',
+          masterclass: siteSettings.zoom_masterclass || '', evenement: siteSettings.zoom_evenement || '',
         }
+        const zoomLink = event.zoom_link || zoomByType[event.type] || null
         const endISO   = DateTime.fromISO(event.date_heure, { zone: 'utc' }).plus({ minutes: event.duration_minutes }).toISO()!
 
         await sendEventConfirmation({
           studentName: student_name, studentEmail: student_email, eventTitle: event.title,
           startISO: event.date_heure, endISO, timezone, isPaid: !event.is_free,
-          amount: event.price, kmeetUrl, cancelUrl: generateCancelUrl(reservation.id),
+          amount: event.price, zoomLink, cancelUrl: generateCancelUrl(reservation.id),
         })
 
         const dateLocal = formatDateLocal(event.date_heure, timezone)
-        const { ics: adminICS, uid: adminICSUid } = generateEventICS({ studentName: student_name, eventTitle: event.title, startISO: event.date_heure, endISO, kmeetUrl: kmeetUrl ?? undefined, uid: reservationIcsUid })
+        const { ics: adminICS, uid: adminICSUid } = generateEventICS({ studentName: student_name, eventTitle: event.title, startISO: event.date_heure, endISO, zoomLink: zoomLink ?? undefined, uid: reservationIcsUid })
         await sendAdminNotification({
           studentName: student_name, studentEmail: student_email, type: event.title,
-          dateLocal, timezone, kmeetUrl, message, icsContent: adminICS,
+          dateLocal, timezone, zoomLink, message, icsContent: adminICS,
         })
       }
     }
