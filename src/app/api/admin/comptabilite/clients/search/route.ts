@@ -35,6 +35,24 @@ export async function GET(req: NextRequest) {
     .order('created_at', { ascending: false })
     .limit(5)
 
+  // Chercher dans les réservations (student_name/student_email)
+  const { data: reservations } = await supabaseAdmin
+    .from('reservations')
+    .select('student_name, student_email, student_phone')
+    .or(`student_name.ilike.%${q}%,student_email.ilike.%${q}%`)
+    .not('student_email', 'is', null)
+    .order('created_at', { ascending: false })
+    .limit(5)
+
+  // Chercher dans les packs (acheteurs)
+  const { data: packs } = await supabaseAdmin
+    .from('course_packs')
+    .select('acheteur_nom, acheteur_email')
+    .or(`acheteur_nom.ilike.%${q}%,acheteur_email.ilike.%${q}%`)
+    .not('acheteur_email', 'is', null)
+    .order('created_at', { ascending: false })
+    .limit(5)
+
   // Chercher dans les factures existantes (clients sans espace élève)
   const { data: factures } = await supabaseAdmin
     .from('comptabilite_factures')
@@ -107,6 +125,42 @@ export async function GET(req: NextRequest) {
         ville:       l.locataire_ville || null,
         code_postal: l.locataire_code_postal || null,
         source:      'facture' as const,
+      })
+    }
+  }
+
+  // Acheteurs de packs
+  for (const pk of packs || []) {
+    const email = pk.acheteur_email?.toLowerCase() || ''
+    if (email && !seen.has(email)) {
+      seen.add(email)
+      results.push({
+        id:          email,
+        nom:         pk.acheteur_nom || '',
+        email:       pk.acheteur_email || '',
+        telephone:   null,
+        adresse:     null,
+        ville:       null,
+        code_postal: null,
+        source:      'eleve' as const,
+      })
+    }
+  }
+
+  // Élèves depuis réservations
+  for (const r of reservations || []) {
+    const email = r.student_email?.toLowerCase() || ''
+    if (email && !seen.has(email)) {
+      seen.add(email)
+      results.push({
+        id:          email,
+        nom:         r.student_name || '',
+        email:       r.student_email || '',
+        telephone:   r.student_phone || null,
+        adresse:     null,
+        ville:       null,
+        code_postal: null,
+        source:      'eleve' as const,
       })
     }
   }
