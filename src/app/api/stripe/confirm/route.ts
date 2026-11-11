@@ -231,7 +231,7 @@ export async function GET(req: NextRequest) {
 
       // Générer facture cours Stripe (si payant, pas pack, pas cadeau)
       try {
-        if (reservation?.id && amount > 0 && !pack_code && !gift_code && !(await factureExistePour('cours', reservation.id))) {
+        if (reservation?.id && amount > 0 && !(await factureExistePour('cours', reservation.id))) {
           await factureDepuisCours({
             id: reservation.id,
             slot_start: slot_start,
