@@ -185,6 +185,11 @@ export default function FacturesPage() {
                 className="input w-full" placeholder="06 00 00 00 00" />
             </div>
           </div>
+          <div>
+            <label className="label mb-1.5 block">Adresse</label>
+            <input value={form.client_adresse} onChange={e => setForm(f => ({ ...f, client_adresse: e.target.value }))}
+              className="input w-full" placeholder="Adresse complète (optionnel)" />
+          </div>
 
           <div className="grid sm:grid-cols-3 gap-4">
             <div>
