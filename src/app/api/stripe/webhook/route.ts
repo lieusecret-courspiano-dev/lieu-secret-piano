@@ -205,7 +205,7 @@ export async function POST(req: NextRequest) {
         masterclass: siteSettings.zoom_masterclass || '',
         evenement:   siteSettings.zoom_evenement   || '',
       }
-      const kmeetUrl = ev.kmeet_url || zoomByType[ev.type] || null
+      const kmeetUrl = ev.zoom_link || zoomByType[ev.type] || null
 
       const endISO = DateTime.fromISO(ev.date_heure, { zone: 'utc' })
         .plus({ minutes: ev.duration_minutes })
