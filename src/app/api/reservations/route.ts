@@ -288,13 +288,13 @@ export async function POST(req: NextRequest) {
           dateHeure: event.date_heure,
           type:     event.type as 'atelier' | 'masterclass' | 'evenement',
         })
-        const kmeetUrl = event.kmeet_url || kmeetUrlEvent
+        const kmeetUrl = event.zoom_link || kmeetUrlEvent
 
         // Sauvegarder le lien Kmeet si pas déjà défini
-        if (!event.kmeet_url) {
+        if (!event.zoom_link) {
           await supabaseAdmin
             .from('events')
-            .update({ kmeet_url: kmeetUrlEvent })
+            .update({ zoom_link: kmeetUrlEvent })
             .eq('id', event_id)
         }
         const endISO   = DateTime.fromISO(event.date_heure, { zone: 'utc' }).plus({ minutes: event.duration_minutes }).toISO()!
