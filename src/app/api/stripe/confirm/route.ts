@@ -254,7 +254,7 @@ export async function GET(req: NextRequest) {
       cours: siteSettings.zoom_cours || '', atelier: siteSettings.zoom_atelier || '',
       masterclass: siteSettings.zoom_masterclass || '', evenement: siteSettings.zoom_evenement || '',
     }
-    const kmeetUrl = ev.kmeet_url || zoomByType[ev.type] || null
+    const kmeetUrl = ev.zoom_link || zoomByType[ev.type] || null
     const endISO   = DateTime.fromISO(ev.date_heure, { zone: 'utc' }).plus({ minutes: ev.duration_minutes }).toISO()!
 
     await sendEventConfirmation({
