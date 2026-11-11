@@ -198,7 +198,7 @@ export async function GET(req: NextRequest) {
       // Générer un lien Kmeet unique
       const { kmeetCours: genKmeet } = await import('@/lib/kmeet')
       const kmeetUrl = genKmeet({ prenom: student_name?.split(' ')[0], dateHeure: slot_start })
-      await supabaseAdmin.from('reservations').update({ kmeet_url: kmeetUrl }).eq('stripe_session_id', sessionId)
+      await supabaseAdmin.from('reservations').update({ zoom_link: kmeetUrl }).eq('stripe_session_id', sessionId)
       await sendCoursConfirmation({
         studentName:  student_name,
         studentEmail: student_email,
