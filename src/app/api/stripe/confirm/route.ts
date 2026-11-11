@@ -297,20 +297,20 @@ export async function GET(req: NextRequest) {
     await sendAdminNotification({ studentName: student_name, studentEmail: student_email, type: ev.title, dateLocal, timezone: student_timezone, kmeetUrl, message, icsContent: adminICS })
 
     // Générer facture événement Stripe
-      try {
-        if (reservation?.id && ev.price > 0 && !(await factureExistePour('evenement', reservation.id))) {
-          await factureDepuisEvenement({
-            id: reservation.id,
-            event_title: ev.title,
-            amount: ev.price,
-            payment_method: 'stripe',
-            nom: student_name,
-            email: student_email,
-            created_at: new Date().toISOString(),
-          })
-        }
-      } catch (fe) { console.error('Erreur facture événement stripe:', fe) }
-      return NextResponse.json({ success: true, student_name, student_email, event_title: ev.title })
+    try {
+      if (event_id && ev.price > 0 && !(await factureExistePour('evenement', event_id))) {
+        await factureDepuisEvenement({
+          id: event_id,
+          event_title: ev.title,
+          amount: ev.price,
+          payment_method: 'stripe',
+          nom: student_name,
+          email: student_email,
+          created_at: new Date().toISOString(),
+        })
+      }
+    } catch (fe) { console.error('Erreur facture événement stripe:', fe) }
+    return NextResponse.json({ success: true, student_name, student_email, event_title: ev.title })
 
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Erreur inconnue'
