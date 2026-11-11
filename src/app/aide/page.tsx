@@ -30,7 +30,7 @@ const FAQ = [
   // ── Réservation ──
   { cat: 'Réservation', q: "Quels sont les modes de paiement disponibles ?", a: "Trois modes : (1) Carte bancaire via Stripe — paiement immédiat et sécurisé, (2) Code pack PK — déduction automatique d'une heure, (3) Bon cadeau avec code LS — déduction du montant disponible." },
   { cat: 'Réservation', q: "Je n'ai pas reçu l'email de confirmation.", a: "Vérifiez votre dossier Spam. Si vous avez choisi le virement, l'email de confirmation avec le lien Kmeet sera envoyé après réception de votre paiement. Pour un paiement CB ou pack, l'email est envoyé immédiatement." },
-  { cat: 'Réservation', q: "Comment se déroule le cours en ligne ?", a: "Tous les cours se déroulent en ligne via Kmeet. Le lien de connexion vous est envoyé par email dans votre confirmation de réservation. Assurez-vous d'avoir un piano ou clavier accessible." },
+  { cat: 'Réservation', q: "Comment se déroule le cours en ligne ?", a: "Tous les cours se déroulent en ligne via Zoom. Le lien de connexion vous est envoyé par email dans votre confirmation de réservation. Assurez-vous d'avoir un piano ou clavier accessible." },
   { cat: 'Réservation', q: "Les créneaux affichés sont-ils dans mon fuseau horaire ?", a: "Oui. Sur la page de réservation, sélectionnez votre fuseau horaire dans le sélecteur en haut. Tous les créneaux s'affichent automatiquement dans votre heure locale." },
 
   // ── Bons cadeaux ──
