@@ -244,7 +244,7 @@ export async function POST(req: NextRequest) {
       // Sauvegarder le lien Kmeet dans la réservation
       await supabaseAdmin
         .from('reservations')
-        .update({ kmeet_url: kmeetUrl })
+        .update({ zoom_link: kmeetUrl })
         .eq('id', reservation.id)
       // Récupérer les coordonnées bancaires si virement
       let virementIban = null, virementNom = null, virementInfo = null
