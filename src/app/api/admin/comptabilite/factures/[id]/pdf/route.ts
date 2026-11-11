@@ -125,21 +125,14 @@ export async function GET(
     </div>
   </div>
 
-  <!-- Émetteur à gauche, Client à droite -->
-  <div class="parties">
-    <div class="partie">
-      <div class="partie-label">Émetteur</div>
-      <div class="partie-nom">${p?.nom_proprietaire || 'Claudine Yombo'}</div>
-      <div class="partie-info">Auto-entrepreneur</div>
-    </div>
-    <div class="partie" style="text-align:right">
-      <div class="partie-label">Facturé à</div>
-      <div class="partie-nom">${facture.client_nom}</div>
-      <div class="partie-info">
-        ${facture.client_email ? facture.client_email + '<br/>' : ''}
-        ${facture.client_telephone ? facture.client_telephone + '<br/>' : ''}
-        ${facture.client_adresse ? facture.client_adresse : ''}
-      </div>
+  <!-- Client à droite uniquement -->
+  <div style="text-align:right; margin-bottom:20px;">
+    <div class="partie-label">Facturé à</div>
+    <div class="partie-nom">${facture.client_nom}</div>
+    <div class="partie-info">
+      ${facture.client_email ? facture.client_email + '<br/>' : ''}
+      ${facture.client_telephone ? facture.client_telephone + '<br/>' : ''}
+      ${facture.client_adresse ? facture.client_adresse : ''}
     </div>
   </div>
 
