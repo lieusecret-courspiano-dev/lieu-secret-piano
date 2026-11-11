@@ -39,7 +39,7 @@ export async function GET(
   // Chercher les packs
   const { data: packs } = await supabaseAdmin
     .from('course_packs')
-    .select('id, code, pack_label, heures_total, heures_restantes, montant, status, created_at')
+    .select('id, code, pack_label, heures_total, heures_restantes, montant, status, created_at, acheteur_nom, acheteur_email')
     .eq('acheteur_email', email)
     .order('created_at', { ascending: false })
 
@@ -53,7 +53,7 @@ export async function GET(
   // Chercher les réservations de cours
   const { data: reservations } = await supabaseAdmin
     .from('reservations')
-    .select('id, slot_start, amount, status, payment_method, type')
+    .select('id, slot_start, amount, status, payment_method, type, student_phone, student_name')
     .eq('email', email)
     .order('slot_start', { ascending: false })
     .limit(10)
@@ -62,12 +62,17 @@ export async function GET(
   const caTotal = (factures || []).reduce((s, f) => s + (f.montant_ttc || 0), 0)
   const nbFactures = (factures || []).length
 
-  // Construire la fiche client
+  // Récupérer infos depuis reservations si pas dans eleves
+  const resaInfos = (reservations || [])[0]
+  const packInfos = (packs || [])[0]
+
+  // Construire la fiche client — chercher dans toutes les sources
   const fiche = {
     email,
-    nom:         eleve ? `${eleve.prenom || ''} ${eleve.nom || ''}`.trim() : (factures?.[0]?.client_nom || email),
-    telephone:   eleve?.telephone || null,
-    adresse:     eleve?.adresse || null,
+    nom:         eleve ? `${eleve.prenom || ''} ${eleve.nom || ''}`.trim()
+                 : (factures?.[0]?.client_nom || packInfos?.acheteur_nom || resaInfos?.student_name || email),
+    telephone:   eleve?.telephone || factures?.[0]?.client_telephone || resaInfos?.student_phone || null,
+    adresse:     eleve?.adresse || factures?.[0]?.client_adresse || null,
     ville:       eleve?.ville || null,
     code_postal: eleve?.code_postal || null,
     est_eleve:   !!eleve,
