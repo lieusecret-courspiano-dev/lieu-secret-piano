@@ -251,7 +251,7 @@ export async function POST(req: NextRequest) {
         startISO:       slot_start,
         endISO:         slot_end,
         timezone,
-        zoomLink,
+        kmeetUrl: zoomLink,
         message,
         cancelUrl:      generateCancelUrl(reservation.id),
         paymentMethod:  payment_method || null,
@@ -262,10 +262,10 @@ export async function POST(req: NextRequest) {
       })
 
       const dateLocal = formatDateLocal(slot_start, timezone)
-      const { ics: adminICS, uid: adminICSUid } = generateCoursICS({ studentName: student_name, startISO: slot_start, endISO: slot_end, zoomLink: zoomLink ?? undefined, uid: reservationIcsUid })
+      const { ics: adminICS, uid: adminICSUid } = generateCoursICS({ studentName: student_name, startISO: slot_start, endISO: slot_end, kmeetUrl: zoomLink ?? undefined, uid: reservationIcsUid })
       await sendAdminNotification({
         studentName: student_name, studentEmail: student_email,
-        type: 'Cours individuel', dateLocal, timezone, zoomLink, message, icsContent: adminICS,
+        type: 'Cours individuel', dateLocal, timezone, kmeetUrl: zoomLink, message, icsContent: adminICS,
       })
     }
 
@@ -283,14 +283,14 @@ export async function POST(req: NextRequest) {
         await sendEventConfirmation({
           studentName: student_name, studentEmail: student_email, eventTitle: event.title,
           startISO: event.date_heure, endISO, timezone, isPaid: !event.is_free,
-          amount: event.price, zoomLink, cancelUrl: generateCancelUrl(reservation.id),
+          amount: event.price, kmeetUrl: zoomLink, cancelUrl: generateCancelUrl(reservation.id),
         })
 
         const dateLocal = formatDateLocal(event.date_heure, timezone)
-        const { ics: adminICS, uid: adminICSUid } = generateEventICS({ studentName: student_name, eventTitle: event.title, startISO: event.date_heure, endISO, zoomLink: zoomLink ?? undefined, uid: reservationIcsUid })
+        const { ics: adminICS, uid: adminICSUid } = generateEventICS({ studentName: student_name, eventTitle: event.title, startISO: event.date_heure, endISO, kmeetUrl: zoomLink ?? undefined, uid: reservationIcsUid })
         await sendAdminNotification({
           studentName: student_name, studentEmail: student_email, type: event.title,
-          dateLocal, timezone, zoomLink, message, icsContent: adminICS,
+          dateLocal, timezone, kmeetUrl: zoomLink, message, icsContent: adminICS,
         })
       }
     }
