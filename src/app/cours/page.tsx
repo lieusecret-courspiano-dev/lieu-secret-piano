@@ -18,21 +18,21 @@ function FadeUp({ children, delay = 0, className = '' }: { children: React.React
 
 const COURS_TYPES = [
   {
-    titre: 'Cours individuel', sous: '1h — En tête-à-tête via Kmeet',
+    titre: 'Cours individuel', sous: '1h — En tête-à-tête via Zoom',
     desc: 'Un cours entièrement dédié à votre progression. Le professeur adapte chaque séance à votre niveau, vos objectifs et votre rythme d\'apprentissage.',
     features: ['Programme 100% personnalisé', 'Suivi de progression détaillé', 'Notes de cours après chaque séance', 'Ressources pédagogiques incluses', 'Lien Kmeet envoyé par email', 'Enregistrement disponible sur demande'],
     cta: 'Réserver un créneau', href: '/reservation',
     icon: <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M7 4v8M10 4v5M14 4v8M17 4v5"/></svg>,
   },
   {
-    titre: 'Atelier de groupe', sous: "Jusqu'à 8 participants via Kmeet",
+    titre: 'Atelier de groupe', sous: "Jusqu'à 8 participants via Zoom",
     desc: 'Apprenez en groupe dans une ambiance conviviale et stimulante. Chaque atelier est centré sur un thème musical précis pour progresser ensemble.',
     features: ['Thème défini à l\'avance', 'Échanges et partage entre élèves', 'Ambiance conviviale et motivante', 'Tarif accessible', 'Gratuit ou payant selon l\'atelier', 'Replay disponible'],
     cta: 'Voir les ateliers', href: '/reservation?tab=evenements',
     icon: <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
   },
   {
-    titre: 'Masterclass', sous: 'Perfectionnement — 6 max via Kmeet',
+    titre: 'Masterclass', sous: 'Perfectionnement — 6 max via Zoom',
     desc: 'Poussez votre technique plus loin avec des sessions intensives en petit groupe. Idéal pour les pianistes intermédiaires et avancés.',
     features: ['Niveau intermédiaire/avancé', 'Technique approfondie', 'Petits groupes (6 participants max)', 'Enregistrement disponible', 'Feedback personnalisé', 'Certificat de participation'],
     cta: 'Voir les masterclass', href: '/reservation?tab=evenements',
@@ -63,7 +63,7 @@ export default function CoursPage() {
               Apprenez le piano<br /><span className="text-gold-400">à votre façon</span>
             </h1>
             <p className="text-noir-300 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed mb-8">
-              Cours individuels, ateliers collectifs ou masterclass via Kmeet — choisissez la formule qui correspond à vos objectifs.
+              Cours individuels, ateliers collectifs ou masterclass via Zoom — choisissez la formule qui correspond à vos objectifs.
             </p>
             <Link href="/essai" className="btn-gold text-base px-8 py-4 shadow-xl shadow-gold-500/20 inline-block">
               Commencer par un cours d'essai gratuit
@@ -145,7 +145,7 @@ export default function CoursPage() {
                 </svg>
               </div>
               <div>
-                <h3 className="text-white font-semibold mb-1">Tous les cours se déroulent via Kmeet</h3>
+                <h3 className="text-white font-semibold mb-1">Tous les cours se déroulent via Zoom</h3>
                 <p className="text-noir-400 text-sm">Après votre réservation, vous recevez automatiquement le lien Kmeet par email. Aucune installation complexe requise.</p>
               </div>
             </div>
