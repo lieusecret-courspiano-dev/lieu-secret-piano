@@ -125,14 +125,16 @@ export async function GET(
     </div>
   </div>
 
-  <!-- Client à droite uniquement -->
-  <div style="text-align:right; margin-bottom:20px;">
-    <div class="partie-label">Facturé à</div>
-    <div class="partie-nom">${facture.client_nom}</div>
-    <div class="partie-info">
-      ${facture.client_email ? facture.client_email + '<br/>' : ''}
-      ${facture.client_telephone ? facture.client_telephone + '<br/>' : ''}
-      ${facture.client_adresse ? facture.client_adresse : ''}
+  <!-- Client aligné à droite (pas à l'extrême) -->
+  <div style="display:flex; justify-content:flex-end; margin-bottom:20px;">
+    <div style="text-align:left; max-width:280px;">
+      <div class="partie-label">Facturé à</div>
+      <div class="partie-nom">${facture.client_nom}</div>
+      <div class="partie-info">
+        ${facture.client_email ? facture.client_email + '<br/>' : ''}
+        ${facture.client_telephone ? facture.client_telephone + '<br/>' : ''}
+        ${facture.client_adresse ? facture.client_adresse : ''}
+      </div>
     </div>
   </div>
 
