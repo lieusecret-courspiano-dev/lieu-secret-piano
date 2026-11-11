@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { validateAdminSession } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase'
-import PDFDocument from 'pdfkit'
 
 export const dynamic = 'force-dynamic'
 
-function fmt(n: number) { return n.toFixed(2).replace('.', ',') + ' \u20ac' }
+function fmt(n: number) { return n.toFixed(2).replace('.', ',') + ' €' }
 function fDate(d: string) {
   return new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
@@ -17,7 +16,6 @@ export async function GET(
   const isAdmin = await validateAdminSession()
   if (!isAdmin) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
 
-  // Récupérer la facture et ses lignes
   const { data: facture, error } = await supabaseAdmin
     .from('comptabilite_factures')
     .select('*, comptabilite_factures_lignes(*)')
@@ -26,7 +24,6 @@ export async function GET(
 
   if (error || !facture) return NextResponse.json({ error: 'Facture introuvable.' }, { status: 404 })
 
-  // Récupérer les paramètres comptables
   const { data: p } = await supabaseAdmin
     .from('comptabilite_parametres')
     .select('*')
@@ -36,208 +33,128 @@ export async function GET(
   const lignes = (facture.comptabilite_factures_lignes || [])
     .sort((a: { position: number }, b: { position: number }) => a.position - b.position)
 
-  // Générer le PDF
-  const pdfBuffer = await new Promise<Buffer>((resolve, reject) => {
-    const doc = new PDFDocument({ size: 'A4', margin: 50 })
-    const chunks: Buffer[] = []
-    doc.on('data', (c: Buffer) => chunks.push(c))
-    doc.on('end', () => resolve(Buffer.concat(chunks)))
-    doc.on('error', reject)
+  const html = `<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<title>${facture.numero}</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: Georgia, serif; color: #1a1a1a; background: #fff; font-size: 12px; line-height: 1.6; }
+  .page { max-width: 750px; margin: 0 auto; padding: 40px; }
+  .header { background: #1a1a2e; color: #f59e0b; padding: 24px; border-radius: 8px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: flex-start; }
+  .logo { font-size: 22px; letter-spacing: 4px; font-weight: bold; }
+  .logo-sub { font-size: 10px; color: #a0a0c0; letter-spacing: 2px; margin-top: 4px; }
+  .header-info { color: #a0a0c0; font-size: 10px; line-height: 1.8; }
+  .header-right { text-align: right; }
+  .facture-num { color: #f59e0b; font-size: 18px; font-weight: bold; }
+  .parties { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+  .partie h3 { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .partie p { font-size: 11px; line-height: 1.8; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+  thead tr { background: #f5f0e8; }
+  th { padding: 8px 10px; text-align: left; font-size: 10px; color: #c47f00; text-transform: uppercase; letter-spacing: 0.5px; }
+  td { padding: 8px 10px; font-size: 11px; border-bottom: 1px solid #eee; }
+  .totaux { margin-left: auto; width: 280px; }
+  .totaux-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 11px; }
+  .total-ttc { background: #1a1a2e; color: #f59e0b; padding: 10px 12px; border-radius: 6px; display: flex; justify-content: space-between; font-weight: bold; font-size: 14px; margin-top: 8px; }
+  .footer { margin-top: 32px; padding-top: 16px; border-top: 1px solid #f59e0b; text-align: center; font-size: 10px; color: #888; line-height: 1.8; }
+  .mention { font-size: 10px; color: #888; margin-top: 8px; }
+  @media print { body { print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <div>
+      <div class="logo">${p?.nom_entreprise || 'LIEU SECRET'}</div>
+      <div class="logo-sub">ÉCOLE DE PIANO EN LIGNE</div>
+      <div class="header-info" style="margin-top:12px">
+        ${p?.nom_proprietaire || 'Claudine Yombo'}<br/>
+        SIRET : ${p?.siret || '98246654200015'}<br/>
+        ${p?.adresse || '106F rue de la Richelandière'}<br/>
+        ${p?.code_postal || '42100'} ${p?.ville || 'Saint-Étienne'}<br/>
+        ${p?.telephone || '+33695346598'}<br/>
+        ${p?.email || 'lieusecret-courspiano@outlook.fr'}
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="facture-num">${facture.numero}</div>
+      <div class="header-info" style="margin-top:8px">
+        Date : ${fDate(facture.date_facture)}<br/>
+        ${facture.date_echeance ? 'Échéance : ' + fDate(facture.date_echeance) : ''}
+      </div>
+    </div>
+  </div>
 
-    const W    = doc.page.width - 100
-    const GOLD = '#c47f00'
-    const DARK = '#1a1a1a'
-    const GRAY = '#555555'
-    const LGRAY = '#888888'
+  <div class="parties">
+    <div class="partie">
+      <h3>Émetteur</h3>
+      <p>
+        <strong>${p?.nom_proprietaire || 'Claudine Yombo'}</strong><br/>
+        Auto-entrepreneur<br/>
+        ${p?.adresse || '106F rue de la Richelandière'}<br/>
+        ${p?.code_postal || '42100'} ${p?.ville || 'Saint-Étienne'}
+      </p>
+    </div>
+    <div class="partie">
+      <h3>Facturé à</h3>
+      <p>
+        <strong>${facture.client_nom}</strong><br/>
+        ${facture.client_email ? facture.client_email + '<br/>' : ''}
+        ${facture.client_telephone ? facture.client_telephone + '<br/>' : ''}
+        ${facture.client_adresse ? facture.client_adresse : ''}
+      </p>
+    </div>
+  </div>
 
-    // ── En-tête ──────────────────────────────────────────────
-    doc.rect(50, 40, W, 80).fill('#1a1a2e')
+  <table>
+    <thead>
+      <tr>
+        <th style="width:50%">Désignation</th>
+        <th>Qté</th>
+        <th>P.U. HT</th>
+        <th>Total HT</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${lignes.map((l: { designation: string; description?: string; quantite: number; unite: string; prix_unitaire: number; montant_ht: number }) => `
+      <tr>
+        <td>
+          <strong>${l.designation}</strong>
+          ${l.description ? '<br/><span style="color:#888;font-size:10px">' + l.description + '</span>' : ''}
+        </td>
+        <td>${l.quantite} ${l.unite}</td>
+        <td>${fmt(l.prix_unitaire)}</td>
+        <td>${fmt(l.montant_ht)}</td>
+      </tr>`).join('')}
+    </tbody>
+  </table>
 
-    doc.font('Helvetica-Bold').fontSize(20).fillColor('#f59e0b')
-      .text(p?.nom_entreprise || 'LIEU SECRET', 65, 55, { characterSpacing: 3 })
+  <div class="totaux">
+    <div class="totaux-row"><span style="color:#888">Total HT</span><span>${fmt(facture.montant_ht)}</span></div>
+    ${facture.taux_tva > 0 ? `<div class="totaux-row"><span style="color:#888">TVA (${facture.taux_tva}%)</span><span>${fmt(facture.montant_tva)}</span></div>` : '<div class="mention">TVA non applicable — Art. 293 B du CGI</div>'}
+    <div class="total-ttc"><span>TOTAL TTC</span><span>${fmt(facture.montant_ttc)}</span></div>
+    ${facture.moyen_paiement ? `<div class="totaux-row" style="margin-top:8px"><span style="color:#888">Règlement</span><span>${facture.moyen_paiement}</span></div>` : ''}
+  </div>
 
-    doc.font('Helvetica').fontSize(9).fillColor('#a0a0c0')
-      .text(p?.nom_proprietaire || 'Claudine Yombo', 65, 78)
-      .text(`SIRET : ${p?.siret || '98246654200015'}`, 65, 90)
-      .text(`${p?.adresse || '106F rue de la Richelandière'} — ${p?.code_postal || '42100'} ${p?.ville || 'Saint-Étienne'}`, 65, 102)
+  ${facture.notes ? `<p style="margin-top:16px;font-size:11px;color:#555">${facture.notes}</p>` : ''}
 
-    // Numéro facture à droite
-    doc.font('Helvetica-Bold').fontSize(14).fillColor('#f59e0b')
-      .text('FACTURE', 350, 55, { width: W - 300, align: 'right' })
-    doc.font('Helvetica').fontSize(10).fillColor('#ffffff')
-      .text(facture.numero, 350, 73, { width: W - 300, align: 'right' })
-    doc.font('Helvetica').fontSize(9).fillColor('#a0a0c0')
-      .text(`Date : ${fDate(facture.date_facture)}`, 350, 90, { width: W - 300, align: 'right' })
+  <div class="footer">
+    ${p?.nom_proprietaire || 'Claudine Yombo'} — SIRET ${p?.siret || '98246654200015'}<br/>
+    ${p?.email || 'lieusecret-courspiano@outlook.fr'} — ${p?.telephone || '+33695346598'}<br/>
+    ${p?.mention_tva || 'TVA non applicable — Art. 293 B du CGI'}
+    ${p?.iban ? '<br/>IBAN : ' + p.iban : ''}
+  </div>
+</div>
+<script>window.onload = function() { window.print(); }</script>
+</body>
+</html>`
 
-    // Ligne dorée
-    doc.moveTo(50, 130).lineTo(50 + W, 130).lineWidth(1.5).stroke(GOLD)
-
-    let y = 145
-
-    // ── Infos émetteur / client ──────────────────────────────
-    // Émetteur
-    doc.font('Helvetica-Bold').fontSize(8).fillColor(LGRAY)
-      .text('ÉMETTEUR', 50, y, { characterSpacing: 1 })
-    y += 14
-    doc.font('Helvetica').fontSize(9).fillColor(DARK)
-      .text(p?.nom_proprietaire || 'Claudine Yombo', 50, y)
-    y += 13
-    doc.font('Helvetica').fontSize(8).fillColor(GRAY)
-      .text(`${p?.adresse || '106F rue de la Richelandière'}`, 50, y)
-    y += 11
-    doc.text(`${p?.code_postal || '42100'} ${p?.ville || 'Saint-Étienne'}`, 50, y)
-    y += 11
-    if (p?.telephone) doc.text(`Tél : ${p.telephone}`, 50, y), y += 11
-    doc.text(p?.email || 'lieusecret-courspiano@outlook.fr', 50, y)
-
-    // Client
-    const clientX = 300
-    let clientY = 145
-    doc.font('Helvetica-Bold').fontSize(8).fillColor(LGRAY)
-      .text('FACTURÉ À', clientX, clientY, { characterSpacing: 1 })
-    clientY += 14
-    doc.font('Helvetica-Bold').fontSize(10).fillColor(DARK)
-      .text(facture.client_nom, clientX, clientY)
-    clientY += 14
-    if (facture.client_email) {
-      doc.font('Helvetica').fontSize(8).fillColor(GRAY).text(facture.client_email, clientX, clientY)
-      clientY += 11
-    }
-    if (facture.client_telephone) {
-      doc.font('Helvetica').fontSize(8).fillColor(GRAY).text(facture.client_telephone, clientX, clientY)
-      clientY += 11
-    }
-    if (facture.client_adresse) {
-      doc.font('Helvetica').fontSize(8).fillColor(GRAY).text(facture.client_adresse, clientX, clientY)
-    }
-
-    y = Math.max(y, clientY) + 25
-
-    // ── Tableau des lignes ───────────────────────────────────
-    // En-tête tableau
-    doc.rect(50, y, W, 20).fill('#f5f0e8')
-    doc.font('Helvetica-Bold').fontSize(8).fillColor(GOLD)
-    doc.text('DÉSIGNATION', 56, y + 6)
-    doc.text('QTÉ', 340, y + 6, { width: 40, align: 'right' })
-    doc.text('P.U. HT', 385, y + 6, { width: 60, align: 'right' })
-    doc.text('TOTAL HT', 450, y + 6, { width: 60, align: 'right' })
-    y += 24
-
-    // Lignes
-    for (const ligne of lignes) {
-      if (y > 680) { doc.addPage(); y = 50 }
-
-      doc.font('Helvetica-Bold').fontSize(9).fillColor(DARK)
-        .text(ligne.designation, 56, y, { width: 275 })
-
-      const lineH = doc.heightOfString(ligne.designation, { width: 275 })
-
-      if (ligne.description) {
-        doc.font('Helvetica').fontSize(7.5).fillColor(GRAY)
-          .text(ligne.description, 56, y + lineH, { width: 275 })
-      }
-
-      doc.font('Helvetica').fontSize(9).fillColor(DARK)
-        .text(`${ligne.quantite} ${ligne.unite}`, 340, y, { width: 40, align: 'right' })
-        .text(fmt(ligne.prix_unitaire), 385, y, { width: 60, align: 'right' })
-        .text(fmt(ligne.montant_ht), 450, y, { width: 60, align: 'right' })
-
-      const totalH = ligne.description
-        ? lineH + doc.heightOfString(ligne.description, { width: 275 }) + 4
-        : lineH + 4
-
-      y += Math.max(totalH, 20)
-
-      doc.moveTo(50, y - 2).lineTo(50 + W, y - 2).lineWidth(0.3).stroke('#dddddd')
-    }
-
-    y += 10
-
-    // ── Totaux ───────────────────────────────────────────────
-    const totauxX = 380
-    const totauxW = W - 330
-
-    const totauxRows = [
-      { label: 'Total HT', value: fmt(facture.montant_ht) },
-      ...(facture.taux_tva > 0 ? [
-        { label: `TVA (${facture.taux_tva}%)`, value: fmt(facture.montant_tva) },
-      ] : []),
-    ]
-
-    for (const row of totauxRows) {
-      doc.font('Helvetica').fontSize(9).fillColor(GRAY)
-        .text(row.label, totauxX, y, { width: totauxW / 2 })
-        .text(row.value, totauxX + totauxW / 2, y, { width: totauxW / 2, align: 'right' })
-      y += 16
-    }
-
-    // Total TTC
-    doc.rect(totauxX - 5, y - 3, totauxW + 10, 24).fill('#1a1a2e')
-    doc.font('Helvetica-Bold').fontSize(11).fillColor('#f59e0b')
-      .text('TOTAL TTC', totauxX, y + 4, { width: totauxW / 2 })
-      .text(fmt(facture.montant_ttc), totauxX + totauxW / 2, y + 4, { width: totauxW / 2, align: 'right' })
-    y += 35
-
-    // ── Paiement ─────────────────────────────────────────────
-    if (facture.moyen_paiement) {
-      const paiementLabels: Record<string, string> = {
-        stripe: 'Carte bancaire (Stripe)', paypal: 'PayPal',
-        virement: 'Virement bancaire', especes: 'Espèces', cheque: 'Chèque',
-      }
-      doc.font('Helvetica').fontSize(8).fillColor(LGRAY)
-        .text(`Mode de règlement : ${paiementLabels[facture.moyen_paiement] || facture.moyen_paiement}`, 50, y)
-      y += 12
-    }
-
-    if (facture.notes) {
-      doc.font('Helvetica').fontSize(8).fillColor(GRAY)
-        .text(facture.notes, 50, y, { width: W })
-      y += doc.heightOfString(facture.notes, { width: W }) + 8
-    }
-
-    // ── Pied de page ─────────────────────────────────────────
-    const footerY = doc.page.height - 60
-    doc.moveTo(50, footerY).lineTo(50 + W, footerY).lineWidth(0.5).stroke(GOLD)
-
-    doc.font('Helvetica').fontSize(7.5).fillColor(LGRAY)
-      .text(p?.mention_tva || 'TVA non applicable — Art. 293 B du CGI', 50, footerY + 8, { width: W, align: 'center' })
-
-    if (p?.iban) {
-      doc.text(`IBAN : ${p.iban}${p.bic ? ' — BIC : ' + p.bic : ''}`, 50, footerY + 20, { width: W, align: 'center' })
-    }
-
-    doc.text(
-      `${p?.nom_proprietaire || 'Claudine Yombo'} — SIRET ${p?.siret || '98246654200015'} — ${p?.email || 'lieusecret-courspiano@outlook.fr'}`,
-      50, footerY + 32, { width: W, align: 'center' }
-    )
-
-    doc.end()
-  })
-
-  // Sauvegarder l'URL du PDF si pas encore fait
-  if (!facture.pdf_url) {
-    try {
-      const { cloudinary } = await import('@/lib/cloudinary')
-      const uploadResult = await new Promise<{ secure_url: string }>((resolve, reject) => {
-        cloudinary.uploader.upload_stream(
-          { folder: 'lieu-secret/factures', resource_type: 'raw', public_id: `facture-${facture.numero}`, format: 'pdf' },
-          (error, result) => { if (error || !result) reject(error); else resolve(result as { secure_url: string }) }
-        ).end(pdfBuffer)
-      })
-      await supabaseAdmin
-        .from('comptabilite_factures')
-        .update({ pdf_url: uploadResult.secure_url })
-        .eq('id', params.id)
-    } catch (e) {
-      console.error('Upload PDF facture Cloudinary:', e)
-    }
-  }
-
-  return new NextResponse(new Uint8Array(pdfBuffer), {
+  return new NextResponse(html, {
     headers: {
-      'Content-Type': 'application/pdf',
-      'Content-Disposition': `attachment; filename="${facture.numero}.pdf"`,
-      'Content-Length': pdfBuffer.length.toString(),
+      'Content-Type': 'text/html; charset=utf-8',
+      'Content-Disposition': `inline; filename="${facture.numero}.html"`,
     },
   })
 }
